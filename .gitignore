@@ -1,0 +1,87 @@
+# Maven build output
+target/
+!target/.gitkeep
+
+# Compiled Java classes
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+*.nar
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+*~
+
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.cache
+
+# IntelliJ IDEA
+out/
+*.iws
+*.ipr
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Data persistence (serialized files)
+data/
+*.ser
+
+# Logs
+*.log
+logs/
+
+# Test reports
+target/surefire-reports/
+target/failsafe-reports/
+*.log
+
+# OS artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.orig
+
+# Maven wrapper (if not using system Maven)
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Backup files
+*.bak
+*.backup
+*~
+
