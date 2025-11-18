@@ -18,21 +18,24 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final UserAccountService userAccountService;
     private final SocketManager socketManager;
 
+    // keeping track of whos in which room had some nasty race conditions before
     private static final Map<UUID, Set<String>> roomToParticipants = Collections.synchronizedMap(new HashMap<>());
+    // quick lookup: email -> room id (one user per room rule)
     private static final Map<String, UUID> emailToRoom = Collections.synchronizedMap(new HashMap<>());
+    // locks per chatroom - stops chaos when people send message at the same time
     private static final Map<UUID, Object> chatRoomIdMessageLockMap = Collections.synchronizedMap(new HashMap<>());
-    private static final Object creationMutex = new Object();
+    private static final Object creationMutex = new Object(); // prevents double-lock creation chaos
 
     public ChatRoomServiceImpl(ChatRoomMessageRepository repository, UserAccountService userAccountService,
             SocketManager socketManager) {
         if (repository == null) {
-            throw new IllegalArgumentException("ChatRoomMessageRepository must not be null");
+            throw new IllegalArgumentException("repository cannot be null");
         }
         if (userAccountService == null) {
-            throw new IllegalArgumentException("UserAccountService must not be null");
+            throw new IllegalArgumentException("userAccountService cannot be null");
         }
         if (socketManager == null) {
-            throw new IllegalArgumentException("SocketManager must not be null");
+            throw new IllegalArgumentException("socketManager cannot be null");
         }
         this.repository = repository;
         this.userAccountService = userAccountService;
@@ -51,10 +54,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public void joinChatRoom(UUID chatRoomId, String userEmail) {
         if (chatRoomId == null) {
-            throw new IllegalArgumentException("Chat room ID must not be null");
+            throw new IllegalArgumentException("chatRoomId cannot be null");
         }
         if (userEmail == null || userEmail.trim().isEmpty()) {
-            throw new IllegalArgumentException("User email must not be null or empty");
+            throw new IllegalArgumentException("Invalid user email");
         }
         if (!repository.existsById(chatRoomId)) {
             throw new IllegalArgumentException("Chat room not found: " + chatRoomId);
@@ -66,9 +69,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         UUID currentRoom = emailToRoom.get(userEmail);
         if (currentRoom != null) {
-            if (currentRoom.equals(chatRoomId)) {// trying to join the same room as he is currently in
+            if (currentRoom.equals(chatRoomId)) { // trying to join the same room as he is currently in
                 return;
             } else {
+                // one room at a time buddy, can't be in two places at once :3
                 throw new IllegalArgumentException(
                         "User " + userEmail + " is already in room " + currentRoom + ". Cannot join another room.");
             }
@@ -80,8 +84,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             roomToParticipants.put(chatRoomId, participants);
         }
         participants.add(userEmail);
-        emailToRoom.put(userEmail, chatRoomId);
+        emailToRoom.put(userEmail, chatRoomId); // remember where this user is
 
+        // send the user the chat history
         Optional<ChatRoomMessageStore> messageStoreOpt = repository.findById(chatRoomId);
         if (messageStoreOpt.isPresent()) {
             ChatRoomMessageStore messageStore = messageStoreOpt.get();
@@ -99,7 +104,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public int getParticipantCount(UUID chatRoomId) {
         if (chatRoomId == null) {
-            throw new IllegalArgumentException("Chat room ID must not be null");
+            throw new IllegalArgumentException("chatRoomId cannot be null");
         }
 
         if (!repository.existsById(chatRoomId)) {
@@ -117,7 +122,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public void disconnectUser(String userEmail) {
         if (userEmail == null || userEmail.trim().isEmpty()) {
-            throw new IllegalArgumentException("User email must not be null or empty");
+            throw new IllegalArgumentException("Invalid user email");
         }
 
         UUID chatRoomId = emailToRoom.get(userEmail);
@@ -136,10 +141,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         participants.remove(userEmail);
         if (participants.isEmpty()) {
+            // cleanup: no one left we dont need this room to be "active" anymore
             roomToParticipants.remove(chatRoomId);
         }
 
-        emailToRoom.remove(userEmail);
+        emailToRoom.remove(userEmail); // the user can now join another room
 
         String username = userAccountService.getUsernameByEmail(userEmail).get();
         String disconnectMessage = userEmail + " has left the chat under the name " + username;
@@ -149,13 +155,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public void addMessage(UUID chatRoomId, String userEmail, String message) {
         if (chatRoomId == null) {
-            throw new IllegalArgumentException("Chat room ID must not be null");
+            throw new IllegalArgumentException("chatRoomId cannot be null");
         }
         if (userEmail == null || userEmail.trim().isEmpty()) {
-            throw new IllegalArgumentException("User email must not be null or empty");
+            throw new IllegalArgumentException("Invalid user email");
         }
         if (message == null || message.trim().isEmpty()) {
-            throw new IllegalArgumentException("Message must not be null or empty");
+            throw new IllegalArgumentException("message cannot be empty");
         }
         UUID userRoom = emailToRoom.get(userEmail);
         if (userRoom == null || !userRoom.equals(chatRoomId)) {
@@ -180,10 +186,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         sendMessageToAllParticipants(chatRoomId, formattedMessage);
     }
 
+    // double-check locking pattern - learned this the hard way after messages got
+    // scrambled
     private Object getLock(UUID chatRoomId) {
         Object lock = chatRoomIdMessageLockMap.get(chatRoomId);
         if (lock == null) {
             synchronized (creationMutex) {
+                // check again inside sync block (classic double-check pattern)
                 lock = chatRoomIdMessageLockMap.get(chatRoomId);
                 if (lock == null) {
                     lock = new Object();
@@ -194,6 +203,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return lock;
     }
 
+    // broadcast to everyone in the room and locking the room to prevent the chaos
     private void sendMessageToAllParticipants(UUID chatRoomId, String message) {
         Object lock = getLock(chatRoomId);
         synchronized (lock) {

@@ -11,7 +11,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     public UserAccountServiceImpl(UserAccountRepository repository) {
         if (repository == null) {
-            throw new IllegalArgumentException("UserAccountRepository must not be null");
+            throw new IllegalArgumentException("repository cannot be null");
         }
         this.repository = repository;
     }
@@ -19,10 +19,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public boolean login(String emailAddress, String password) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("Invalid email address");
         }
         if (password == null) {
-            throw new IllegalArgumentException("Password must not be null");
+            throw new IllegalArgumentException("password cannot be null");
         }
 
         Optional<UserAccount> user = repository.findByEmailAddress(emailAddress);
@@ -35,26 +35,20 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public boolean registerUser(String username, String emailAddress, String password, UserRole role) {
-        if (username == null) {
-            throw new IllegalArgumentException("Username must not be null");
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("username is required");
         }
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("Email address must not be null");
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("email address is required");
         }
         if (password == null) {
-            throw new IllegalArgumentException("Password must not be null");
+            throw new IllegalArgumentException("password cannot be null");
         }
         if (role == null) {
-            throw new IllegalArgumentException("Role must not be null");
+            throw new IllegalArgumentException("role cannot be null");
         }
 
-        if (username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username must not be empty");
-        }
-        if (emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be empty");
-        }
-
+        // check if email already taken no douplicate emails allowed
         if (repository.existsByEmailAddress(emailAddress)) {
             return false;
         }
@@ -67,8 +61,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public boolean deleteUserByEmail(String emailAddress) {
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("Email address must not be null");
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid email address");
         }
 
         if (!repository.existsByEmailAddress(emailAddress)) {
@@ -81,9 +75,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public void updateUserInformationByEmail(String emailAddress, String newEmailAddress, String newPassword,
-            UserRole newRole, String newUsername) {
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("Email address must not be null");
+            UserRole newRole, String newUsername) {// if the fields are null we dont change them we update whats not
+                                                   // null
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid email address");
         }
 
         Optional<UserAccount> userOpt = repository.findByEmailAddress(emailAddress);
@@ -95,7 +90,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         if (newUsername != null) {
             if (newUsername.trim().isEmpty()) {
-                throw new IllegalArgumentException("New username must not be empty");
+                throw new IllegalArgumentException("username cannot be empty");
             }
             user.setUsername(newUsername);
         }
@@ -117,8 +112,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public Optional<String> getUsernameByEmail(String emailAddress) {
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("Email address must not be null");
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid email address");
         }
 
         Optional<UserAccount> userOpt = repository.findByEmailAddress(emailAddress);
@@ -131,8 +126,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public Optional<UserRole> getUserRoleByEmail(String emailAddress) {
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("Email address must not be null");
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid email address");
         }
 
         Optional<UserAccount> userOpt = repository.findByEmailAddress(emailAddress);

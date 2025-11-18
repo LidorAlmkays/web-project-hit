@@ -77,7 +77,7 @@ public class FileChatRoomMessageRepository extends AbstractFileRepository<ChatRo
         String chatRoomIdStr = chatRoomId.toString();
         Object lock = getLock(chatRoomIdStr);
         synchronized (lock) {
-            String fileName = chatRoomIdStr;
+            String fileName = chatRoomIdStr; // filename is just the UUID string
             if (!fileExists(fileName)) {
                 return Optional.empty();
             }

@@ -11,18 +11,18 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
     public InventoryItemServiceImpl(InventoryItemRepository repository) {
         if (repository == null) {
-            throw new IllegalArgumentException("InventoryItemRepository must not be null");
+            throw new IllegalArgumentException("repository cannot be null");
         }
         this.repository = repository;
     }
 
     @Override
     public InventoryItem purchaseItem(String itemName, int quantity) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("item name is required");
         }
         if (quantity < 0) {
-            throw new IllegalArgumentException("Quantity must be non-negative");
+            throw new IllegalArgumentException("quantity cannot be negative");
         }
 
         Optional<InventoryItem> itemOpt = repository.findByName(itemName);
@@ -30,6 +30,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
             throw new IllegalArgumentException("Item not found: " + itemName);
         }
         InventoryItem item = itemOpt.get();
+        // check stock first - can't sell what we don't have
         if (quantity > item.getQuantityInStock()) {
             throw new IllegalArgumentException(
                     "Cannot purchase " + quantity + " items. Only " + item.getQuantityInStock()
@@ -47,11 +48,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
     @Override
     public InventoryItem restockItem(String itemName, int quantity) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("item name is required");
         }
         if (quantity < 0) {
-            throw new IllegalArgumentException("Quantity must be non-negative");
+            throw new IllegalArgumentException("quantity cannot be negative");
         }
 
         Optional<InventoryItem> itemOpt = repository.findByName(itemName);
@@ -66,17 +67,14 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
     @Override
     public InventoryItem createItem(String itemName, double unitPrice, int initialQuantity) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
-        }
-        if (itemName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Item name must not be empty");
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("item name is required");
         }
         if (unitPrice < 0) {
-            throw new IllegalArgumentException("Unit price must be non-negative");
+            throw new IllegalArgumentException("unit price cannot be negative");
         }
         if (initialQuantity < 0) {
-            throw new IllegalArgumentException("Initial quantity must be non-negative");
+            throw new IllegalArgumentException("initial quantity cannot be negative");
         }
 
         if (repository.existsByName(itemName)) {
@@ -90,11 +88,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
     @Override
     public InventoryItem updateItemPrice(String itemName, double newPrice) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("item name is required");
         }
         if (newPrice < 0) {
-            throw new IllegalArgumentException("New price must be non-negative");
+            throw new IllegalArgumentException("price cannot be negative");
         }
 
         Optional<InventoryItem> itemOpt = repository.findByName(itemName);
@@ -109,8 +107,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
     @Override
     public boolean deleteItem(String itemName) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("item name is required");
         }
 
         if (!repository.existsByName(itemName)) {

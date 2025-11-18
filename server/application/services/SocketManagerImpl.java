@@ -11,11 +11,12 @@ import java.util.Optional;
 
 public class SocketManagerImpl implements SocketManager {
     private final SocketMessageSender socketMessageSender;
+    // mapping emails to their sockets - "who's online" list
     private static final Map<String, Socket> emailToSocket = Collections.synchronizedMap(new HashMap<>());
 
     public SocketManagerImpl(SocketMessageSender socketMessageSender) {
         if (socketMessageSender == null) {
-            throw new IllegalArgumentException("SocketMessageSender must not be null");
+            throw new IllegalArgumentException("socketMessageSender cannot be null");
         }
         this.socketMessageSender = socketMessageSender;
     }
@@ -23,10 +24,10 @@ public class SocketManagerImpl implements SocketManager {
     @Override
     public void bindSocket(String emailAddress, Socket socket) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("email address is required");
         }
         if (socket == null) {
-            throw new IllegalArgumentException("Socket must not be null");
+            throw new IllegalArgumentException("socket cannot be null");
         }
 
         emailToSocket.put(emailAddress, socket);
@@ -36,7 +37,7 @@ public class SocketManagerImpl implements SocketManager {
     @Override
     public void unbindSocket(String emailAddress) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("Invalid email address");
         }
 
         Socket removedSocket = emailToSocket.remove(emailAddress);
@@ -48,7 +49,7 @@ public class SocketManagerImpl implements SocketManager {
     @Override
     public Optional<Socket> getSocketByEmail(String emailAddress) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("email address is required");
         }
 
         Socket socket = emailToSocket.get(emailAddress);
@@ -58,7 +59,7 @@ public class SocketManagerImpl implements SocketManager {
     @Override
     public boolean isEmailBound(String emailAddress) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("Invalid email address");
         }
 
         return emailToSocket.containsKey(emailAddress);
@@ -67,10 +68,10 @@ public class SocketManagerImpl implements SocketManager {
     @Override
     public void sendMessageToEmail(String emailAddress, String message) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("email address is required");
         }
         if (message == null) {
-            throw new IllegalArgumentException("Message must not be null");
+            throw new IllegalArgumentException("message cannot be null");
         }
 
         Optional<Socket> socketOpt = getSocketByEmail(emailAddress);
@@ -86,10 +87,10 @@ public class SocketManagerImpl implements SocketManager {
     @Override
     public void sendMessagesToEmail(String emailAddress, List<String> messages) {
         if (emailAddress == null || emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address must not be null or empty");
+            throw new IllegalArgumentException("email address is required");
         }
         if (messages == null) {
-            throw new IllegalArgumentException("Messages must not be null");
+            throw new IllegalArgumentException("messages cannot be null");
         }
 
         Optional<Socket> socketOpt = getSocketByEmail(emailAddress);

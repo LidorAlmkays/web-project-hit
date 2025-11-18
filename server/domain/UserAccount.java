@@ -8,16 +8,16 @@ public class UserAccount {
 
     public UserAccount(String username, String emailAddress, String password, UserRole role) {
         if (username == null) {
-            throw new IllegalArgumentException("username must not be null");
+            throw new IllegalArgumentException("username cannot be null");
         }
         if (emailAddress == null) {
-            throw new IllegalArgumentException("emailAddress must not be null");
+            throw new IllegalArgumentException("emailAddress cannot be null");
         }
         if (password == null) {
-            throw new IllegalArgumentException("password must not be null");
+            throw new IllegalArgumentException("password cannot be null");
         }
         if (role == null) {
-            throw new IllegalArgumentException("role must not be null");
+            throw new IllegalArgumentException("role cannot be null");
         }
         this.username = username;
         this.emailAddress = emailAddress;
@@ -43,31 +43,28 @@ public class UserAccount {
 
     public void setPassword(String password) {
         if (password == null) {
-            throw new IllegalArgumentException("password must not be null");
+            throw new IllegalArgumentException("password cannot be null");
         }
         this.password = password;
     }
 
     public void setRole(UserRole role) {
         if (role == null) {
-            throw new IllegalArgumentException("role must not be null");
+            throw new IllegalArgumentException("role cannot be null");
         }
         this.role = role;
     }
 
     public void setUsername(String username) {
         if (username == null) {
-            throw new IllegalArgumentException("username must not be null");
+            throw new IllegalArgumentException("username cannot be null");
         }
         this.username = username;
     }
 
     public void setEmailAddress(String emailAddress) {
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("emailAddress must not be null");
-        }
-        if (emailAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException("emailAddress must not be empty");
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("emailAddress cannot be empty");
         }
         this.emailAddress = emailAddress;
     }

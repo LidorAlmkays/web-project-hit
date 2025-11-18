@@ -15,10 +15,10 @@ public class ChatRoomMessageStore {
 
     public ChatRoomMessageStore(UUID chatRoomId, List<String> messageHistory) {
         if (chatRoomId == null) {
-            throw new IllegalArgumentException("chatRoomId must not be null");
+            throw new IllegalArgumentException("chatRoomId cannot be null");
         }
         if (messageHistory == null) {
-            throw new IllegalArgumentException("messageHistory must not be null");
+            throw new IllegalArgumentException("messageHistory cannot be null");
         }
         this.chatRoomId = chatRoomId;
         this.messageHistory = new ArrayList<>(messageHistory);
@@ -34,7 +34,7 @@ public class ChatRoomMessageStore {
 
     public void addMessage(String message) {
         if (message == null) {
-            throw new IllegalArgumentException("Message must not be null");
+            throw new IllegalArgumentException("message cannot be null");
         }
         messageHistory.add(message);
     }
