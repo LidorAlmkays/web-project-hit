@@ -1,11 +1,13 @@
 package server.infustructre;
 
-import server.infustructre.adaptors.ChatRoomRepository;
+import server.infustructre.adaptors.ChatRoomMessageRepository;
 import server.infustructre.adaptors.InventoryItemRepository;
+import server.infustructre.adaptors.SocketMessageSender;
 import server.infustructre.adaptors.UserAccountRepository;
-import server.infustructre.persistentTxtStorage.FileChatRoomRepository;
+import server.infustructre.persistentTxtStorage.FileChatRoomMessageRepository;
 import server.infustructre.persistentTxtStorage.FileInventoryItemRepository;
 import server.infustructre.persistentTxtStorage.FileUserAccountRepository;
+import server.infustructre.socket.SocketMessageSenderImpl;
 
 public class InfrastructureFactory {
 
@@ -17,7 +19,11 @@ public class InfrastructureFactory {
         return new FileInventoryItemRepository();
     }
 
-    public ChatRoomRepository createChatRoomRepository() {
-        return new FileChatRoomRepository();
+    public ChatRoomMessageRepository createChatRoomMessageRepository() {
+        return new FileChatRoomMessageRepository();
+    }
+
+    public SocketMessageSender createSocketMessageSender() {
+        return new SocketMessageSenderImpl();
     }
 }

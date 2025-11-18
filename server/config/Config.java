@@ -5,7 +5,8 @@ public class Config {
     public static final String USER_ACCOUNTS_DIR = DATA_DIR + "/user_accounts";
     public static final String CHAT_ROOMS_DIR = DATA_DIR + "/chat_rooms";
     public static final String INVENTORY_ITEMS_DIR = DATA_DIR + "/inventory_items";
-    public static final int PORT = 8832;
+    public static final int PORT = 7000;
+    public static final String HOST = "localhost";
 
     private Config() {
     }

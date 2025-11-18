@@ -46,14 +46,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
     }
 
     @Override
-    public Optional<InventoryItem> getItemByName(String itemName) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
-        }
-        return repository.findByName(itemName);
-    }
-
-    @Override
     public InventoryItem restockItem(String itemName, int quantity) {
         if (itemName == null) {
             throw new IllegalArgumentException("Item name must not be null");
@@ -116,45 +108,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
     }
 
     @Override
-    public boolean checkAvailability(String itemName, int quantity) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
-        }
-        if (quantity < 0) {
-            throw new IllegalArgumentException("Quantity must be non-negative");
-        }
-        return repository.checkAvailability(itemName, quantity);
-    }
-
-    @Override
-    public int getStockQuantity(String itemName) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
-        }
-
-        Optional<InventoryItem> itemOpt = repository.findByName(itemName);
-        if (itemOpt.isEmpty()) {
-            throw new IllegalArgumentException("Item not found: " + itemName);
-        }
-        InventoryItem item = itemOpt.get();
-        return item.getQuantityInStock();
-    }
-
-    @Override
-    public int getTotalPurchasedCount(String itemName) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
-        }
-
-        Optional<InventoryItem> itemOpt = repository.findByName(itemName);
-        if (itemOpt.isEmpty()) {
-            throw new IllegalArgumentException("Item not found: " + itemName);
-        }
-        InventoryItem item = itemOpt.get();
-        return item.getTotalPurchasedCount();
-    }
-
-    @Override
     public boolean deleteItem(String itemName) {
         if (itemName == null) {
             throw new IllegalArgumentException("Item name must not be null");
@@ -168,11 +121,4 @@ public class InventoryItemServiceImpl implements InventoryItemService {
         return true;
     }
 
-    @Override
-    public boolean itemExists(String itemName) {
-        if (itemName == null) {
-            throw new IllegalArgumentException("Item name must not be null");
-        }
-        return repository.existsByName(itemName);
-    }
 }

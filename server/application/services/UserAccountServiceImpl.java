@@ -17,9 +17,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    public Optional<String> login(String emailAddress, String password) {
-        if (emailAddress == null) {
-            throw new IllegalArgumentException("Email address must not be null");
+    public boolean login(String emailAddress, String password) {
+        if (emailAddress == null || emailAddress.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email address must not be null or empty");
         }
         if (password == null) {
             throw new IllegalArgumentException("Password must not be null");
@@ -27,13 +27,14 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         Optional<UserAccount> user = repository.findByEmailAddress(emailAddress);
         if (user.isPresent() && user.get().getPassword().equals(password)) {
-            return Optional.of(user.get().getEmailAddress());
+            System.out.println("User logged in: " + emailAddress);
+            return true;
         }
-        return Optional.empty();
+        return false;
     }
 
     @Override
-    public void registerUser(String username, String emailAddress, String password, UserRole role) {
+    public boolean registerUser(String username, String emailAddress, String password, UserRole role) {
         if (username == null) {
             throw new IllegalArgumentException("Username must not be null");
         }
@@ -55,11 +56,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
 
         if (repository.existsByEmailAddress(emailAddress)) {
-            throw new IllegalArgumentException("Email address already exists: " + emailAddress);
+            return false;
         }
 
         UserAccount user = new UserAccount(username, emailAddress, password, role);
         repository.save(user);
+        System.out.println("User registered: " + emailAddress);
+        return true;
     }
 
     @Override

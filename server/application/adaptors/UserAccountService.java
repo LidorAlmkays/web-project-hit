@@ -4,9 +4,9 @@ import server.domain.UserRole;
 import java.util.Optional;
 
 public interface UserAccountService {
-    Optional<String> login(String emailAddress, String password);
+    boolean login(String emailAddress, String password);
 
-    void registerUser(String username, String emailAddress, String password, UserRole role);
+    boolean registerUser(String username, String emailAddress, String password, UserRole role);
 
     boolean deleteUserByEmail(String emailAddress);
 
@@ -16,5 +16,4 @@ public interface UserAccountService {
     Optional<String> getUsernameByEmail(String emailAddress);
 
     Optional<UserRole> getUserRoleByEmail(String emailAddress);
-
 }

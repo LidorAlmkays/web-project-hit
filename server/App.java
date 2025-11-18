@@ -17,12 +17,15 @@ public class App {
         System.out.println("Starting application");
         var userAccountRepository = this.infrastructureFactory.createUserAccountRepository();
         var inventoryItemRepository = this.infrastructureFactory.createInventoryItemRepository();
-        var chatRoomRepository = this.infrastructureFactory.createChatRoomRepository();
+        var chatRoomMessageRepository = this.infrastructureFactory.createChatRoomMessageRepository();
+        var socketMessageSender = this.infrastructureFactory.createSocketMessageSender();
 
         System.out.println("Creating services");
+        var socketManager = this.applicationFactory.createSocketManager(socketMessageSender);
         var userAccountService = this.applicationFactory.createUserAccountService(userAccountRepository);
         var inventoryItemService = this.applicationFactory.createInventoryItemService(inventoryItemRepository);
-        var chatRoomService = this.applicationFactory.createChatRoomService(chatRoomRepository, userAccountService);
+        var chatRoomService = this.applicationFactory.createChatRoomService(chatRoomMessageRepository,
+                userAccountService, socketManager);
 
         System.out.println("Creating socket server");
         var socketServer = new SocketServer(chatRoomService, inventoryItemService, userAccountService);
