@@ -2,20 +2,16 @@ package server.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import server.config.Config;
 
 public class Logger {
     private static final Logger instance = new Logger();
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final Object lock = new Object();
 
     private Logger() {
@@ -38,27 +34,29 @@ public class Logger {
     }
 
     private void writeLog(String level, String message) {
-        if (message == null) {
-            message = "null";
-        }
-
         synchronized (lock) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(Config.getLogFilePath(), true))) {
-                String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
-                String logEntry = String.format("[%s] [%s] %s", timestamp, level, message);
+            File logFile = new File(Config.getLogFilePath());
+            PrintWriter writer = null;
+            try {
+                writer = new PrintWriter(logFile);
+                String logEntry = "[" + level + "] " + message;
                 writer.println(logEntry);
                 writer.flush();
             } catch (IOException e) {
                 System.err.println("Failed to write to log file: " + e.getMessage());
+            } finally {
+                if (writer != null) {
+                    writer.close();
+                }
             }
         }
     }
 
-    public static void logInfo(String message) {
+    public static void info(String message) {
         getInstance().writeLog("INFO", message);
     }
 
-    public static void logError(String message) {
+    public static void error(String message) {
         getInstance().writeLog("ERROR", message);
     }
 

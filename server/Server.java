@@ -6,4 +6,3 @@ public class Server {
         application.start();
     }
 }
-
