@@ -14,7 +14,7 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     private final Map<UUID, Object> locks = Collections.synchronizedMap(new HashMap<>());
     private final Object creationMutex = new Object();
     private final Map<UUID, Customer> cache = Collections.synchronizedMap(new HashMap<>());
-    // Index: email -> customerId for fast lookup
+    // email -> customerId
     private final Map<String, UUID> emailIndex = Collections.synchronizedMap(new HashMap<>());
 
     public FileCustomerRepository() {

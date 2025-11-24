@@ -7,8 +7,8 @@ public class Branch {
     private String branchName;
     private String address;
     private String phoneNumber;
-    private UUID managerId; // Optional - for future Employee reference
-    private boolean isActive;
+    private int totalSold;
+    private double totalMoneyEarned;
 
     public Branch(String branchName, String address, String phoneNumber) {
         if (branchName == null || branchName.trim().isEmpty()) {
@@ -24,12 +24,12 @@ public class Branch {
         this.branchName = branchName;
         this.address = address;
         this.phoneNumber = phoneNumber;
-        this.managerId = null;
-        this.isActive = true;
+        this.totalSold = 0;
+        this.totalMoneyEarned = 0.0;
     }
 
-    public Branch(UUID branchId, String branchName, String address, String phoneNumber, UUID managerId,
-            boolean isActive) {
+    public Branch(UUID branchId, String branchName, String address, String phoneNumber, int totalSold,
+            double totalMoneyEarned) {
         if (branchId == null) {
             throw new IllegalArgumentException("branchId must not be null");
         }
@@ -42,12 +42,18 @@ public class Branch {
         if (phoneNumber == null) {
             throw new IllegalArgumentException("phoneNumber must not be null");
         }
+        if (totalSold < 0) {
+            throw new IllegalArgumentException("totalSold must be non-negative");
+        }
+        if (totalMoneyEarned < 0) {
+            throw new IllegalArgumentException("totalMoneyEarned must be non-negative");
+        }
         this.branchId = branchId;
         this.branchName = branchName;
         this.address = address;
         this.phoneNumber = phoneNumber;
-        this.managerId = managerId;
-        this.isActive = isActive;
+        this.totalSold = totalSold;
+        this.totalMoneyEarned = totalMoneyEarned;
     }
 
     public UUID getBranchId() {
@@ -87,51 +93,24 @@ public class Branch {
         this.phoneNumber = phoneNumber;
     }
 
-    public UUID getManagerId() {
-        return managerId;
+    public int getTotalSold() {
+        return totalSold;
     }
 
-    public void setManagerId(UUID managerId) {
-        this.managerId = managerId;
+    public double getTotalMoneyEarned() {
+        return totalMoneyEarned;
     }
 
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public String encode() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(branchId.toString()).append("\n");
-        sb.append(branchName).append("\n");
-        sb.append(address).append("\n");
-        sb.append(phoneNumber).append("\n");
-        sb.append(managerId != null ? managerId.toString() : "null").append("\n");
-        sb.append(isActive);
-        return sb.toString();
-    }
-
-    public static Branch decodeFromString(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            throw new IllegalArgumentException("Content must not be null or empty");
+    public void addSale(int quantity, double amount) {
+        if (quantity < 0) {
+            throw new IllegalArgumentException(
+                    "quantity needs to be bigger then 0, whats the point of selling 0 items????");
         }
-
-        String[] lines = content.split("\n");
-        if (lines.length < 6) {
-            throw new IllegalArgumentException("Invalid branch data format");
+        if (amount < 0) {
+            throw new IllegalArgumentException("amount cant be below 0, Im not going to give you free money");
         }
-
-        UUID branchId = UUID.fromString(lines[0].trim());
-        String branchName = lines[1].trim();
-        String address = lines[2].trim();
-        String phoneNumber = lines[3].trim();
-        UUID managerId = lines[4].trim().equals("null") ? null : UUID.fromString(lines[4].trim());
-        boolean isActive = Boolean.parseBoolean(lines[5].trim());
-
-        return new Branch(branchId, branchName, address, phoneNumber, managerId, isActive);
+        this.totalSold += quantity;
+        this.totalMoneyEarned += amount;
     }
 
     public Branch createCopy() {
@@ -140,8 +119,8 @@ public class Branch {
                 this.branchName,
                 this.address,
                 this.phoneNumber,
-                this.managerId,
-                this.isActive);
+                this.totalSold,
+                this.totalMoneyEarned);
     }
 
     @Override
@@ -151,9 +130,8 @@ public class Branch {
                 ", branchName='" + branchName + '\'' +
                 ", address='" + address + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
-                ", managerId=" + managerId +
-                ", isActive=" + isActive +
+                ", totalSold=" + totalSold +
+                ", totalMoneyEarned=" + totalMoneyEarned +
                 '}';
     }
 }
-

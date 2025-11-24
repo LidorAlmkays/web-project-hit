@@ -13,11 +13,9 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
         implements BranchRepository {
     private final Map<UUID, Object> locks = Collections.synchronizedMap(new HashMap<>());
     private final Object creationMutex = new Object();
-    private final Map<UUID, Branch> cache = Collections.synchronizedMap(new HashMap<>());
 
     public FileBranchRepository() {
         super(Config.getBranchesDir());
-        loadCache();
     }
 
     private Object getLock(UUID branchId) {
@@ -40,12 +38,35 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
     @Override
     protected String encode(Branch entity) {
-        return entity.encode();
+        StringBuilder sb = new StringBuilder();
+        sb.append(entity.getBranchId().toString()).append("\n");
+        sb.append(entity.getBranchName()).append("\n");
+        sb.append(entity.getAddress()).append("\n");
+        sb.append(entity.getPhoneNumber()).append("\n");
+        sb.append(entity.getTotalSold()).append("\n");
+        sb.append(entity.getTotalMoneyEarned());
+        return sb.toString();
     }
 
     @Override
     protected Branch decodeFromString(String content) {
-        return Branch.decodeFromString(content);
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Content must not be null or empty");
+        }
+
+        String[] lines = content.split("\n");
+        if (lines.length < 6) {
+            throw new IllegalArgumentException("Invalid branch data format: expected 6 lines, but got " + lines.length);
+        }
+
+        UUID branchId = UUID.fromString(lines[0].trim());
+        String branchName = lines[1].trim();
+        String address = lines[2].trim();
+        String phoneNumber = lines[3].trim();
+        int totalSold = Integer.parseInt(lines[4].trim());
+        double totalMoneyEarned = Double.parseDouble(lines[5].trim());
+
+        return new Branch(branchId, branchName, address, phoneNumber, totalSold, totalMoneyEarned);
     }
 
     @Override
@@ -56,19 +77,13 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
         UUID branchId = branch.getBranchId();
         Object lock = getLock(branchId);
+        String fileName = getFileName(branchId);
 
         synchronized (lock) {
-            if (cache.containsKey(branchId)) {
-                throw new IllegalArgumentException("Branch already exists: " + branchId);
-            }
-
-            String fileName = getFileName(branchId);
             if (fileExists(fileName)) {
                 throw new IllegalArgumentException("Branch file already exists: " + fileName);
             }
-
             writeToFile(branch, fileName);
-            cache.put(branchId, branch.createCopy());
         }
     }
 
@@ -80,15 +95,13 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
         UUID branchId = branch.getBranchId();
         Object lock = getLock(branchId);
+        String fileName = getFileName(branchId);
 
         synchronized (lock) {
-            Branch existingBranch = cache.get(branchId);
-            if (existingBranch == null) {
+            if (!fileExists(fileName)) {
                 throw new IllegalArgumentException("Branch does not exist: " + branchId);
             }
-
-            writeToFile(branch, getFileName(branchId));
-            cache.put(branchId, branch.createCopy());
+            writeToFile(branch, fileName);
         }
     }
 
@@ -99,19 +112,13 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
         }
 
         Object lock = getLock(branchId);
+        String fileName = getFileName(branchId);
 
         synchronized (lock) {
-            if (!cache.containsKey(branchId)) {
+            if (!fileExists(fileName)) {
                 throw new IllegalArgumentException("Branch does not exist: " + branchId);
             }
-
-            String fileName = getFileName(branchId);
-            if (!fileExists(fileName)) {
-                throw new IllegalArgumentException("Branch file does not exist: " + fileName);
-            }
-
             deleteFile(fileName);
-            cache.remove(branchId);
         }
     }
 
@@ -122,22 +129,10 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
         }
 
         Object lock = getLock(branchId);
-        synchronized (lock) {
-            Branch branch = cache.get(branchId);
-            if (branch == null) {
-                return Optional.empty();
-            }
-            return Optional.of(branch.createCopy());
-        }
-    }
+        String fileName = getFileName(branchId);
 
-    private void loadCache() {
-        java.util.List<Branch> branches = readAllFromDirectory();
-        synchronized (cache) {
-            for (Branch branch : branches) {
-                cache.put(branch.getBranchId(), branch);
-            }
+        synchronized (lock) {
+            return Optional.ofNullable(readFromFile(fileName));
         }
     }
 }
-

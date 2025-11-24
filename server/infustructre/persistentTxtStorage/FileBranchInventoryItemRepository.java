@@ -15,7 +15,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     private final Map<UUID, Object> locks = Collections.synchronizedMap(new HashMap<>());
     private final Object creationMutex = new Object();
     private final Map<UUID, BranchInventoryItem> cache = Collections.synchronizedMap(new HashMap<>());
-    // Index: branchId -> List of itemIds for that branch
+    // branchId -> List of itemIds
     private final Map<UUID, List<UUID>> branchIndex = Collections.synchronizedMap(new HashMap<>());
 
     public FileBranchInventoryItemRepository() {
@@ -50,6 +50,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
         sb.append(entity.getCategory()).append("\n");
         sb.append(entity.getUnitPrice()).append("\n");
         sb.append(entity.getQuantityInStock()).append("\n");
+        sb.append(entity.getTotalBought()).append("\n");
         sb.append(entity.getTotalSold()).append("\n");
         sb.append(entity.getTotalRevenue()).append("\n");
         return sb.toString();
@@ -59,7 +60,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     protected BranchInventoryItem decodeFromString(String content) {
         String[] lines = content.split("\n");
 
-        if (lines.length < 8) {
+        if (lines.length < 9) {
             throw new RuntimeException("Invalid branch inventory item format: insufficient data");
         }
 
@@ -69,11 +70,12 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
         String category = lines[3].trim();
         double unitPrice = Double.parseDouble(lines[4].trim());
         int quantityInStock = Integer.parseInt(lines[5].trim());
-        int totalSold = Integer.parseInt(lines[6].trim());
-        double totalRevenue = Double.parseDouble(lines[7].trim());
+        int totalBought = Integer.parseInt(lines[6].trim());
+        int totalSold = Integer.parseInt(lines[7].trim());
+        double totalRevenue = Double.parseDouble(lines[8].trim());
 
         return new BranchInventoryItem(itemId, branchId, productName, category, unitPrice,
-                quantityInStock, totalSold, totalRevenue);
+                quantityInStock, totalBought, totalSold, totalRevenue);
     }
 
     @Override
