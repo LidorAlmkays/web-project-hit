@@ -5,13 +5,12 @@ import java.util.UUID;
 public class Customer {
     private final UUID customerId;// index
     private String fullName;
-    private String idNumber;
+    private String idNumber;// ת.ז
     private String phone;
     private String email;
     private CustomerType customerType;
     private int totalPurchases;
     private double totalSpent;
-    private String registrationDate;
 
     public Customer(String fullName, String idNumber, String phone, String email, CustomerType customerType) {
         if (fullName == null || fullName.trim().isEmpty()) {
@@ -37,12 +36,11 @@ public class Customer {
         this.customerType = customerType;
         this.totalPurchases = 0;
         this.totalSpent = 0.0;
-        this.registrationDate = String.valueOf(System.currentTimeMillis());
     }
 
     public Customer(UUID customerId, String fullName, String idNumber, String phone, String email,
             CustomerType customerType,
-            int totalPurchases, double totalSpent, String registrationDate) {
+            int totalPurchases, double totalSpent) {
         if (customerId == null) {
             throw new IllegalArgumentException("customerId must not be null");
         }
@@ -67,9 +65,6 @@ public class Customer {
         if (totalSpent < 0) {
             throw new IllegalArgumentException("totalSpent must be non-negative");
         }
-        if (registrationDate == null) {
-            throw new IllegalArgumentException("registrationDate must not be null");
-        }
         this.customerId = customerId;
         this.fullName = fullName;
         this.idNumber = idNumber;
@@ -78,8 +73,9 @@ public class Customer {
         this.customerType = customerType;
         this.totalPurchases = totalPurchases;
         this.totalSpent = totalSpent;
-        this.registrationDate = registrationDate;
     }
+
+    // getters
 
     public UUID getCustomerId() {
         return customerId;
@@ -113,9 +109,7 @@ public class Customer {
         return totalSpent;
     }
 
-    public String getRegistrationDate() {
-        return registrationDate;
-    }
+    // setters
 
     public void setFullName(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) {
@@ -172,8 +166,7 @@ public class Customer {
                 this.email,
                 this.customerType,
                 this.totalPurchases,
-                this.totalSpent,
-                this.registrationDate);
+                this.totalSpent);
     }
 
     @Override

@@ -56,6 +56,8 @@ public class Branch {
         this.totalMoneyEarned = totalMoneyEarned;
     }
 
+    // getters
+
     public UUID getBranchId() {
         return branchId;
     }
@@ -64,15 +66,29 @@ public class Branch {
         return branchName;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public int getTotalSold() {
+        return totalSold;
+    }
+
+    public double getTotalMoneyEarned() {
+        return totalMoneyEarned;
+    }
+
+    // setters
+
     public void setBranchName(String branchName) {
         if (branchName == null || branchName.trim().isEmpty()) {
             throw new IllegalArgumentException("branchName must not be null or empty");
         }
         this.branchName = branchName;
-    }
-
-    public String getAddress() {
-        return address;
     }
 
     public void setAddress(String address) {
@@ -82,23 +98,11 @@ public class Branch {
         this.address = address;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
     public void setPhoneNumber(String phoneNumber) {
         if (phoneNumber == null) {
             throw new IllegalArgumentException("phoneNumber must not be null");
         }
         this.phoneNumber = phoneNumber;
-    }
-
-    public int getTotalSold() {
-        return totalSold;
-    }
-
-    public double getTotalMoneyEarned() {
-        return totalMoneyEarned;
     }
 
     public void addSale(int quantity, double amount) {

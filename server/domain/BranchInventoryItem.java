@@ -77,6 +77,8 @@ public class BranchInventoryItem {
         this.totalRevenue = totalRevenue;
     }
 
+    // getters
+
     public UUID getItemId() {
         return itemId;
     }
@@ -112,6 +114,8 @@ public class BranchInventoryItem {
     public double getTotalRevenue() {
         return totalRevenue;
     }
+
+    // setters
 
     public void setProductName(String productName) {
         if (productName == null || productName.trim().isEmpty()) {

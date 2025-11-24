@@ -22,19 +22,19 @@ public abstract class AbstractFileRepository<T> {
         if (!rootDirectory.exists()) {
             boolean created = rootDirectory.mkdirs();
             if (!created) {
-                throw new RuntimeException("Failed to create data directory: " + rootPath);
+                throw new RuntimeException("cant create data directory: " + rootPath);
             }
         } else if (!rootDirectory.isDirectory()) {
-            throw new RuntimeException("Path exists but is not a directory: " + rootPath);
+            throw new RuntimeException("path exists but not a directory: " + rootPath);
         }
     }
 
     protected void writeToFile(T entity, String fileName) {
         if (entity == null) {
-            throw new IllegalArgumentException("Entity must not be null");
+            throw new IllegalArgumentException("cant write null entity");
         }
         if (fileName == null || fileName.trim().isEmpty()) {
-            throw new IllegalArgumentException("File name must not be null or empty");
+            throw new IllegalArgumentException("cant write empty file name");
         }
 
         ensureDirectoryExists();
@@ -47,7 +47,7 @@ public abstract class AbstractFileRepository<T> {
             String content = encode(entity);
             writer.print(content);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write to file: " + file.getAbsolutePath(), e);
+            throw new RuntimeException("cant write to file get error ", e);
         } finally {
             if (writer != null) {
                 writer.close();
@@ -67,26 +67,26 @@ public abstract class AbstractFileRepository<T> {
 
     protected void deleteFile(String fileName) {
         if (fileName == null || fileName.trim().isEmpty()) {
-            throw new IllegalArgumentException("File name must not be null or empty");
+            throw new IllegalArgumentException("cant delete name cant be empty");
         }
 
         File file = getFilePath(fileName);
         if (file.exists()) {
             boolean deleted = file.delete();
             if (!deleted) {
-                throw new RuntimeException("Failed to delete file: " + file.getAbsolutePath());
+                throw new RuntimeException("failed to delete file: " + file.getAbsolutePath());
             }
         }
     }
 
     protected T readFromFile(String fileName) {
         if (fileName == null || fileName.trim().isEmpty()) {
-            throw new IllegalArgumentException("File name must not be null or empty");
+            throw new IllegalArgumentException("cant read empty file name");
         }
 
         File file = getFilePath(fileName);
         if (!file.exists()) {
-            throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
+            throw new RuntimeException("cant read file doesnt exist: " + file.getAbsolutePath());
         }
 
         Scanner scanner = null;
@@ -106,7 +106,7 @@ public abstract class AbstractFileRepository<T> {
             String fileContent = content.toString();
             return decodeFromString(fileContent);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("Failed to read from file: " + file.getAbsolutePath(), e);
+            throw new RuntimeException("cant read file error " + file.getAbsolutePath(), e);
         } finally {
             if (scanner != null) {
                 scanner.close();
@@ -133,19 +133,8 @@ public abstract class AbstractFileRepository<T> {
                     T entity = readFromFile(baseFileName);
                     entities.add(entity);
                 } catch (RuntimeException e) {
-                    System.err.println("Failed to read file " + file.getName() + ": " + e.getMessage());// i dont want
-                                                                                                        // to stop the
-                                                                                                        // program if
-                                                                                                        // one of the
-                                                                                                        // files is not
-                                                                                                        // read
-                                                                                                        // currectly so
-                                                                                                        // i print for
-                                                                                                        // me to debug
-                                                                                                        // as the
-                                                                                                        // project
-                                                                                                        // mantainer to
-                                                                                                        // fix.
+                    throw new RuntimeException(
+                            "failed to read file '" + file.getName() + "', error: " + e.getMessage());
                 }
             }
         }

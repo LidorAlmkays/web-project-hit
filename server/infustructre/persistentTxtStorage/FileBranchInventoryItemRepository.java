@@ -81,7 +81,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     @Override
     public void save(BranchInventoryItem item) {
         if (item == null) {
-            throw new IllegalArgumentException("item must not be null");
+            throw new IllegalArgumentException("cant save null item");
         }
         UUID itemId = item.getItemId();
         UUID branchId = item.getBranchId();
@@ -89,7 +89,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
         synchronized (lock) {
             String fileName = getFileName(itemId);
             if (fileExists(fileName)) {
-                throw new IllegalArgumentException("Item with ID already exists: " + itemId);
+                throw new IllegalArgumentException("cant save id already exists: " + itemId);
             }
             writeToFile(item, fileName);
             cache.put(itemId, item);
@@ -100,13 +100,13 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     @Override
     public void delete(UUID itemId) {
         if (itemId == null) {
-            throw new IllegalArgumentException("itemId must not be null");
+            throw new IllegalArgumentException("cant delete null item id");
         }
         Object lock = getLock(itemId);
         synchronized (lock) {
             BranchInventoryItem item = cache.get(itemId);
             if (item == null) {
-                throw new IllegalArgumentException("Item does not exist: " + itemId);
+                throw new IllegalArgumentException("cant delete item not found: " + itemId);
             }
             UUID branchId = item.getBranchId();
             String fileName = getFileName(itemId);
@@ -138,7 +138,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     @Override
     public Optional<BranchInventoryItem> findById(UUID itemId) {
         if (itemId == null) {
-            throw new IllegalArgumentException("itemId must not be null");
+            throw new IllegalArgumentException("cant find null item id");
         }
         Object lock = getLock(itemId);
         synchronized (lock) {
@@ -153,7 +153,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     @Override
     public List<BranchInventoryItem> findByBranchId(UUID branchId) {
         if (branchId == null) {
-            throw new IllegalArgumentException("branchId must not be null");
+            throw new IllegalArgumentException("cant find items, branch id cant be null");
         }
         List<BranchInventoryItem> items = new java.util.ArrayList<>();
 
@@ -178,17 +178,18 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     @Override
     public void update(BranchInventoryItem item) {
         if (item == null) {
-            throw new IllegalArgumentException("item must not be null");
+            throw new IllegalArgumentException("cant update null item");
         }
         UUID itemId = item.getItemId();
         Object lock = getLock(itemId);
         synchronized (lock) {
             BranchInventoryItem existingItem = cache.get(itemId);
             if (existingItem == null) {
-                throw new IllegalArgumentException("Item does not exist: " + itemId);
+                throw new IllegalArgumentException("cant update item not found");
             }
             if (!existingItem.getBranchId().equals(item.getBranchId())) {
-                throw new IllegalArgumentException("Cannot change branchId for existing item: " + itemId);
+                throw new IllegalArgumentException(
+                        "cant update, change branchId for existing item is not allowed, item id: " + itemId);
             }
 
             String fileName = getFileName(itemId);

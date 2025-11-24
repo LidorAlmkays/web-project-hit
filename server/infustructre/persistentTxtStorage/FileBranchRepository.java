@@ -50,13 +50,10 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
     @Override
     protected Branch decodeFromString(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            throw new IllegalArgumentException("Content must not be null or empty");
-        }
-
         String[] lines = content.split("\n");
+
         if (lines.length < 6) {
-            throw new IllegalArgumentException("Invalid branch data format: expected 6 lines, but got " + lines.length);
+            throw new IllegalArgumentException("Invalid branch data format: insufficient data");
         }
 
         UUID branchId = UUID.fromString(lines[0].trim());
@@ -72,7 +69,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
     @Override
     public void save(Branch branch) {
         if (branch == null) {
-            throw new IllegalArgumentException("Branch must not be null");
+            throw new IllegalArgumentException("cant save null id for branch");
         }
 
         UUID branchId = branch.getBranchId();
@@ -81,7 +78,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
         synchronized (lock) {
             if (fileExists(fileName)) {
-                throw new IllegalArgumentException("Branch file already exists: " + fileName);
+                throw new IllegalArgumentException("cant save branch already exists: " + branchId);
             }
             writeToFile(branch, fileName);
         }
@@ -90,7 +87,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
     @Override
     public void update(Branch branch) {
         if (branch == null) {
-            throw new IllegalArgumentException("Branch must not be null");
+            throw new IllegalArgumentException("cant update branch id cant be null");
         }
 
         UUID branchId = branch.getBranchId();
@@ -99,7 +96,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
         synchronized (lock) {
             if (!fileExists(fileName)) {
-                throw new IllegalArgumentException("Branch does not exist: " + branchId);
+                throw new IllegalArgumentException("cant update branch not found: " + branchId);
             }
             writeToFile(branch, fileName);
         }
@@ -108,7 +105,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
     @Override
     public void delete(UUID branchId) {
         if (branchId == null) {
-            throw new IllegalArgumentException("BranchId must not be null");
+            throw new IllegalArgumentException("cant delete null branch id");
         }
 
         Object lock = getLock(branchId);
@@ -116,7 +113,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
 
         synchronized (lock) {
             if (!fileExists(fileName)) {
-                throw new IllegalArgumentException("Branch does not exist: " + branchId);
+                throw new IllegalArgumentException("cant delete didnt find branch: " + branchId);
             }
             deleteFile(fileName);
         }
@@ -125,7 +122,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
     @Override
     public Optional<Branch> findById(UUID branchId) {
         if (branchId == null) {
-            throw new IllegalArgumentException("BranchId must not be null");
+            throw new IllegalArgumentException("cant find branch id cant be null");
         }
 
         Object lock = getLock(branchId);

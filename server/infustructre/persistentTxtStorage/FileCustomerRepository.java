@@ -51,7 +51,6 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
         sb.append(entity.getCustomerType().name()).append("\n");
         sb.append(entity.getTotalPurchases()).append("\n");
         sb.append(entity.getTotalSpent()).append("\n");
-        sb.append(entity.getRegistrationDate()).append("\n");
         return sb.toString();
     }
 
@@ -59,7 +58,7 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     protected Customer decodeFromString(String content) {
         String[] lines = content.split("\n");
 
-        if (lines.length < 9) {
+        if (lines.length < 8) {
             throw new RuntimeException("Invalid customer format: insufficient data");
         }
 
@@ -71,16 +70,15 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
         server.domain.customer.CustomerType customerType = server.domain.customer.CustomerType.valueOf(lines[5].trim());
         int totalPurchases = Integer.parseInt(lines[6].trim());
         double totalSpent = Double.parseDouble(lines[7].trim());
-        String registrationDate = lines[8].trim();
 
         return new Customer(customerId, fullName, idNumber, phone, email, customerType,
-                totalPurchases, totalSpent, registrationDate);
+                totalPurchases, totalSpent);
     }
 
     @Override
     public void save(Customer customer) {
         if (customer == null) {
-            throw new IllegalArgumentException("customer must not be null");
+            throw new IllegalArgumentException("cant save, consumer is null");
         }
         UUID customerId = customer.getCustomerId();
         String email = customer.getEmail();
@@ -88,10 +86,10 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
         synchronized (lock) {
             String fileName = getFileName(customerId);
             if (fileExists(fileName)) {
-                throw new IllegalArgumentException("Customer with ID already exists: " + customerId);
+                throw new IllegalArgumentException("cant save customer, id already exists: " + customerId);
             }
             if (emailIndex.containsKey(email.toLowerCase())) {
-                throw new IllegalArgumentException("Customer with email already exists: " + email);
+                throw new IllegalArgumentException("cant save consumer, email already exists: " + email);
             }
             writeToFile(customer, fileName);
             cache.put(customerId, customer);
@@ -102,7 +100,7 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     @Override
     public void update(Customer customer) {
         if (customer == null) {
-            throw new IllegalArgumentException("customer must not be null");
+            throw new IllegalArgumentException("cant update, consumer is null");
         }
         UUID customerId = customer.getCustomerId();
         String newEmail = customer.getEmail();
@@ -110,14 +108,14 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
         synchronized (lock) {
             Customer existingCustomer = cache.get(customerId);
             if (existingCustomer == null) {
-                throw new IllegalArgumentException("Customer does not exist: " + customerId);
+                throw new IllegalArgumentException("cant update, consumer not found, id: " + customerId);
             }
             String oldEmail = existingCustomer.getEmail();
 
             // Check if email changed and new email already exists
             if (!oldEmail.equalsIgnoreCase(newEmail)) {
                 if (emailIndex.containsKey(newEmail.toLowerCase())) {
-                    throw new IllegalArgumentException("Customer with email already exists: " + newEmail);
+                    throw new IllegalArgumentException("cant update, new email already exists: " + newEmail);
                 }
                 emailIndex.remove(oldEmail.toLowerCase());
                 emailIndex.put(newEmail.toLowerCase(), customerId);
@@ -132,13 +130,13 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     @Override
     public void delete(UUID customerId) {
         if (customerId == null) {
-            throw new IllegalArgumentException("customerId must not be null");
+            throw new IllegalArgumentException("cant delete, customer id cant be null");
         }
         Object lock = getLock(customerId);
         synchronized (lock) {
             Customer customer = cache.get(customerId);
             if (customer == null) {
-                throw new IllegalArgumentException("Customer does not exist: " + customerId);
+                throw new IllegalArgumentException("cant delete, customer not found, id: " + customerId);
             }
             String email = customer.getEmail();
             String fileName = getFileName(customerId);
@@ -151,7 +149,7 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     @Override
     public Optional<Customer> findById(UUID customerId) {
         if (customerId == null) {
-            throw new IllegalArgumentException("customerId must not be null");
+            throw new IllegalArgumentException("cant find, customer id cant be null");
         }
         Object lock = getLock(customerId);
         synchronized (lock) {
@@ -166,7 +164,7 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     @Override
     public Optional<Customer> findByEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("email must not be null or empty");
+            throw new IllegalArgumentException("cant find, consumer email cant be null");
         }
         String emailLower = email.toLowerCase();
         UUID customerId;
