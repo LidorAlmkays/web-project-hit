@@ -4,26 +4,26 @@ import server.application.adaptors.AuthService;
 import server.application.adaptors.EmployeeService;
 import server.application.services.AuthServiceImpl;
 import server.application.services.EmployeeServiceImpl;
-import server.infustructre.InfrastructureFactory;
+import server.infustructre.adaptors.BranchRepository;
+import server.infustructre.adaptors.EmployeeRepository;
+import server.infustructre.adaptors.LogRepository;
 
 public class ApplicationFactory {
 
-    private final InfrastructureFactory infraFactory;
-
     public ApplicationFactory() {
-        this.infraFactory = new InfrastructureFactory();
     }
 
-    public AuthService createAuthService() {
+    public AuthService createAuthService(EmployeeRepository employeeRepository, LogRepository logRepository) {
         return new AuthServiceImpl(
-                infraFactory.createEmployeeRepository(),
-                infraFactory.createLogRepository());
+                employeeRepository,
+                logRepository);
     }
 
-    public EmployeeService createEmployeeService() {
+    public EmployeeService createEmployeeService(EmployeeRepository employeeRepository,
+            BranchRepository branchRepository, LogRepository logRepository) {
         return new EmployeeServiceImpl(
-                infraFactory.createEmployeeRepository(),
-                infraFactory.createBranchRepository(),
-                infraFactory.createLogRepository());
+                employeeRepository,
+                branchRepository,
+                logRepository);
     }
 }
