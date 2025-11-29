@@ -44,6 +44,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee createEmployee(UUID branchId, String fullName, String employeeId, String phoneNumber,
             String bankAccountNumber, EmployeeRole role, String email, String password) {
+        this.logRepository
+                .info("creating employee: " + fullName + " " + employeeId + " " + phoneNumber + " " + bankAccountNumber
+                        + " " + role + " " + email + " " + password);
         if (role != EmployeeRole.ADMIN && branchId != null) {
             try {
                 if (branchRepository.findById(branchId).isEmpty()) {

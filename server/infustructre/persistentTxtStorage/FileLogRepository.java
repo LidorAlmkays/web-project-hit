@@ -4,14 +4,14 @@ import server.config.Config;
 import server.infustructre.adaptors.LogRepository;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,9 +71,18 @@ public class FileLogRepository implements LogRepository {
         }
 
         synchronized (writeLock) {
-            try (BufferedWriter writer = Files.newBufferedWriter(logFilePath, StandardOpenOption.APPEND)) {
-                writer.write(logEntry);
-                writer.newLine();
+            File file = new File("logs.txt");
+            PrintWriter writer = null;
+            try {
+                writer = new PrintWriter(new FileWriter(file, true));// true is to append to the file that way we dont
+                                                                     // remove exisitng logs
+                writer.println(logEntry);
+            } catch (IOException e) {
+                throw new RuntimeException("cant write to file get error ", e);
+            } finally {
+                if (writer != null) {
+                    writer.close();
+                }
             }
         }
     }
