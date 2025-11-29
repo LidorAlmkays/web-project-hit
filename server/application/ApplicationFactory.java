@@ -1,33 +1,35 @@
 package server.application;
 
-import server.application.adaptors.ChatRoomService;
-import server.application.adaptors.InventoryItemService;
-import server.application.adaptors.SocketManager;
-import server.application.adaptors.UserAccountService;
-import server.application.services.ChatRoomServiceImpl;
-import server.application.services.InventoryItemServiceImpl;
-import server.application.services.SocketManagerImpl;
-import server.application.services.UserAccountServiceImpl;
-import server.infustructre.adaptors.ChatRoomMessageRepository;
-import server.infustructre.adaptors.InventoryItemRepository;
-import server.infustructre.adaptors.SocketMessageSender;
-import server.infustructre.adaptors.UserAccountRepository;
+import server.application.adaptors.AuthService;
+import server.application.adaptors.EmployeeService;
+import server.application.adaptors.LoggerService;
+import server.application.services.AuthServiceImpl;
+import server.application.services.EmployeeServiceImpl;
+import server.application.services.LoggerServiceImpl;
+import server.infustructre.adaptors.BranchRepository;
+import server.infustructre.adaptors.EmployeeRepository;
+import server.infustructre.adaptors.LogRepository;
 
 public class ApplicationFactory {
-    public InventoryItemService createInventoryItemService(InventoryItemRepository repository) {
-        return new InventoryItemServiceImpl(repository);
+
+    public ApplicationFactory() {
     }
 
-    public SocketManager createSocketManager(SocketMessageSender socketMessageSender) {
-        return new SocketManagerImpl(socketMessageSender);
+    public AuthService createAuthService(EmployeeRepository employeeRepository, LogRepository logRepository) {
+        return new AuthServiceImpl(
+                employeeRepository,
+                logRepository);
     }
 
-    public UserAccountService createUserAccountService(UserAccountRepository repository) {
-        return new UserAccountServiceImpl(repository);
+    public EmployeeService createEmployeeService(EmployeeRepository employeeRepository,
+            BranchRepository branchRepository, LogRepository logRepository) {
+        return new EmployeeServiceImpl(
+                employeeRepository,
+                branchRepository,
+                logRepository);
     }
 
-    public ChatRoomService createChatRoomService(ChatRoomMessageRepository chatRoomMessageRepository,
-            UserAccountService userAccountService, SocketManager socketManager) {
-        return new ChatRoomServiceImpl(chatRoomMessageRepository, userAccountService, socketManager);
+    public LoggerService createLoggerService(LogRepository logRepository) {
+        return new LoggerServiceImpl(logRepository);
     }
 }
