@@ -1,4 +1,4 @@
-package server.Api;
+package server.api;
 
 import server.application.adaptors.AuthService;
 import server.application.adaptors.EmployeeService;
