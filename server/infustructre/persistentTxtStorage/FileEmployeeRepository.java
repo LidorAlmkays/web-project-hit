@@ -163,6 +163,20 @@ public class FileEmployeeRepository extends AbstractFileRepository<Employee> imp
         return findByEmployeeNumber(employeeNumber);
     }
 
+    @Override
+    public List<Employee> findByBranchId(UUID branchId) {
+        List<Employee> employees = new ArrayList<>();
+        synchronized (cache) {
+            for (Employee employee : cache.values()) {
+                UUID employeeBranchId = employee.getBranchId();
+                if (employeeBranchId != null && employeeBranchId.equals(branchId)) {
+                    employees.add(employee.createCopy());
+                }
+            }
+        }
+        return employees;
+    }
+
     private void loadCache() {
         List<Employee> employees = readAllFromDirectory();
         synchronized (cache) {

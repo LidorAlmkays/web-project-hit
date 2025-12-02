@@ -1,26 +1,26 @@
 package server.application.services;
 
 import server.application.adaptors.AuthService;
+import server.application.adaptors.UserManagementService;
 import server.domain.employee.Employee;
 import server.infustructre.adaptors.EmployeeRepository;
 import server.infustructre.adaptors.LogRepository;
 
 import java.net.Socket;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AuthServiceImpl implements AuthService {
 
     private final EmployeeRepository employeeRepository;
     private final LogRepository logRepository;
+    private final UserManagementService userManagementService;
 
-    private final Map<UUID, Socket> activeSessions = new ConcurrentHashMap<>();
-
-    public AuthServiceImpl(EmployeeRepository employeeRepository, LogRepository logRepository) {
+    public AuthServiceImpl(EmployeeRepository employeeRepository, LogRepository logRepository,
+            UserManagementService userManagementService) {
         this.employeeRepository = employeeRepository;
         this.logRepository = logRepository;
+        this.userManagementService = userManagementService;
     }
 
     @Override
@@ -49,15 +49,13 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("login failed, invalid credentials");
         }
 
-        synchronized (this) {
-            if (activeSessions.containsKey(employee.getEmployeeNumber())) {
-                Error error = new Error(
-                        "login failed: Employee " + employee.getEmployeeNumber() + " is already logged in");
-                logRepository.error(error);
-                throw new SecurityException(error);
-            }
-            activeSessions.put(employee.getEmployeeNumber(), socket);
+        // Check if user is already logged in
+        if (userManagementService.getSocketByEmail(email).isPresent()) {
+            Error error = new Error("login failed: Employee " + email + " is already logged in");
+            logRepository.error(error);
+            throw new SecurityException(error);
         }
+        userManagementService.addUser(email, employee, socket);
 
         logRepository.info("Login successful: Employee " + employee.getEmployeeNumber() + " logged in");
         return employee;
@@ -70,10 +68,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
-            if (activeSessions.remove(employeeNumber) != null) {
+            // Find employee by employeeNumber to get email
+            Optional<Employee> employeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
+            if (employeeOpt.isPresent()) {
+                String email = employeeOpt.get().getEmail();
+                userManagementService.removeUser(email);
                 logRepository.info("logout successful: Employee " + employeeNumber + " logged out");
             } else {
-                logRepository.info("Logout failed, employee wasnt loged in: " + employeeNumber);
+                logRepository.info("Logout failed, employee not found: " + employeeNumber);
             }
         } catch (Exception e) {
             logRepository.error(new Error(

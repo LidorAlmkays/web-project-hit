@@ -1,6 +1,7 @@
 package server.infustructre.adaptors;
 
 import server.domain.employee.Employee;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public interface EmployeeRepository {
     Optional<Employee> findByEmployeeNumber(UUID employeeNumber);
 
     Optional<Employee> findByEmail(String email);
+
+    List<Employee> findByBranchId(UUID branchId);
 }
