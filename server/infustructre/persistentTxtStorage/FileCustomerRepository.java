@@ -18,7 +18,7 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     private final Map<String, UUID> emailIndex = Collections.synchronizedMap(new HashMap<>());
 
     public FileCustomerRepository() {
-        super(Config.getCustomersDir());
+        super(Config.CUSTOMERS_DIR);
         loadCache();
     }
 

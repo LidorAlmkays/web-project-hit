@@ -15,7 +15,7 @@ public class FileEmployeeRepository extends AbstractFileRepository<Employee> imp
     private final Map<String, UUID> emailIndex = Collections.synchronizedMap(new HashMap<>());
 
     public FileEmployeeRepository() {
-        super(Config.getEmployeesDir());
+        super(Config.EMPLOYEES_DIR);
         loadCache();
     }
 

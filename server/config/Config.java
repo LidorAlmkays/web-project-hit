@@ -8,31 +8,8 @@ public class Config {
     public static final String EMPLOYEES_DIR = DATA_DIR + "/employees";
     public static final String LOGS_DIR = DATA_DIR + "/logs";
     public static final String LOG_FILE_PATH = "./logs/server.log";
+    public static final int SOCKET_PORT = 8080;
 
     private Config() {
-    }
-
-    public static String getLogFilePath() {
-        return LOG_FILE_PATH;
-    }
-
-    public static String getBranchInventoryItemsDir() {
-        return BRANCH_INVENTORY_ITEMS_DIR;
-    }
-
-    public static String getCustomersDir() {
-        return CUSTOMERS_DIR;
-    }
-
-    public static String getBranchesDir() {
-        return BRANCHES_DIR;
-    }
-
-    public static String getEmployeesDir() {
-        return EMPLOYEES_DIR;
-    }
-
-    public static String getLogsDir() {
-        return LOGS_DIR;
     }
 }

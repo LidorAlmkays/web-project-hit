@@ -23,7 +23,7 @@ public class FileLogRepository implements LogRepository {
     private final Object writeLock = new Object();
 
     public FileLogRepository() {
-        this.logFilePath = Paths.get(Config.getLogFilePath());
+        this.logFilePath = Paths.get(Config.LOG_FILE_PATH);
     }
 
     @Override

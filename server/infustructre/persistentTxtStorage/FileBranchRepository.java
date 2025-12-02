@@ -15,7 +15,7 @@ public class FileBranchRepository extends AbstractFileRepository<Branch>
     private final Object creationMutex = new Object();
 
     public FileBranchRepository() {
-        super(Config.getBranchesDir());
+        super(Config.BRANCHES_DIR);
     }
 
     private Object getLock(UUID branchId) {

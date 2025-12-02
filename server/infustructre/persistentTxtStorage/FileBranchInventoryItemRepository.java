@@ -19,7 +19,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     private final Map<UUID, List<UUID>> branchIndex = Collections.synchronizedMap(new HashMap<>());
 
     public FileBranchInventoryItemRepository() {
-        super(Config.getBranchInventoryItemsDir());
+        super(Config.BRANCH_INVENTORY_ITEMS_DIR);
         loadCache();
     }
 
