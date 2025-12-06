@@ -1,29 +1,30 @@
 package server.infustructre;
 
-import server.infustructre.adaptors.ChatRoomMessageRepository;
-import server.infustructre.adaptors.InventoryItemRepository;
-import server.infustructre.adaptors.SocketMessageSender;
-import server.infustructre.adaptors.UserAccountRepository;
-import server.infustructre.persistentTxtStorage.FileChatRoomMessageRepository;
-import server.infustructre.persistentTxtStorage.FileInventoryItemRepository;
-import server.infustructre.persistentTxtStorage.FileUserAccountRepository;
-import server.infustructre.socket.SocketMessageSenderImpl;
+import server.infustructre.adaptors.*;
+import server.infustructre.persistentTxtStorage.*;
 
 public class InfrastructureFactory {
 
-    public UserAccountRepository createUserAccountRepository() {
-        return new FileUserAccountRepository();
+    public InfrastructureFactory() {
     }
 
-    public InventoryItemRepository createInventoryItemRepository() {
-        return new FileInventoryItemRepository();
+    public BranchRepository createBranchRepository() {
+        return new FileBranchRepository();
     }
 
-    public ChatRoomMessageRepository createChatRoomMessageRepository() {
-        return new FileChatRoomMessageRepository();
+    public CustomerRepository createCustomerRepository() {
+        return new FileCustomerRepository();
     }
 
-    public SocketMessageSender createSocketMessageSender() {
-        return new SocketMessageSenderImpl();
+    public BranchInventoryItemRepository createBranchInventoryItemRepository() {
+        return new FileBranchInventoryItemRepository();
+    }
+
+    public EmployeeRepository createEmployeeRepository() {
+        return new FileEmployeeRepository();
+    }
+
+    public LogRepository createLogRepository() {
+        return new FileLogRepository();
     }
 }
