@@ -3,6 +3,7 @@ package server.application.services;
 import java.util.List;
 
 import server.application.adaptors.LoggerService;
+import server.domain.LogEntry;
 import server.infustructre.adaptors.LogRepository;
 
 public class LoggerServiceImpl implements LoggerService {
@@ -14,7 +15,7 @@ public class LoggerServiceImpl implements LoggerService {
     }
 
     @Override
-    public List<String> getLogs() {
-        return logRepository.getLogs();
+    public List<LogEntry> getLogs() {
+        return logRepository.findAll();
     }
 }
