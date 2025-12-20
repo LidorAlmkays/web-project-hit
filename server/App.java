@@ -43,7 +43,7 @@ public class App {
         AuthService authService = applicationFactory.createAuthService(employeeRepository, logRepository,
                 userManagementService);
         System.out.println("Starting API");
-        SocketServer socketServer = new SocketServer(authService, logService, employeeService);
+        SocketServer socketServer = new SocketServer(authService, logService, employeeService, branchService);
         socketServer.start();
 
     }
