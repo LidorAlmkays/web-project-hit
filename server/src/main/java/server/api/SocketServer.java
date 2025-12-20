@@ -1,6 +1,7 @@
 package server.api;
 
 import server.application.adaptors.AuthService;
+import server.application.adaptors.BranchItemService;
 import server.application.adaptors.BranchService;
 import server.application.adaptors.EmployeeService;
 import server.application.adaptors.LoggerService;
@@ -15,17 +16,19 @@ public class SocketServer {
     private final LoggerService logService;
     private final EmployeeService employeeService;
     private final BranchService branchService;
+    private final BranchItemService branchItemService;
     private ServerSocket serverSocket;
     private boolean running;
     private HandlerFactory handlerFactory;
 
-    public SocketServer(AuthService authService, LoggerService logService, EmployeeService employeeService, BranchService branchService) {
+    public SocketServer(AuthService authService, LoggerService logService, EmployeeService employeeService, BranchService branchService, BranchItemService branchItemService) {
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
-        this.branchService = branchService;        
+        this.branchService = branchService;
+        this.branchItemService = branchItemService;
         this.running = false;
-        this.handlerFactory = new HandlerFactory(authService, logService, employeeService, branchService);
+        this.handlerFactory = new HandlerFactory(authService, logService, employeeService, branchService, branchItemService);
     }
 
     public void start() {

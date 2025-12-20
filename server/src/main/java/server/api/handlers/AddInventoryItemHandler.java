@@ -8,11 +8,11 @@ import java.util.UUID;
 import server.application.adaptors.BranchItemService;
 import server.domain.BranchInventoryItem;
 
-public class UpdateInventoryItemHandler implements SocketHandler {
+public class AddInventoryItemHandler implements SocketHandler {
     private final BranchItemService branchItemService;
     private final Gson gson = new Gson();
 
-    public UpdateInventoryItemHandler(BranchItemService branchItemService) {
+    public AddInventoryItemHandler(BranchItemService branchItemService) {
         this.branchItemService = branchItemService;
     }
 
@@ -22,11 +22,12 @@ public class UpdateInventoryItemHandler implements SocketHandler {
         JsonObject request = gson.fromJson(requestJson, JsonObject.class);
 
         UUID branchId = UUID.fromString(request.get("branchId").getAsString());
-        BranchInventoryItem item = gson.fromJson(request.get("item"), BranchInventoryItem.class);
+        int quantity = request.get("quantity").getAsInt();
+        UUID itemId = UUID.fromString(request.get("itemId").getAsString());
 
-        BranchInventoryItem updatedItem = branchItemService.restockItem(branchId, item.getItemId(), item.getQuantity());
+        BranchInventoryItem createdItem = branchItemService.restockItem(branchId, itemId, quantity);
 
         DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
-        out.writeUTF(gson.toJson(updatedItem));
+        out.writeUTF(gson.toJson(createdItem));
     }
 }

@@ -49,7 +49,7 @@ public class App {
                                 branchInventoryItemRepository, customerRepository, logRepository);
                 System.out.println("Starting API");
                 SocketServer socketServer = new SocketServer(authService, logService, employeeService,
-                                branchItemService, branchService);
+                                branchService, branchItemService);
                 socketServer.start();
 
         }

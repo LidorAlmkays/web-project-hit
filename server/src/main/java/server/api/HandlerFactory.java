@@ -8,6 +8,7 @@ import server.api.handlers.LoginEmployeeHandler;
 import server.api.handlers.SocketHandler;
 import server.api.handlers.UpdateInventoryItemHandler;
 import server.application.adaptors.AuthService;
+import server.application.adaptors.BranchItemService;
 import server.application.adaptors.BranchService;
 import server.application.adaptors.EmployeeService;
 import server.application.adaptors.LoggerService;
