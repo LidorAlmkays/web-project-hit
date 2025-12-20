@@ -1,4 +1,4 @@
-package server.api.dto;
+package shareddto;
 
 public enum EventType {
     LOGIN_EMPLOYEE

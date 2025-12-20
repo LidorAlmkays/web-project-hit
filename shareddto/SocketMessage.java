@@ -1,4 +1,4 @@
-package server.api.dto;
+package shareddto;
 
 public class SocketMessage {
     private EventType eventType;

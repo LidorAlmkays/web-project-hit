@@ -1,14 +1,14 @@
 package server.api;
 
-import server.api.dto.EventType;
-import server.api.dto.SocketMessage;
+import shareddto.EventType;
+import shareddto.SocketMessage;
+import com.google.gson.Gson;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.StringReader;
 import java.net.Socket;
 
 public class ClientSocketHandler implements Runnable {
+    private static final Gson gson = new Gson();
     private final Socket clientSocket;
     private final HandlerFactory handlerFactory;
     private DataInputStream inputStream;
@@ -34,7 +34,17 @@ public class ClientSocketHandler implements Runnable {
 
                 System.out.println("Received message: " + jsonMessage);
 
-                SocketMessage message = null;// add parser here to json
+                SocketMessage message = null;
+                try {
+                    message = gson.fromJson(jsonMessage, SocketMessage.class);
+                    System.out.println("Parsed message - EventType: " +
+                            (message != null ? message.getEventType() : "null") +
+                            ", Data: " + (message != null ? message.getData() : "null"));
+                } catch (Exception e) {
+                    System.err.println("Error parsing JSON: " + e.getMessage());
+                    e.printStackTrace();
+                    continue;
+                }
 
                 if (message == null || message.getEventType() == null) {
                     System.out.println("Invalid message format - missing eventType");
