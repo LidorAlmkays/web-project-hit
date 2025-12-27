@@ -3,7 +3,7 @@ package frontend.cli.employeemanagement;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import shareddto.employeemanagement.response.EmployeeDto;
+import frontend.dto.employeemanagement.response.EmployeeDto;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,8 +32,7 @@ public class EmployeeManagementView {
         System.out.println("3. Delete employee");
         System.out.println("4. Get employee");
         System.out.println("5. List branch employees");
-        System.out.println("6. Logout");
-        System.out.println("7. Exit");
+        System.out.println("6. Exit");
         System.out.print("Choose: ");
     }
 
