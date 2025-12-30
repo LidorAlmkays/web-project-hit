@@ -281,4 +281,76 @@ public class BranchItemServiceImpl implements BranchItemService {
             throw new RuntimeException(error);
         }
     }
+
+    @Override
+    public BranchInventoryItem addItem(UUID branchId, String productName, String category, double unitPrice,
+            int initialQuantity) {
+        logRepository.info("Adding new item, branchId=" + branchId + ", productName=" + productName
+                + ", category=" + category + ", unitPrice=" + unitPrice + ", initialQuantity=" + initialQuantity);
+
+        if (branchId == null) {
+            Error error = new Error("Add item failed, branchId is null");
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        if (productName == null || productName.trim().isEmpty()) {
+            Error error = new Error("Add item failed, productName must not be null or empty");
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        if (category == null || category.trim().isEmpty()) {
+            Error error = new Error("Add item failed, category must not be null or empty");
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        if (unitPrice < 0) {
+            Error error = new Error("Add item failed, unitPrice must be non-negative, got: " + unitPrice);
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        if (initialQuantity < 0) {
+            Error error = new Error("Add item failed, initialQuantity must be non-negative, got: " + initialQuantity);
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        try {
+            // Validate branch exists
+            Optional<Branch> branchOpt = branchRepository.findById(branchId);
+            if (branchOpt.isEmpty()) {
+                Error error = new Error("Add item failed, branch not found: " + branchId);
+                logRepository.error(error);
+                throw new IllegalArgumentException(error);
+            }
+
+            // Create new item (itemId is auto-generated in constructor)
+            BranchInventoryItem newItem = new BranchInventoryItem(branchId, productName, category, unitPrice);
+
+            // If initial quantity is provided, restock the item
+            if (initialQuantity > 0) {
+                newItem.restock(initialQuantity);
+            }
+
+            // Save the new item to repository
+            branchInventoryItemRepository.save(newItem);
+
+            logRepository.info("Add item succeeded, itemId=" + newItem.getItemId() + ", branchId=" + branchId
+                    + ", productName=" + productName + ", category=" + category + ", unitPrice=" + unitPrice
+                    + ", initialQuantity=" + initialQuantity + ", quantityInStock=" + newItem.getQuantityInStock());
+
+            return newItem;
+        } catch (IllegalArgumentException ex) {
+            // Already logged above
+            throw ex;
+        } catch (Exception e) {
+            Error error = new Error("Add item error, branchId=" + branchId + ", productName=" + productName
+                    + ", message=" + e.getMessage());
+            logRepository.error(error);
+            throw new RuntimeException(error);
+        }
+    }
 }
