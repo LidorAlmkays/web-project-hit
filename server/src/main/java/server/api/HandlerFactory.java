@@ -1,15 +1,8 @@
 package server.api;
 
 import shareddto.EventType;
-import server.api.handlers.CreateEmployeeHandler;
-import server.api.handlers.DeleteEmployeeHandler;
-import server.api.handlers.GetEmployeeHandler;
-import server.api.handlers.ListBranchEmployeesHandler;
-import server.api.handlers.LoginEmployeeHandler;
-import server.api.handlers.LogoutEmployeeHandler;
-import server.api.handlers.SocketHandler;
+import server.api.handlers.*;
 import server.application.adaptors.*;
-import shareddto.EventType;
 
 import java.util.HashMap;
 import java.util.Map;
