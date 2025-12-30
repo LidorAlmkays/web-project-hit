@@ -14,8 +14,8 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     private final Map<UUID, Object> locks = Collections.synchronizedMap(new HashMap<>());
     private final Object creationMutex = new Object();
     private final Map<UUID, Customer> cache = Collections.synchronizedMap(new HashMap<>());
-    // email -> customerId
-    private final Map<String, UUID> emailIndex = Collections.synchronizedMap(new HashMap<>());
+    // idNumber -> customerId
+    private final Map<String, UUID> idNumberIndex = Collections.synchronizedMap(new HashMap<>());
 
     public FileCustomerRepository() {
         super(Config.CUSTOMERS_DIR);
@@ -81,19 +81,19 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
             throw new IllegalArgumentException("cant save, consumer is null");
         }
         UUID customerId = customer.getCustomerId();
-        String email = customer.getEmail();
         Object lock = getLock(customerId);
         synchronized (lock) {
             String fileName = getFileName(customerId);
             if (fileExists(fileName)) {
                 throw new IllegalArgumentException("cant save customer, id already exists: " + customerId);
             }
-            if (emailIndex.containsKey(email.toLowerCase())) {
-                throw new IllegalArgumentException("cant save consumer, email already exists: " + email);
+            String idNumber = customer.getIdNumber();
+            if (idNumberIndex.containsKey(idNumber)) {
+                throw new IllegalArgumentException("cant save consumer, idNumber already exists: " + idNumber);
             }
             writeToFile(customer, fileName);
             cache.put(customerId, customer);
-            emailIndex.put(email.toLowerCase(), customerId);
+            idNumberIndex.put(idNumber, customerId);
         }
     }
 
@@ -103,22 +103,11 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
             throw new IllegalArgumentException("cant update, consumer is null");
         }
         UUID customerId = customer.getCustomerId();
-        String newEmail = customer.getEmail();
         Object lock = getLock(customerId);
         synchronized (lock) {
             Customer existingCustomer = cache.get(customerId);
             if (existingCustomer == null) {
                 throw new IllegalArgumentException("cant update, consumer not found, id: " + customerId);
-            }
-            String oldEmail = existingCustomer.getEmail();
-
-            // Check if email changed and new email already exists
-            if (!oldEmail.equalsIgnoreCase(newEmail)) {
-                if (emailIndex.containsKey(newEmail.toLowerCase())) {
-                    throw new IllegalArgumentException("cant update, new email already exists: " + newEmail);
-                }
-                emailIndex.remove(oldEmail.toLowerCase());
-                emailIndex.put(newEmail.toLowerCase(), customerId);
             }
 
             String fileName = getFileName(customerId);
@@ -138,11 +127,11 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
             if (customer == null) {
                 throw new IllegalArgumentException("cant delete, customer not found, id: " + customerId);
             }
-            String email = customer.getEmail();
+            String idNumber = customer.getIdNumber();
             String fileName = getFileName(customerId);
             deleteFile(fileName);
             cache.remove(customerId);
-            emailIndex.remove(email.toLowerCase());
+            idNumberIndex.remove(idNumber);
         }
     }
 
@@ -162,14 +151,13 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     }
 
     @Override
-    public Optional<Customer> findByEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("cant find, consumer email cant be null");
+    public Optional<Customer> findByIdNumber(String idNumber) {
+        if (idNumber == null || idNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("cant find, customer idNumber cant be null or empty");
         }
-        String emailLower = email.toLowerCase();
         UUID customerId;
-        synchronized (emailIndex) {
-            customerId = emailIndex.get(emailLower);
+        synchronized (idNumberIndex) {
+            customerId = idNumberIndex.get(idNumber);
             if (customerId == null) {
                 return Optional.empty();
             }
@@ -180,13 +168,13 @@ public class FileCustomerRepository extends AbstractFileRepository<Customer>
     private void loadCache() {
         synchronized (cache) {
             cache.clear();
-            emailIndex.clear();
+            idNumberIndex.clear();
             java.util.List<Customer> allCustomers = readAllFromDirectory();
             for (Customer customer : allCustomers) {
                 UUID customerId = customer.getCustomerId();
-                String email = customer.getEmail();
+                String idNumber = customer.getIdNumber();
                 cache.put(customerId, customer);
-                emailIndex.put(email.toLowerCase(), customerId);
+                idNumberIndex.put(idNumber, customerId);
             }
         }
     }
