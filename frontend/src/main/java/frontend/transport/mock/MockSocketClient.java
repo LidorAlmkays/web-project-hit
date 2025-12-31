@@ -1,27 +1,38 @@
 package frontend.transport.mock;
 
-import frontend.dto.employeemanagement.request.BranchEmployeesRequest;
-import frontend.dto.employeemanagement.request.EmployeeCreateRequest;
-import frontend.dto.employeemanagement.request.EmployeeDeleteRequest;
-import frontend.dto.employeemanagement.request.EmployeeGetRequest;
-import frontend.dto.employeemanagement.request.EmployeeUpdateRequest;
-import frontend.dto.employeemanagement.response.EmployeeDto;
 import frontend.transport.IClientTransport;
 import shareddto.EventType;
 import shareddto.SocketMessage;
+import shareddto.employeemanagement.request.*;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * In-memory mock transport for local CLI testing without a server.
  */
 public class MockSocketClient implements IClientTransport {
     private final Map<String, EmployeeDto> employees = new HashMap<>();
+    // store plain-text passwords in the mock (for testing only)
+    private final Map<String, String> passwords = new HashMap<>();
+    // track logged-in users (optional for mock)
+    private final Set<String> loggedIn = new HashSet<>();
+
+    // seed a default admin user for convenience when running in mock/offline mode
+    public MockSocketClient() {
+        EmployeeDto admin = new EmployeeDto(
+                "00000000-0000-0000-0000-000000000000",
+                null,
+                "Administrator",
+                "admin",
+                "000000000",
+                "000000000",
+                "ADMIN",
+                "admin@local");
+        employees.put("admin@local", admin);
+        passwords.put("admin@local", "admin");
+    }
     @Override
     public SocketMessage send(EventType eventType, Object data) throws IOException {
         if (eventType == null) {
@@ -38,6 +49,8 @@ public class MockSocketClient implements IClientTransport {
                 return handleGet(data);
             case LIST_BRANCH_EMPLOYEES:
                 return handleListBranch(data);
+            case LOGIN_EMPLOYEE:
+                return handleLogin(data);
             default:
                 return error(eventType, "Unsupported event in mock: " + eventType);
         }
@@ -72,6 +85,8 @@ public class MockSocketClient implements IClientTransport {
                 request.getRole(),
                 email);
         employees.put(email, employee);
+        // Store password for mock authentication (testing only)
+        passwords.put(email, request.getPassword());
         return ok(EventType.CREATE_EMPLOYEE, employee);
     }
 
@@ -146,6 +161,31 @@ public class MockSocketClient implements IClientTransport {
             }
         }
         return ok(EventType.LIST_BRANCH_EMPLOYEES, list);
+    }
+
+    private SocketMessage handleLogin(Object data) {
+        LoginEmployeeRequest request = (LoginEmployeeRequest) data;
+        if (request == null || isBlank(request.getEmail()) || isBlank(request.getPassword())) {
+            return error(EventType.LOGIN_EMPLOYEE, "Missing email or password");
+        }
+
+        String email = request.getEmail().trim();
+        String password = request.getPassword().trim();
+
+        EmployeeDto existing = employees.get(email);
+        if (existing == null) {
+            return error(EventType.LOGIN_EMPLOYEE, "User not found");
+        }
+
+        String expected = passwords.get(email);
+        if (expected == null || !expected.equals(password)) {
+            return error(EventType.LOGIN_EMPLOYEE, "Invalid credentials");
+        }
+
+        // mark as logged in in mock
+        loggedIn.add(email);
+
+        return ok(EventType.LOGIN_EMPLOYEE, existing);
     }
 
     private EmployeeDto findByEmployeeNumber(String employeeNumber) {

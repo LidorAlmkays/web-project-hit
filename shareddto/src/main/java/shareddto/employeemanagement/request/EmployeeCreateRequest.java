@@ -1,10 +1,9 @@
-package frontend.dto.employeemanagement.response;
+package shareddto.employeemanagement.request;
 
 /**
- * Response payload for employee details.
+ * Request payload for creating an employee.
  */
-public class EmployeeDto {
-    private String employeeNumber;
+public class EmployeeCreateRequest {
     private String branchId;
     private String fullName;
     private String employeeId;
@@ -12,13 +11,13 @@ public class EmployeeDto {
     private String bankAccountNumber;
     private String role;
     private String email;
+    private String password;
 
-    public EmployeeDto() {
+    public EmployeeCreateRequest() {
     }
 
-    public EmployeeDto(String employeeNumber, String branchId, String fullName, String employeeId, String phoneNumber,
-            String bankAccountNumber, String role, String email) {
-        this.employeeNumber = employeeNumber;
+    public EmployeeCreateRequest(String branchId, String fullName, String employeeId, String phoneNumber,
+            String bankAccountNumber, String role, String email, String password) {
         this.branchId = branchId;
         this.fullName = fullName;
         this.employeeId = employeeId;
@@ -26,14 +25,7 @@ public class EmployeeDto {
         this.bankAccountNumber = bankAccountNumber;
         this.role = role;
         this.email = email;
-    }
-
-    public String getEmployeeNumber() {
-        return employeeNumber;
-    }
-
-    public void setEmployeeNumber(String employeeNumber) {
-        this.employeeNumber = employeeNumber;
+        this.password = password;
     }
 
     public String getBranchId() {
@@ -90,5 +82,13 @@ public class EmployeeDto {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

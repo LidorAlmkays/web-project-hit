@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import frontend.transport.IClientTransport;
 import frontend.cli.employeemanagement.config.EmployeeManagementEvents;
-import frontend.dto.employeemanagement.request.BranchEmployeesRequest;
-import frontend.dto.employeemanagement.request.EmployeeCreateRequest;
-import frontend.dto.employeemanagement.request.EmployeeDeleteRequest;
-import frontend.dto.employeemanagement.request.EmployeeGetRequest;
-import frontend.dto.employeemanagement.request.EmployeeUpdateRequest;
-import frontend.dto.employeemanagement.response.EmployeeDto;
+import shareddto.employeemanagement.request.BranchEmployeesRequest;
+import shareddto.employeemanagement.request.EmployeeCreateRequest;
+import shareddto.employeemanagement.request.EmployeeDeleteRequest;
+import shareddto.employeemanagement.request.EmployeeGetRequest;
+import shareddto.employeemanagement.request.EmployeeUpdateRequest;
+import shareddto.employeemanagement.response.EmployeeDto;
 import shareddto.SocketMessage;
 
 import java.io.IOException;

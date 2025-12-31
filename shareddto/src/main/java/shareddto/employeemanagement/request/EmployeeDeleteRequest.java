@@ -1,12 +1,12 @@
-package frontend.dto.employeemanagement.request;
+package shareddto.employeemanagement.request;
 
-public class EmployeeGetRequest {
+public class EmployeeDeleteRequest {
     private String employeeNumber;
 
-    public EmployeeGetRequest() {
+    public EmployeeDeleteRequest() {
     }
 
-    public EmployeeGetRequest(String employeeNumber) {
+    public EmployeeDeleteRequest(String employeeNumber) {
         this.employeeNumber = employeeNumber;
     }
 

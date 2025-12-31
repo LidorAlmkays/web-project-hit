@@ -1,9 +1,11 @@
 package frontend;
 
+import frontend.cli.auth.LoginController;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 import frontend.transport.IClientTransport;
-import frontend.transport.mock.MockSocketClient;
 import frontend.transport.SocketClient;
+import frontend.transport.mock.MockSocketClient;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,8 +30,14 @@ public class App {
         String host = params.size() > 0 ? params.get(0) : DEFAULT_HOST;
         int port = params.size() > 1 ? Integer.parseInt(params.get(1)) : DEFAULT_PORT;
 
-        try (IClientTransport client = createClient(offline, host, port);
-                Scanner scanner = new Scanner(System.in)) {
+        try (IClientTransport client = createClient(offline, host, port); Scanner scanner = new Scanner(System.in)) {
+            LoginController loginController = new frontend.cli.auth.LoginController();
+            EmployeeDto loggedInEmployee = loginController.login(client, scanner);
+            if (loggedInEmployee == null) {
+                System.out.println("Login failed after multiple attempts. Exiting.");
+                return;
+            }
+
             new EmployeeManagementCli().run(client, scanner);
         } catch (IOException e) {
             System.out.println("Failed to connect to server: " + e.getMessage());

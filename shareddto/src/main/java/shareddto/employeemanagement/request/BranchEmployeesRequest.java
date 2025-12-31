@@ -1,4 +1,4 @@
-package frontend.dto.employeemanagement.request;
+package shareddto.employeemanagement.request;
 
 public class BranchEmployeesRequest {
     private String branchId;

@@ -3,7 +3,7 @@ package frontend.cli.employeemanagement;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import frontend.dto.employeemanagement.response.EmployeeDto;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.util.List;
 import java.util.Locale;

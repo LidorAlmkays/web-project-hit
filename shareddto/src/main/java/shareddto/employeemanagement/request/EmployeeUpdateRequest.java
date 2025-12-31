@@ -1,4 +1,4 @@
-package frontend.dto.employeemanagement.request;
+package shareddto.employeemanagement.request;
 
 /**
  * Request payload for updating an employee.
