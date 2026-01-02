@@ -1,7 +1,7 @@
 package server.api;
 
 import shareddto.EventType;
-import server.api.handlers.AddInventoryItemHandler;
+import server.api.handlers.BuyItemHandler;
 import server.api.handlers.GetBranchInfoHandler;
 import server.api.handlers.GetInventoryItemsHandler;
 import server.api.handlers.LoginEmployeeHandler;
@@ -42,7 +42,7 @@ public class HandlerFactory {
         handlers.put(EventType.LOGIN_EMPLOYEE, new LoginEmployeeHandler(authService));
         handlers.put(EventType.GET_BRANCH_INFO, new GetBranchInfoHandler(branchService));
         handlers.put(EventType.GET_INVERTORY_ITEMS, new GetInventoryItemsHandler(branchItemService));
-        handlers.put(EventType.ADD_INVENTORY_ITEM, new AddInventoryItemHandler(branchItemService));
+        handlers.put(EventType.BUY_INVENTORY_ITEM, new BuyItemHandler(branchItemService));
         handlers.put(EventType.UPDATE_INVENTORY_ITEM, new UpdateInventoryItemHandler(branchItemService));
     }
 

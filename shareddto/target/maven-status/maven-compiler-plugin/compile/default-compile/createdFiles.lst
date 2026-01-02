@@ -1,2 +1,6 @@
+shareddto\GetBranchInfoRequest.class
 shareddto\SocketMessage.class
 shareddto\EventType.class
+shareddto\GetInventoryItemsRequest.class
+shareddto\BuyItemRequest.class
+shareddto\UpdateStockRequest.class

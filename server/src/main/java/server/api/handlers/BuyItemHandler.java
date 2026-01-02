@@ -7,13 +7,13 @@ import java.net.Socket;
 import java.util.UUID;
 import server.application.adaptors.BranchItemService;
 import server.domain.BranchInventoryItem;
-import shareddto.UpdateStockRequest;
+import shareddto.BuyItemRequest;
 
-public class UpdateInventoryItemHandler implements SocketHandler {
+public class BuyItemHandler implements SocketHandler {
     private final BranchItemService branchItemService;
     private final Gson gson = new Gson();
 
-    public UpdateInventoryItemHandler(BranchItemService branchItemService) {
+    public BuyItemHandler(BranchItemService branchItemService) {
         this.branchItemService = branchItemService;
     }
 
@@ -22,22 +22,21 @@ public class UpdateInventoryItemHandler implements SocketHandler {
         DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
         try {
             String requestJson = gson.toJson(data);
-            UpdateStockRequest request = gson.fromJson(requestJson, UpdateStockRequest.class);
+            BuyItemRequest request = gson.fromJson(requestJson, BuyItemRequest.class);
 
             UUID branchId = UUID.fromString(request.getBranchId());
             UUID itemId = UUID.fromString(request.getItemId());
+            UUID customerId = UUID.fromString(request.getCustomerId());
             int quantity = request.getQuantity();
 
-            BranchInventoryItem updatedItem = branchItemService.restockItem(branchId, itemId, quantity);
+            BranchInventoryItem updatedItem = branchItemService.buyItem(branchId, itemId, customerId, quantity);
 
             JsonObject response = new JsonObject();
             response.add("data", gson.toJsonTree(updatedItem));
             out.writeUTF(gson.toJson(response));
         } catch (Exception e) {
             JsonObject response = new JsonObject();
-            JsonObject errorData = new JsonObject();
-            errorData.addProperty("error", e.getMessage());
-            response.add("data", errorData);
+            response.addProperty("error", e.getMessage());
             out.writeUTF(gson.toJson(response));
         }
     }

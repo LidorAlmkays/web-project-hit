@@ -1,0 +1,69 @@
+[2026-01-02T12:21:26.391174600Z] [INFO] Getting branch: 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T12:21:33.536030700Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T12:27:59.132736200Z] [INFO] Getting branch: 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T12:28:08.855957Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T12:29:23.465497700Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440101, quantity=0
+[2026-01-02T12:29:23.468504100Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: 0
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:27)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T13:05:25.510412400Z] [INFO] Getting branch: 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T13:05:35.988065900Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T13:07:23.866314800Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=550e8400-e29b-41d4-a716-446655440001, quantity=0
+[2026-01-02T13:07:23.870314600Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: 0
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:27)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T14:00:25.115897Z] [INFO] Getting branch: 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:00:33.074487900Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:01:04.654138Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440101, quantity=2
+[2026-01-02T14:01:04.661143Z] [INFO] Restock item succeeded, itemId=660e8400-e29b-41d4-a716-446655440101, branchId=550e8400-e29b-41d4-a716-446655440001, quantity=2, newStock=47
+[2026-01-02T14:02:04.393678500Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440101, quantity=-50
+[2026-01-02T14:02:04.396678800Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: -50
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:29)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T14:13:51.872943700Z] [INFO] Getting branch: 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:13:57.804051300Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:14:23.729774400Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440102, quantity=12
+[2026-01-02T14:14:23.737774800Z] [INFO] Restock item succeeded, itemId=660e8400-e29b-41d4-a716-446655440102, branchId=550e8400-e29b-41d4-a716-446655440001, quantity=12, newStock=40
+[2026-01-02T14:14:28.963769600Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:14:42.018878200Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440102, quantity=-50
+[2026-01-02T14:14:42.022879800Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: -50
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:31)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T14:15:02.440885500Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440102, quantity=-10
+[2026-01-02T14:15:02.442886300Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: -10
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:31)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T14:18:48.090277800Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:18:57.873080800Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440102, quantity=-1
+[2026-01-02T14:18:57.874080200Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: -1
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:31)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T14:32:09.872852400Z] [INFO] Getting branch: 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:32:12.551849800Z] [INFO] Getting items for branch (BranchItemService): 550e8400-e29b-41d4-a716-446655440001
+[2026-01-02T14:34:58.523899100Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440102, quantity=-1
+[2026-01-02T14:34:58.526903900Z] [ERROR] java.lang.Error: Restock item failed, quantity must be > 0, got: -1
+	at server.application.services.BranchItemServiceImpl.restockItem(BranchItemServiceImpl.java:221)
+	at server.api.handlers.UpdateInventoryItemHandler.handle(UpdateInventoryItemHandler.java:31)
+	at server.api.ClientSocketHandler.run(ClientSocketHandler.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+[2026-01-02T14:35:28.555920100Z] [INFO] Restocking item, branchId=550e8400-e29b-41d4-a716-446655440001, itemId=660e8400-e29b-41d4-a716-446655440101, quantity=3
+[2026-01-02T14:35:28.563923900Z] [INFO] Restock item succeeded, itemId=660e8400-e29b-41d4-a716-446655440101, branchId=550e8400-e29b-41d4-a716-446655440001, quantity=3, newStock=50

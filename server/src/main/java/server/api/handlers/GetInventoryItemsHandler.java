@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import server.application.adaptors.BranchItemService;
 import server.domain.BranchInventoryItem;
+import shareddto.GetInventoryItemsRequest;
 
 public class GetInventoryItemsHandler implements SocketHandler {
     private final BranchItemService branchItemService;
@@ -20,12 +21,14 @@ public class GetInventoryItemsHandler implements SocketHandler {
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
         String requestJson = gson.toJson(data);
-        JsonObject request = gson.fromJson(requestJson, JsonObject.class);
-        UUID branchId = UUID.fromString(request.get("branchId").getAsString());
+        GetInventoryItemsRequest request = gson.fromJson(requestJson, GetInventoryItemsRequest.class);
+        UUID branchId = UUID.fromString(request.getBranchId());
 
         List<BranchInventoryItem> items = branchItemService.getBranchItems(branchId);
 
         DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
-        out.writeUTF(gson.toJson(items));
+        JsonObject response = new JsonObject();
+        response.add("data", gson.toJsonTree(items));
+        out.writeUTF(gson.toJson(response));
     }
 }
