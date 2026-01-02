@@ -11,4 +11,7 @@ public interface BranchItemService {
     BranchInventoryItem buyItem(UUID branchId, UUID itemId, UUID customerId, int quantity);
 
     BranchInventoryItem restockItem(UUID branchId, UUID itemId, int quantity);
+
+    BranchInventoryItem addItem(UUID branchId, String productName, String category, double unitPrice,
+            int initialQuantity);
 }

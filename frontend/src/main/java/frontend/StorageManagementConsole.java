@@ -1,4 +1,4 @@
-package frontend.console;
+package frontend;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,7 +10,7 @@ import java.util.UUID;
 public class StorageManagementConsole {
     
     private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 12345;
+    private static final int SERVER_PORT = 8080;
     private UUID branchId;
 
     public static void main(String[] args) {
@@ -68,6 +68,7 @@ public class StorageManagementConsole {
 
         } catch (IOException e) {
             System.err.println("Connection error: " + e.getMessage());
+            System.err.println("Make sure the server is running! (Run '.\\mvnw.cmd -pl server exec:java' in a separate terminal)");
         }
     }
 

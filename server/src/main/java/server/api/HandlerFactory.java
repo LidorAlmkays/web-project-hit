@@ -10,6 +10,7 @@ import server.api.handlers.UpdateInventoryItemHandler;
 import server.application.adaptors.AuthService;
 import server.application.adaptors.BranchItemService;
 import server.application.adaptors.BranchService;
+import server.application.adaptors.CustomerService;
 import server.application.adaptors.EmployeeService;
 import server.application.adaptors.LoggerService;
 
@@ -21,15 +22,18 @@ public class HandlerFactory {
     private final LoggerService logService;
     private final EmployeeService employeeService;
     private final BranchService branchService;
+    private final CustomerService customerService;
     private final BranchItemService branchItemService;
     private final Map<EventType, SocketHandler> handlers;
 
-    public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService, BranchService branchService, BranchItemService branchItemService) {
+    public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService,
+            BranchItemService branchItemService, BranchService branchService, CustomerService customerService) {
+        this.branchItemService = branchItemService;
+        this.branchService = branchService;
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
-        this.branchService = branchService;
-        this.branchItemService = branchItemService;
+        this.customerService = customerService;
         this.handlers = new HashMap<>();
         initializeHandlers();
     }

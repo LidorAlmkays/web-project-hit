@@ -10,7 +10,7 @@ target/
 *.war
 *.ear
 *.nar
-
+data/
 # IDE metadata
 .idea/
 .vscode/
