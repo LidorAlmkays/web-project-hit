@@ -2,6 +2,7 @@ package shareddto;
 
 public enum EventType {
     LOGIN_EMPLOYEE,
+    LOGOUT_EMPLOYEE,
     CREATE_EMPLOYEE,
     UPDATE_EMPLOYEE,
     DELETE_EMPLOYEE,

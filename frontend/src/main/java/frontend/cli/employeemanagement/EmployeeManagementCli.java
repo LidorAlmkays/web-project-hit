@@ -12,9 +12,9 @@ public class EmployeeManagementCli {
     /**
      * Runs the employee management CLI with the given transport and input source.
      */
-    public void run(IClientTransport client, Scanner scanner) throws IOException {
+    public EmployeeManagementController.ControllerResult run(IClientTransport client, Scanner scanner, shareddto.employeemanagement.response.EmployeeDto currentUser) throws IOException {
         EmployeeManagementView view = new EmployeeManagementView();
-        EmployeeManagementController controller = new EmployeeManagementController(client, view, scanner);
-        controller.run();
+        EmployeeManagementController controller = new EmployeeManagementController(client, view, scanner, currentUser);
+        return controller.run();
     }
 }

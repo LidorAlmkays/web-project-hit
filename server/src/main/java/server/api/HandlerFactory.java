@@ -36,6 +36,7 @@ public class HandlerFactory {
 
     private void initializeHandlers() {
         handlers.put(EventType.LOGIN_EMPLOYEE, new LoginEmployeeHandler(authService));
+        handlers.put(EventType.LOGOUT_EMPLOYEE, new server.api.handlers.LogoutEmployeeHandler(authService));
     }
 
     public SocketHandler createHandler(EventType eventType) {

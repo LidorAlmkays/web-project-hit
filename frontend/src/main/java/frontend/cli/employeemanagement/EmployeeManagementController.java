@@ -2,21 +2,17 @@ package frontend.cli.employeemanagement;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import frontend.transport.IClientTransport;
 import frontend.cli.employeemanagement.config.EmployeeManagementEvents;
-import shareddto.employeemanagement.request.BranchEmployeesRequest;
-import shareddto.employeemanagement.request.EmployeeCreateRequest;
-import shareddto.employeemanagement.request.EmployeeDeleteRequest;
-import shareddto.employeemanagement.request.EmployeeGetRequest;
-import shareddto.employeemanagement.request.EmployeeUpdateRequest;
-import shareddto.employeemanagement.response.EmployeeDto;
+import frontend.transport.IClientTransport;
+import shareddto.EventType;
 import shareddto.SocketMessage;
+import shareddto.employeemanagement.request.*;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Scanner;
-import shareddto.EventType;
 
 /**
  * Coordinates user input, API calls, and view rendering for employee management tasks.
@@ -26,23 +22,24 @@ public class EmployeeManagementController {
     private final IClientTransport client;
     private final EmployeeManagementView view;
     private final Scanner scanner;
+    private final EmployeeDto currentUser;
 
-    public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner) {
+    public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner, EmployeeDto currentUser) {
         this.client = client;
         this.view = view;
         this.scanner = scanner;
+        this.currentUser = currentUser;
     }
 
-    /**
-     * Runs the main CLI loop until the user exits.
-     */
-    public void run() throws IOException {
+    public enum ControllerResult { LOGGED_OUT, EXITED }
+
+    public ControllerResult run() throws IOException {
         view.header("Task 8 - Employee Management");
         while (true) {
             view.menu();
             if (!scanner.hasNextLine()) {
                 view.info("No input. Exiting.");
-                return;
+                return ControllerResult.EXITED;
             }
             String choice = scanner.nextLine().trim();
             switch (choice) {
@@ -62,7 +59,10 @@ public class EmployeeManagementController {
                     listBranchEmployees();
                     break;
                 case "6":
-                    return;
+                    logout();
+                    return ControllerResult.LOGGED_OUT;
+                case "7":
+                    return ControllerResult.EXITED;
                 default:
                     view.error("Unknown option.");
                     break;
@@ -88,16 +88,7 @@ public class EmployeeManagementController {
         // Backend expects UUID employee number; adjust if server supports other identifiers.
         String employeeNumber = view.prompt(scanner, "Employee number (UUID)");
         EmployeeCreateRequest base = promptEmployeeCreateRequest();
-        EmployeeUpdateRequest request = new EmployeeUpdateRequest(
-                employeeNumber,
-                base.getBranchId(),
-                base.getFullName(),
-                base.getEmployeeId(),
-                base.getPhoneNumber(),
-                base.getBankAccountNumber(),
-                base.getRole(),
-                base.getEmail(),
-                base.getPassword());
+        EmployeeUpdateRequest request = new EmployeeUpdateRequest(employeeNumber, base.getBranchId(), base.getFullName(), base.getEmployeeId(), base.getPhoneNumber(), base.getBankAccountNumber(), base.getRole(), base.getEmail(), base.getPassword());
 
         SocketMessage response = sendOrReport(EmployeeManagementEvents.UPDATE_EMPLOYEE, request, "Update failed: ");
         if (response == null) {
@@ -139,16 +130,22 @@ public class EmployeeManagementController {
         view.printEmployeeList(parseEmployeeList(response));
     }
 
+    private void logout() throws IOException {
+        view.section("Logout");
+        if (currentUser == null) {
+            view.error("No logged-in user information available");
+            return;
+        }
+        LogoutEmployeeRequest request = new LogoutEmployeeRequest(currentUser.getEmployeeNumber());
+        SocketMessage response = sendOrReport(EventType.LOGOUT_EMPLOYEE, request, "Logout failed: ");
+        if (response == null) {
+            return;
+        }
+        view.success("Logged out.");
+    }
+
     private EmployeeCreateRequest promptEmployeeCreateRequest() {
-        return new EmployeeCreateRequest(
-                view.prompt(scanner, "Branch ID (blank for admin)"),
-                view.prompt(scanner, "Full name"),
-                view.prompt(scanner, "Employee ID"),
-                view.prompt(scanner, "Phone number"),
-                view.prompt(scanner, "Bank account number"),
-                view.promptRole(scanner),
-                view.prompt(scanner, "Email"),
-                view.prompt(scanner, "Password"));
+        return new EmployeeCreateRequest(view.prompt(scanner, "Branch ID (blank for admin)"), view.prompt(scanner, "Full name"), view.prompt(scanner, "Employee ID"), view.prompt(scanner, "Phone number"), view.prompt(scanner, "Bank account number"), view.promptRole(scanner), view.prompt(scanner, "Email"), view.prompt(scanner, "Password"));
     }
 
     /**

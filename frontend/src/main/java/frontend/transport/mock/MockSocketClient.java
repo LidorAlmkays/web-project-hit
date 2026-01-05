@@ -51,6 +51,8 @@ public class MockSocketClient implements IClientTransport {
                 return handleListBranch(data);
             case LOGIN_EMPLOYEE:
                 return handleLogin(data);
+            case LOGOUT_EMPLOYEE:
+                return handleLogout(data);
             default:
                 return error(eventType, "Unsupported event in mock: " + eventType);
         }
@@ -161,6 +163,38 @@ public class MockSocketClient implements IClientTransport {
             }
         }
         return ok(EventType.LIST_BRANCH_EMPLOYEES, list);
+    }
+
+    private SocketMessage handleLogout(Object data) {
+        // Parse typed DTO first; otherwise convert untyped data into DTO using Gson
+        String employeeNumber = null;
+        if (data instanceof shareddto.employeemanagement.request.LogoutEmployeeRequest) {
+            employeeNumber = ((shareddto.employeemanagement.request.LogoutEmployeeRequest) data).getEmployeeNumber();
+        } else {
+            com.google.gson.Gson gson = new com.google.gson.Gson();
+            try {
+                shareddto.employeemanagement.request.LogoutEmployeeRequest req =
+                        gson.fromJson(gson.toJson(data), shareddto.employeemanagement.request.LogoutEmployeeRequest.class);
+                if (req != null) {
+                    employeeNumber = req.getEmployeeNumber();
+                }
+            } catch (Exception ignored) {
+                // fall through to error handling below
+            }
+        }
+
+        if (isBlank(employeeNumber)) {
+            return error(EventType.LOGOUT_EMPLOYEE, "Missing employee number");
+        }
+
+        EmployeeDto existing = findByEmployeeNumber(employeeNumber.trim());
+        if (existing == null) {
+            return error(EventType.LOGOUT_EMPLOYEE, "Employee not found");
+        }
+
+        // Remove from logged-in set (mock behavior)
+        loggedIn.remove(existing.getEmail());
+        return ok(EventType.LOGOUT_EMPLOYEE, null);
     }
 
     private SocketMessage handleLogin(Object data) {

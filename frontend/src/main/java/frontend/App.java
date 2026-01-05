@@ -2,6 +2,7 @@ package frontend;
 
 import frontend.cli.auth.LoginController;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
+import frontend.cli.employeemanagement.EmployeeManagementController;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
 import frontend.transport.mock.MockSocketClient;
@@ -32,13 +33,23 @@ public class App {
 
         try (IClientTransport client = createClient(offline, host, port); Scanner scanner = new Scanner(System.in)) {
             LoginController loginController = new frontend.cli.auth.LoginController();
-            EmployeeDto loggedInEmployee = loginController.login(client, scanner);
-            if (loggedInEmployee == null) {
-                System.out.println("Login failed after multiple attempts. Exiting.");
-                return;
-            }
+            boolean repeat;
+            do {
+                EmployeeDto loggedInEmployee = loginController.login(client, scanner);
+                if (loggedInEmployee == null) {
+                    System.out.println("Login failed after multiple attempts. Exiting.");
+                    return;
+                }
 
-            new EmployeeManagementCli().run(client, scanner);
+                EmployeeManagementController.ControllerResult result = new EmployeeManagementCli().run(client, scanner, loggedInEmployee);
+                if (result == EmployeeManagementController.ControllerResult.LOGGED_OUT) {
+                    System.out.println("You have been logged out.");
+                    repeat = true;
+                } else {
+                    repeat = false;
+                }
+            } while (repeat);
+            // exit after user chose Exit
         } catch (IOException e) {
             System.out.println("Failed to connect to server: " + e.getMessage());
         }
