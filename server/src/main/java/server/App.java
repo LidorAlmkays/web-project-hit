@@ -40,10 +40,11 @@ public class App {
         BranchService branchService = applicationFactory.createBranchService(branchRepository,
                 branchInventoryItemRepository, employeeRepository, logRepository);
         LoggerService logService = applicationFactory.createLoggerService(logRepository);
+        ReportService reportService = applicationFactory.createReportService(logRepository, branchInventoryItemRepository);
         AuthService authService = applicationFactory.createAuthService(employeeRepository, logRepository,
                 userManagementService);
         System.out.println("Starting API");
-        SocketServer socketServer = new SocketServer(authService, logService, employeeService);
+        SocketServer socketServer = new SocketServer(authService, logService, employeeService, reportService);
         socketServer.start();
 
     }

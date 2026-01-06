@@ -3,6 +3,7 @@ package server.api;
 import server.application.adaptors.AuthService;
 import server.application.adaptors.EmployeeService;
 import server.application.adaptors.LoggerService;
+import server.application.adaptors.ReportService;
 import server.config.Config;
 
 import java.io.IOException;
@@ -13,16 +14,18 @@ public class SocketServer {
     private final AuthService authService;
     private final LoggerService logService;
     private final EmployeeService employeeService;
+    private final ReportService reportService;
     private ServerSocket serverSocket;
     private boolean running;
     private HandlerFactory handlerFactory;
 
-    public SocketServer(AuthService authService, LoggerService logService, EmployeeService employeeService) {
+    public SocketServer(AuthService authService, LoggerService logService, EmployeeService employeeService, ReportService reportService) {
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
+        this.reportService = reportService;
         this.running = false;
-        this.handlerFactory = new HandlerFactory(authService, logService, employeeService);
+        this.handlerFactory = new HandlerFactory(authService, logService, employeeService, reportService);
     }
 
     public void start() {

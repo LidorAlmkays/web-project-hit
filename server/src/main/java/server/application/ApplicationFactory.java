@@ -14,6 +14,8 @@ import server.infustructre.adaptors.BranchInventoryItemRepository;
 import server.infustructre.adaptors.BranchRepository;
 import server.infustructre.adaptors.EmployeeRepository;
 import server.infustructre.adaptors.LogRepository;
+import server.application.adaptors.ReportService;
+import server.application.services.ReportServiceImpl;
 
 public class ApplicationFactory {
 
@@ -53,5 +55,9 @@ public class ApplicationFactory {
 
     public UserManagementService createUserManagementService(LogRepository logRepository) {
         return new UserManagementServiceImpl(logRepository);
+    }
+
+    public ReportService createReportService(LogRepository logRepository, BranchInventoryItemRepository inventoryRepository) {
+        return new ReportServiceImpl(logRepository, inventoryRepository);
     }
 }
