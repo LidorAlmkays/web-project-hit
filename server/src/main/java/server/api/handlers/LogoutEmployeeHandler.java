@@ -4,12 +4,10 @@ import com.google.gson.Gson;
 import shareddto.EventType;
 import shareddto.SocketMessage;
 import server.application.adaptors.AuthService;
-import server.application.services.ChatManager;
 import shareddto.employeemanagement.request.LogoutEmployeeRequest;
 
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -17,19 +15,15 @@ import java.util.UUID;
  */
 public class LogoutEmployeeHandler implements SocketHandler {
     private final AuthService authService;
-    private final ChatManager chatManager;
     private final Gson gson = new Gson();
 
-    public LogoutEmployeeHandler(AuthService authService, ChatManager chatManager) {
+    public LogoutEmployeeHandler(AuthService authService) {
         this.authService = authService;
-        this.chatManager = chatManager;
     }
 
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
         try {
-            // Always parse incoming data into a LogoutEmployeeRequest via Gson to avoid
-            // casting to Map
             LogoutEmployeeRequest req = gson.fromJson(gson.toJson(data),
                     LogoutEmployeeRequest.class);
             String employeeNumberStr = req == null ? null : req.getEmployeeNumber();
@@ -41,7 +35,6 @@ public class LogoutEmployeeHandler implements SocketHandler {
 
             UUID employeeNumber = UUID.fromString(employeeNumberStr.trim());
             authService.logout(employeeNumber);
-            chatManager.unregisterUser(employeeNumber.toString());
             sendSuccess(clientSocket);
         } catch (IllegalArgumentException e) {
             sendError(clientSocket, e.getMessage());
