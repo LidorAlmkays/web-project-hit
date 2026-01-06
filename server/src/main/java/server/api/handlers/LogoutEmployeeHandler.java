@@ -1,21 +1,18 @@
 package server.api.handlers;
 
-import com.google.gson.Gson;
+import server.application.adaptors.AuthService;
 import shareddto.EventType;
 import shareddto.SocketMessage;
-import server.application.adaptors.AuthService;
 import shareddto.employeemanagement.request.LogoutEmployeeRequest;
 
-import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.UUID;
 
 /**
  * Handles logout requests from clients.
  */
-public class LogoutEmployeeHandler implements SocketHandler {
+public class LogoutEmployeeHandler extends AbstractSocketHandler {
     private final AuthService authService;
-    private final Gson gson = new Gson();
 
     public LogoutEmployeeHandler(AuthService authService) {
         this.authService = authService;
@@ -24,8 +21,7 @@ public class LogoutEmployeeHandler implements SocketHandler {
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
         try {
-            LogoutEmployeeRequest req = gson.fromJson(gson.toJson(data),
-                    LogoutEmployeeRequest.class);
+            LogoutEmployeeRequest req = gson.fromJson(gson.toJson(data), LogoutEmployeeRequest.class);
             String employeeNumberStr = req == null ? null : req.getEmployeeNumber();
 
             if (employeeNumberStr == null || employeeNumberStr.trim().isEmpty()) {
@@ -49,11 +45,5 @@ public class LogoutEmployeeHandler implements SocketHandler {
 
     private void sendError(Socket clientSocket, String message) throws Exception {
         sendMessage(clientSocket, new SocketMessage(EventType.LOGOUT_EMPLOYEE, message));
-    }
-
-    private void sendMessage(Socket clientSocket, SocketMessage message) throws Exception {
-        DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
-        out.writeUTF(gson.toJson(message));
-        out.flush();
     }
 }
