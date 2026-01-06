@@ -1,0 +1,12 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.maven.enabled": true,
+    "java.project.referencedLibraries": [
+        "**/*.jar"
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.maven.userSettings": null,
+    "maven.executable.path": "${workspaceFolder}/apache-maven-3.9.11/bin/mvn.cmd",
+    "java.jdt.ls.java.home": null
+}
+

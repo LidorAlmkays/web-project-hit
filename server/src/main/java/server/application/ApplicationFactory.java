@@ -2,20 +2,25 @@ package server.application;
 
 import server.application.adaptors.AuthService;
 import server.application.adaptors.BranchService;
+import server.application.adaptors.BranchItemService;
+import server.application.adaptors.CustomerService;
 import server.application.adaptors.EmployeeService;
 import server.application.adaptors.LoggerService;
+import server.application.adaptors.ReportService;
 import server.application.adaptors.UserManagementService;
 import server.application.services.AuthServiceImpl;
 import server.application.services.BranchServiceImpl;
+import server.application.services.BranchItemServiceImpl;
+import server.application.services.CustomerServiceImpl;
 import server.application.services.EmployeeServiceImpl;
 import server.application.services.LoggerServiceImpl;
+import server.application.services.ReportServiceImpl;
 import server.application.services.UserManagementServiceImpl;
 import server.infustructre.adaptors.BranchInventoryItemRepository;
 import server.infustructre.adaptors.BranchRepository;
+import server.infustructre.adaptors.CustomerRepository;
 import server.infustructre.adaptors.EmployeeRepository;
 import server.infustructre.adaptors.LogRepository;
-import server.application.adaptors.ReportService;
-import server.application.services.ReportServiceImpl;
 
 public class ApplicationFactory {
 
@@ -53,11 +58,26 @@ public class ApplicationFactory {
                 logRepository);
     }
 
+    public BranchItemService createBranchItemService(BranchRepository branchRepository,
+            BranchInventoryItemRepository branchInventoryItemRepository,
+            CustomerRepository customerRepository,
+            LogRepository logRepository) {
+        return new BranchItemServiceImpl(
+                branchRepository,
+                branchInventoryItemRepository,
+                customerRepository,
+                logRepository);
+    }
+
     public UserManagementService createUserManagementService(LogRepository logRepository) {
         return new UserManagementServiceImpl(logRepository);
     }
 
     public ReportService createReportService(LogRepository logRepository, BranchInventoryItemRepository inventoryRepository) {
         return new ReportServiceImpl(logRepository, inventoryRepository);
+    }
+
+    public CustomerService createCustomerService(CustomerRepository customerRepository, LogRepository logRepository) {
+        return new CustomerServiceImpl(customerRepository, logRepository);
     }
 }

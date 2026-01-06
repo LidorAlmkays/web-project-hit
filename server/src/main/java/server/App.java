@@ -9,9 +9,12 @@ import server.infustructre.adaptors.LogRepository;
 import server.api.SocketServer;
 import server.application.ApplicationFactory;
 import server.application.adaptors.AuthService;
+import server.application.adaptors.BranchItemService;
 import server.application.adaptors.BranchService;
+import server.application.adaptors.CustomerService;
 import server.application.adaptors.EmployeeService;
 import server.application.adaptors.LoggerService;
+import server.application.adaptors.ReportService;
 import server.application.adaptors.UserManagementService;
 
 public class App {
@@ -41,10 +44,15 @@ public class App {
                 branchInventoryItemRepository, employeeRepository, logRepository);
         LoggerService logService = applicationFactory.createLoggerService(logRepository);
         ReportService reportService = applicationFactory.createReportService(logRepository, branchInventoryItemRepository);
+        BranchItemService branchItemService = applicationFactory.createBranchItemService(branchRepository,
+                branchInventoryItemRepository, customerRepository, logRepository);
+        CustomerService customerService = applicationFactory.createCustomerService(customerRepository,
+                logRepository);
         AuthService authService = applicationFactory.createAuthService(employeeRepository, logRepository,
                 userManagementService);
         System.out.println("Starting API");
-        SocketServer socketServer = new SocketServer(authService, logService, employeeService, reportService);
+        SocketServer socketServer = new SocketServer(authService, logService, employeeService,
+                branchItemService, branchService, customerService, reportService);
         socketServer.start();
 
     }

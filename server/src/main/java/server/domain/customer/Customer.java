@@ -5,7 +5,7 @@ import java.util.UUID;
 public class Customer {
     private final UUID customerId;// index
     private String fullName;
-    private String idNumber;// ת.ז
+    private String idNumber;// ת.ז //index
     private String phone;
     private String email;
     private CustomerType customerType;
