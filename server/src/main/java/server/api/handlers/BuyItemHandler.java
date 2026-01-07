@@ -1,17 +1,16 @@
 package server.api.handlers;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.UUID;
 import server.application.adaptors.BranchItemService;
 import server.domain.BranchInventoryItem;
 import shareddto.BuyItemRequest;
+import shareddto.EventType;
+import shareddto.SocketMessage;
 
-public class BuyItemHandler implements SocketHandler {
+public class BuyItemHandler extends AbstractSocketHandler {
     private final BranchItemService branchItemService;
-    private final Gson gson = new Gson();
 
     public BuyItemHandler(BranchItemService branchItemService) {
         this.branchItemService = branchItemService;
@@ -19,25 +18,42 @@ public class BuyItemHandler implements SocketHandler {
 
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
-        DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
         try {
             String requestJson = gson.toJson(data);
             BuyItemRequest request = gson.fromJson(requestJson, BuyItemRequest.class);
 
-            UUID branchId = UUID.fromString(request.getBranchId());
-            UUID itemId = UUID.fromString(request.getItemId());
-            UUID customerId = UUID.fromString(request.getCustomerId());
+            UUID branchId;
+            try {
+                branchId = UUID.fromString(request.getBranchId());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid Branch ID format: " + request.getBranchId());
+            }
+
+            UUID customerId;
+            try {
+                customerId = UUID.fromString(request.getCustomerId());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Validation Error: '" + request.getCustomerId() + "' is not a valid Customer UUID format.");
+            }
+
+            UUID itemId;
+            try {
+                itemId = UUID.fromString(request.getItemId());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Validation Error: '" + request.getItemId() + "' is not a valid Item UUID format.");
+            }
+
             int quantity = request.getQuantity();
 
             BranchInventoryItem updatedItem = branchItemService.buyItem(branchId, itemId, customerId, quantity);
-
-            JsonObject response = new JsonObject();
-            response.add("data", gson.toJsonTree(updatedItem));
-            out.writeUTF(gson.toJson(response));
+           
+            sendMessage(clientSocket, new SocketMessage(EventType.BUY_INVENTORY_ITEM, updatedItem));
         } catch (Exception e) {
-            JsonObject response = new JsonObject();
-            response.addProperty("error", e.getMessage());
-            out.writeUTF(gson.toJson(response));
+            System.err.println("Error in BuyItemHandler:");
+            e.printStackTrace();
+            JsonObject errorData = new JsonObject();
+            errorData.addProperty("error", e.getMessage());
+            sendMessage(clientSocket, new SocketMessage(EventType.BUY_INVENTORY_ITEM, errorData));
         }
     }
 }

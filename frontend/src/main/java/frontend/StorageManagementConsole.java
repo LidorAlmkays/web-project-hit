@@ -21,7 +21,7 @@ public class StorageManagementConsole {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 8080;
     private UUID branchId;
-
+    
     public static void main(String[] args) {
         new StorageManagementConsole().start();
     }
@@ -38,48 +38,43 @@ public class StorageManagementConsole {
             try {
                 this.branchId = UUID.fromString(scanner.nextLine());
             } catch (IllegalArgumentException e) {
-                System.out.println("Invalid UUID format. Exiting.");
+                System.out.println("Invalid Branch UUID format. Exiting.");
                 return;
             }
 
             boolean running = true;
             while (running) {
                 try {
-                printMenu();
-                String choice = scanner.nextLine();
+                    printMenu();
+                    String choice = scanner.nextLine();
 
-                switch (choice) {
-                    case "1": // View Branch Details
-                        GetBranchInfoRequest branchReq = new GetBranchInfoRequest(branchId.toString());
-                        JsonElement branchInfo = sendRequest(client, EventType.GET_BRANCH_INFO, branchReq);
-                        printBranchInfo(branchInfo);
-                        break;
-                    case "2": // View Inventory
-                        GetInventoryItemsRequest invReq = new GetInventoryItemsRequest(branchId.toString());
-                        JsonElement inventory = sendRequest(client, EventType.GET_INVERTORY_ITEMS, invReq);
-                        printInventoryList(inventory);
-                        break;
-                    case "3": // Restock Existing Item (Update)
-                        handleRestockExistingItem(client, scanner);
-                        break;
-                    case "4": // Buy Item
-                        handleBuyItem(client, scanner);
-                        break;
-                    case "5":
-                        System.out.println("Exiting...");
-                        running = false;
-                        break;
-                    default:
-                        System.out.println("Invalid option.");
-                }
+                    switch (choice) {
+                        case "1":
+                            printBranchInfo(sendRequest(client, EventType.GET_BRANCH_INFO, new GetBranchInfoRequest(branchId.toString())));
+                            break;
+                        case "2":
+                            printInventoryList(sendRequest(client, EventType.GET_INVERTORY_ITEMS, new GetInventoryItemsRequest(branchId.toString())));
+                            break;
+                        case "3":
+                            handleRestockExistingItem(client, scanner);
+                            break;
+                        case "4":
+                            handleBuyItem(client, scanner);
+                            break;
+                        case "5":
+                            System.out.println("Exiting...");
+                            running = false;
+                            break;
+                        default:
+                            System.out.println("Invalid option.");
+                    }
                 } catch (Exception e) {
-                    System.err.println("Error during operation: " + e.getMessage());
+                    System.err.println("Error: " + e.getMessage());
                 }
             }
 
         } catch (IOException e) {
             System.err.println("Connection error: " + e.getMessage());
-            System.err.println("Make sure the server is running! (Run '.\\mvnw.cmd -pl server exec:java' in a separate terminal)");
         }
     }
 
@@ -94,19 +89,33 @@ public class StorageManagementConsole {
     }
 
     private JsonElement sendRequest(SocketClient client, EventType eventType, Object data) throws IOException {
-        System.out.println(">> Sending " + eventType);
         SocketMessage response = client.send(eventType, data);
-        System.out.println("<< Response: " + response.getData());
         return new Gson().toJsonTree(response.getData());
     }
 
     private void handleRestockExistingItem(SocketClient client, Scanner scanner) throws IOException {
         System.out.print("Item ID (UUID): ");
-        String pid = scanner.nextLine();
-        System.out.print("Quantity to add: ");
-        int qty = Integer.parseInt(scanner.nextLine());
+        String pidInput = scanner.nextLine();
+        
+        // Manual validation for clearer error message
+        try {
+            UUID.fromString(pidInput); 
+        } catch (IllegalArgumentException e) {
+            System.err.println("Validation Error: '" + pidInput + "' is not a valid Item UUID format.");
+            return;
+        }
 
-        UpdateStockRequest request = new UpdateStockRequest(branchId.toString(), pid, qty);
+        System.out.print("Quantity to add: ");
+        String qtyInput = scanner.nextLine();
+        int qty;
+        try {
+            qty = Integer.parseInt(qtyInput);
+        } catch (NumberFormatException e) {
+            System.err.println("Validation Error: Quantity must be a number.");
+            return;
+        }
+
+        UpdateStockRequest request = new UpdateStockRequest(branchId.toString(), pidInput, qty);
         JsonElement response = sendRequest(client, EventType.UPDATE_INVENTORY_ITEM, request);
         if (checkForError(response)) return;
         System.out.println("Update successful:");
@@ -114,25 +123,38 @@ public class StorageManagementConsole {
     }
 
     private void handleBuyItem(SocketClient client, Scanner scanner) throws IOException {
-            System.out.print("Item ID (UUID) to buy: ");
-            String pid = scanner.nextLine();
-            System.out.print("Customer ID (UUID): ");
-            String cid = scanner.nextLine();
-            System.out.print("Quantity to buy: ");
-            int qty = Integer.parseInt(scanner.nextLine());
-
-            BuyItemRequest request = new BuyItemRequest(branchId.toString(), pid, cid, qty);
-            JsonElement response = sendRequest(client, EventType.BUY_INVENTORY_ITEM, request);
-            if (checkForError(response)) return;
-            System.out.println("Purchase successful:");
-            printSingleItem(response);
-        }
-
-    private void printBranchInfo(JsonElement json) {
-        if (json == null || json.isJsonNull()) {
-            System.out.println("No data received.");
+        System.out.print("Item ID (UUID) to buy: ");
+        String pidInput = scanner.nextLine();
+        
+        try {
+            UUID.fromString(pidInput);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Validation Error: '" + pidInput + "' is not a valid Item UUID format.");
             return;
         }
+
+        System.out.print("Customer ID (UUID): ");
+        String cid = scanner.nextLine();
+        
+        try {
+            UUID.fromString(cid);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Validation Error: '" + cid + "' is not a valid Customer UUID format.");
+            return;
+        }
+
+        System.out.print("Quantity to buy: ");
+        int qty = Integer.parseInt(scanner.nextLine());
+
+        BuyItemRequest request = new BuyItemRequest(branchId.toString(), pidInput, cid, qty);
+        JsonElement response = sendRequest(client, EventType.BUY_INVENTORY_ITEM, request);
+        if (checkForError(response)) return;
+        System.out.println("Purchase successful:");
+        printSingleItem(response);
+    }
+
+    private void printBranchInfo(JsonElement json) {
+        if (json == null || json.isJsonNull()) return;
         JsonObject data = json.getAsJsonObject();
         if (data.has("data")) data = data.getAsJsonObject("data");
         
@@ -143,7 +165,7 @@ public class StorageManagementConsole {
         System.out.println("Phone:   " + getString(data, "phoneNumber"));
         System.out.println("Sold:    " + data.get("totalSold"));
         System.out.println("Revenue: " + data.get("totalMoneyEarned"));
-        System.out.println("======================\n");
+        System.out.println("======================");
     }
 
     private void printInventoryList(JsonElement json) {
@@ -156,18 +178,30 @@ public class StorageManagementConsole {
             items = root.has("data") ? root.getAsJsonArray("data") : new JsonArray();
         }
 
-        System.out.println("\n=== Inventory ===");
-        System.out.printf("%-38s | %-30s | %-15s | %-10s | %-8s%n", "Item ID", "Product Name", "Category", "Price", "Stock");
-        System.out.println("----------------------------------------------------------------------------------------------------------------");
+        String rowFormat = "%-38s | %-25s | %-15s | %-10s | %-8s%n";
+
+        System.out.println("\n=== Current Inventory ===");
+        
+        System.out.printf(rowFormat, "Item ID", "Product Name", "Category", "Price", "Stock");
+        System.out.println("-".repeat(105)); 
+
         for (JsonElement e : items) {
             JsonObject item = e.getAsJsonObject();
-            System.out.printf("%-38s | %-30s | %-15s | %-10.2f | %-8d%n",
-                    getString(item, "itemId"), getString(item, "productName"), getString(item, "category"),
-                    item.get("unitPrice").getAsDouble(), item.get("quantityInStock").getAsInt());
-        }
-        System.out.println("=================\n");
-    }
+            
+            String name = getString(item, "productName");
+            if (name.length() > 25) {
+                name = name.substring(0, 22) + "...";
+            }
 
+            System.out.printf(rowFormat,
+                    getString(item, "itemId"), 
+                    name, 
+                    getString(item, "category"),
+                    String.format("%.2f", item.get("unitPrice").getAsDouble()), 
+                    item.get("quantityInStock").getAsInt());
+        }
+        System.out.println("=========================\n");
+    }
     private void printSingleItem(JsonElement json) {
         if (json == null || json.isJsonNull()) return;
         JsonObject item = json.getAsJsonObject();

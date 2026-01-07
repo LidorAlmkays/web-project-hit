@@ -1,17 +1,16 @@
 package server.api.handlers;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.UUID;
 import server.application.adaptors.BranchItemService;
 import server.domain.BranchInventoryItem;
+import shareddto.EventType;
+import shareddto.SocketMessage;
 import shareddto.UpdateStockRequest;
 
-public class UpdateInventoryItemHandler implements SocketHandler {
+public class UpdateInventoryItemHandler extends AbstractSocketHandler {
     private final BranchItemService branchItemService;
-    private final Gson gson = new Gson();
 
     public UpdateInventoryItemHandler(BranchItemService branchItemService) {
         this.branchItemService = branchItemService;
@@ -19,7 +18,6 @@ public class UpdateInventoryItemHandler implements SocketHandler {
 
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
-        DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
         try {
             String requestJson = gson.toJson(data);
             UpdateStockRequest request = gson.fromJson(requestJson, UpdateStockRequest.class);
@@ -30,15 +28,11 @@ public class UpdateInventoryItemHandler implements SocketHandler {
 
             BranchInventoryItem updatedItem = branchItemService.restockItem(branchId, itemId, quantity);
 
-            JsonObject response = new JsonObject();
-            response.add("data", gson.toJsonTree(updatedItem));
-            out.writeUTF(gson.toJson(response));
+            sendMessage(clientSocket, new SocketMessage(EventType.UPDATE_INVENTORY_ITEM, updatedItem));
         } catch (Exception e) {
-            JsonObject response = new JsonObject();
             JsonObject errorData = new JsonObject();
             errorData.addProperty("error", e.getMessage());
-            response.add("data", errorData);
-            out.writeUTF(gson.toJson(response));
+            sendMessage(clientSocket, new SocketMessage(EventType.UPDATE_INVENTORY_ITEM, errorData));
         }
     }
 }
