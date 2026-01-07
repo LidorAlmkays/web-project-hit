@@ -1,11 +1,11 @@
 package frontend.transport.mock;
 
-import frontend.dto.employeemanagement.request.BranchEmployeesRequest;
-import frontend.dto.employeemanagement.request.EmployeeCreateRequest;
-import frontend.dto.employeemanagement.request.EmployeeDeleteRequest;
-import frontend.dto.employeemanagement.request.EmployeeGetRequest;
-import frontend.dto.employeemanagement.request.EmployeeUpdateRequest;
-import frontend.dto.employeemanagement.response.EmployeeDto;
+import shareddto.employeemanagement.request.BranchEmployeesRequest;
+import shareddto.employeemanagement.request.EmployeeCreateRequest;
+import shareddto.employeemanagement.request.EmployeeDeleteRequest;
+import shareddto.employeemanagement.request.EmployeeGetRequest;
+import shareddto.employeemanagement.request.EmployeeUpdateRequest;
+import shareddto.employeemanagement.response.EmployeeDto;
 import frontend.transport.IClientTransport;
 import shareddto.EventType;
 import shareddto.SocketMessage;
@@ -77,11 +77,11 @@ public class MockSocketClient implements IClientTransport {
 
     private SocketMessage handleUpdate(Object data) {
         EmployeeUpdateRequest request = (EmployeeUpdateRequest) data;
-        if (request == null || isBlank(request.getEmployeeNumber()) || isBlank(request.getEmail())) {
-            return error(EventType.UPDATE_EMPLOYEE, "Missing employee number or email");
+        if (request == null || isBlank(request.getEmail())) {
+            return error(EventType.UPDATE_EMPLOYEE, "Missing email");
         }
 
-        EmployeeDto existing = findByEmployeeNumber(request.getEmployeeNumber().trim());
+        EmployeeDto existing = findByEmail(request.getEmail().trim());
         if (existing == null) {
             return error(EventType.UPDATE_EMPLOYEE, "Employee not found");
         }
@@ -107,11 +107,11 @@ public class MockSocketClient implements IClientTransport {
 
     private SocketMessage handleDelete(Object data) {
         EmployeeDeleteRequest request = (EmployeeDeleteRequest) data;
-        if (request == null || isBlank(request.getEmployeeNumber())) {
-            return error(EventType.DELETE_EMPLOYEE, "Missing employee number");
+        if (request == null || isBlank(request.getEmail())) {
+            return error(EventType.DELETE_EMPLOYEE, "Missing email");
         }
 
-        EmployeeDto existing = findByEmployeeNumber(request.getEmployeeNumber().trim());
+        EmployeeDto existing = findByEmail(request.getEmail().trim());
         if (existing == null) {
             return error(EventType.DELETE_EMPLOYEE, "Employee not found");
         }
@@ -122,11 +122,11 @@ public class MockSocketClient implements IClientTransport {
 
     private SocketMessage handleGet(Object data) {
         EmployeeGetRequest request = (EmployeeGetRequest) data;
-        if (request == null || isBlank(request.getEmployeeNumber())) {
-            return error(EventType.GET_EMPLOYEE, "Missing employee number");
+        if (request == null || isBlank(request.getEmail())) {
+            return error(EventType.GET_EMPLOYEE, "Missing email");
         }
 
-        EmployeeDto existing = findByEmployeeNumber(request.getEmployeeNumber().trim());
+        EmployeeDto existing = findByEmail(request.getEmail().trim());
         if (existing == null) {
             return error(EventType.GET_EMPLOYEE, "Employee not found");
         }
@@ -159,6 +159,14 @@ public class MockSocketClient implements IClientTransport {
             }
         }
         return null;
+    }
+
+    private EmployeeDto findByEmail(String email) {
+        if (isBlank(email)) {
+            return null;
+        }
+        String normalized = email.trim();
+        return employees.get(normalized);
     }
 
     private SocketMessage ok(EventType eventType, Object data) {

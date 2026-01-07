@@ -1,9 +1,11 @@
-package frontend.dto.employeemanagement.response;
+package server.api.handlers;
 
-/**
- * Response payload for employee details.
- */
-public class EmployeeDto {
+import server.domain.employee.Employee;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class EmployeeResponse {
     private String employeeNumber;
     private String branchId;
     private String fullName;
@@ -13,11 +15,11 @@ public class EmployeeDto {
     private String role;
     private String email;
 
-    public EmployeeDto() {
+    public EmployeeResponse() {
     }
 
-    public EmployeeDto(String employeeNumber, String branchId, String fullName, String employeeId, String phoneNumber,
-            String bankAccountNumber, String role, String email) {
+    public EmployeeResponse(String employeeNumber, String branchId, String fullName, String employeeId,
+            String phoneNumber, String bankAccountNumber, String role, String email) {
         this.employeeNumber = employeeNumber;
         this.branchId = branchId;
         this.fullName = fullName;
@@ -26,6 +28,33 @@ public class EmployeeDto {
         this.bankAccountNumber = bankAccountNumber;
         this.role = role;
         this.email = email;
+    }
+
+    public static EmployeeResponse from(Employee employee) {
+        if (employee == null) {
+            return null;
+        }
+        String branchId = employee.getBranchId() != null ? employee.getBranchId().toString() : null;
+        return new EmployeeResponse(
+                employee.getEmployeeNumber().toString(),
+                branchId,
+                employee.getFullName(),
+                employee.getEmployeeId(),
+                employee.getPhoneNumber(),
+                employee.getBankAccountNumber(),
+                employee.getRole().name(),
+                employee.getEmail());
+    }
+
+    public static List<EmployeeResponse> fromList(List<Employee> employees) {
+        List<EmployeeResponse> responses = new ArrayList<>();
+        if (employees == null) {
+            return responses;
+        }
+        for (Employee employee : employees) {
+            responses.add(from(employee));
+        }
+        return responses;
     }
 
     public String getEmployeeNumber() {
