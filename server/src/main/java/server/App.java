@@ -2,7 +2,6 @@ package server;
 
 import server.infustructre.InfrastructureFactory;
 import server.infustructre.adaptors.*;
-import server.infustructre.adaptors.*;
 import server.api.SocketServer;
 import server.application.ApplicationFactory;
 import server.application.adaptors.*;
@@ -40,9 +39,11 @@ public class App {
                                 userManagementService);
                 BranchItemService branchItemService = applicationFactory.createBranchItemService(branchRepository,
                                 branchInventoryItemRepository, customerRepository, logRepository);
+                CustomerService customerService = applicationFactory.createCustomerService(customerRepository,
+                                logRepository);
                 System.out.println("Starting API");
                 SocketServer socketServer = new SocketServer(authService, logService, employeeService,
-                                branchItemService, branchService);
+                                branchItemService, branchService, customerService);
                 socketServer.start();
 
     }
