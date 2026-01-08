@@ -2,14 +2,11 @@ package server;
 
 import server.infustructre.InfrastructureFactory;
 import server.infustructre.adaptors.*;
+import server.infustructre.adaptors.*;
 import server.api.SocketServer;
 import server.application.ApplicationFactory;
-import server.application.adaptors.AuthService;
-import server.application.adaptors.BranchItemService;
-import server.application.adaptors.BranchService;
-import server.application.adaptors.EmployeeService;
-import server.application.adaptors.LoggerService;
-import server.application.adaptors.UserManagementService;
+import server.application.adaptors.*;
+
 
 public class App {
     private final InfrastructureFactory infrastructureFactory;
