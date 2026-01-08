@@ -2,6 +2,7 @@ package server.api.handlers;
 
 import shareddto.EventType;
 import shareddto.SocketMessage;
+import shareddto.employeemanagement.request.BranchEmployeesRequest;
 import server.domain.employee.Employee;
 
 import java.net.Socket;
@@ -21,7 +22,7 @@ public class ListBranchEmployeesHandler extends AbstractSocketHandler {
             BranchEmployeesRequest request = gson.fromJson(gson.toJsonTree(data), BranchEmployeesRequest.class);
             List<Employee> employees = resolveEmployees(request);
             sendMessage(clientSocket,
-                    new SocketMessage(EventType.LIST_BRANCH_EMPLOYEES, EmployeeResponse.fromList(employees)));
+                    new SocketMessage(EventType.LIST_BRANCH_EMPLOYEES, EmployeeMapper.toDtoList(employees)));
         } catch (Exception e) {
             sendMessage(clientSocket, new SocketMessage(EventType.LIST_BRANCH_EMPLOYEES, e.getMessage()));
         }
@@ -34,13 +35,5 @@ public class ListBranchEmployeesHandler extends AbstractSocketHandler {
         }
         UUID branchId = UUID.fromString(request.getBranchId().trim());
         return employeeRepositoryReader.findByBranchId(branchId);
-    }
-
-    private static class BranchEmployeesRequest {
-        private String branchId;
-
-        public String getBranchId() {
-            return branchId;
-        }
     }
 }

@@ -3,18 +3,18 @@ package frontend.cli.employeemanagement;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import frontend.transport.IClientTransport;
-import frontend.cli.employeemanagement.config.EmployeeManagementEvents;
 import shareddto.employeemanagement.request.BranchEmployeesRequest;
 import shareddto.employeemanagement.request.EmployeeGetRequest;
 import shareddto.employeemanagement.request.EmployeeUpdateRequest;
+import shareddto.employeemanagement.BranchCatalog;
 import shareddto.employeemanagement.response.EmployeeDto;
 import shareddto.SocketMessage;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import shareddto.EventType;
 
@@ -26,13 +26,13 @@ public class EmployeeManagementController {
     private final IClientTransport client;
     private final EmployeeManagementView view;
     private final Scanner scanner;
-    private final List<BranchOption> branchOptions;
+    private final List<Map.Entry<String, String>> branchOptions;
 
     public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner) {
         this.client = client;
         this.view = view;
         this.scanner = scanner;
-        this.branchOptions = new ArrayList<>(KNOWN_BRANCHES);
+        this.branchOptions = new ArrayList<>(BranchCatalog.KNOWN_BRANCHES.entrySet());
     }
 
     /**
@@ -81,7 +81,7 @@ public class EmployeeManagementController {
             return;
         }
 
-        SocketMessage response = sendOrReport(EmployeeManagementEvents.UPDATE_EMPLOYEE, request, "Update failed: ");
+        SocketMessage response = sendOrReport(EventType.UPDATE_EMPLOYEE, request, "Update failed: ");
         if (response == null) {
             return;
         }
@@ -92,7 +92,7 @@ public class EmployeeManagementController {
     private void getEmployee() throws IOException {
         view.section("Get Employee");
         EmployeeGetRequest request = new EmployeeGetRequest(view.prompt(scanner, "Email"));
-        SocketMessage response = sendOrReport(EmployeeManagementEvents.GET_EMPLOYEE, request, "Get failed: ");
+        SocketMessage response = sendOrReport(EventType.GET_EMPLOYEE, request, "Get failed: ");
         if (response == null) {
             return;
         }
@@ -102,7 +102,7 @@ public class EmployeeManagementController {
     private void listBranchEmployees() throws IOException {
         view.section("List Employees");
         BranchEmployeesRequest request = new BranchEmployeesRequest(promptBranchId("Branch", true, "leave blank for all"));
-        SocketMessage response = sendOrReport(EmployeeManagementEvents.LIST_BRANCH_EMPLOYEES, request, "List failed: ");
+        SocketMessage response = sendOrReport(EventType.LIST_BRANCH_EMPLOYEES, request, "List failed: ");
         if (response == null) {
             return;
         }
@@ -115,7 +115,7 @@ public class EmployeeManagementController {
             return null;
         }
         EmployeeGetRequest getRequest = new EmployeeGetRequest(email.trim());
-        SocketMessage response = sendOrReport(EmployeeManagementEvents.GET_EMPLOYEE, getRequest, "Get failed: ");
+        SocketMessage response = sendOrReport(EventType.GET_EMPLOYEE, getRequest, "Get failed: ");
         if (response == null) {
             return null;
         }
@@ -243,8 +243,8 @@ public class EmployeeManagementController {
 
         view.info("Known branches:");
         for (int i = 0; i < branchOptions.size(); i++) {
-            BranchOption option = branchOptions.get(i);
-            view.info(String.format("  %d) %s", i + 1, option.name));
+            Map.Entry<String, String> option = branchOptions.get(i);
+            view.info(String.format("  %d) %s", i + 1, option.getValue()));
         }
         String hint = allowBlank
                 ? "Choose a number from the list or " + blankHint
@@ -256,7 +256,7 @@ public class EmployeeManagementController {
             }
             Integer selection = parseSelection(input, branchOptions.size());
             if (selection != null) {
-                return branchOptions.get(selection - 1).id;
+                return branchOptions.get(selection - 1).getKey();
             }
             view.error("Invalid selection. Enter a number from the list.");
         }
@@ -273,11 +273,6 @@ public class EmployeeManagementController {
         return null;
     }
 
-    private static final List<BranchOption> KNOWN_BRANCHES = Arrays.asList(
-            new BranchOption("550e8400-e29b-41d4-a716-446655440001", "Downtown Premium Store"),
-            new BranchOption("550e8400-e29b-41d4-a716-446655440002", "Mall Branch - High Traffic"),
-            new BranchOption("550e8400-e29b-41d4-a716-446655440003", "Industrial Outlet")
-    );
 
     /**
      * Sends a request and renders a user-friendly error on failure.
@@ -342,21 +337,11 @@ public class EmployeeManagementController {
         if (branchId == null || branchId.trim().isEmpty()) {
             return branchId;
         }
-        for (BranchOption option : branchOptions) {
-            if (option.id.equals(branchId)) {
-                return option.name;
+        for (Map.Entry<String, String> option : branchOptions) {
+            if (option.getKey().equals(branchId)) {
+                return option.getValue();
             }
         }
         return branchId;
-    }
-
-    private static class BranchOption {
-        private final String id;
-        private final String name;
-
-        private BranchOption(String id, String name) {
-            this.id = id;
-            this.name = name;
-        }
     }
 }

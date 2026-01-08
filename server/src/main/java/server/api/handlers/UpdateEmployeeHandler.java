@@ -2,6 +2,7 @@ package server.api.handlers;
 
 import shareddto.EventType;
 import shareddto.SocketMessage;
+import shareddto.employeemanagement.request.EmployeeUpdateRequest;
 import server.application.adaptors.EmployeeService;
 import server.domain.employee.Employee;
 import server.domain.employee.EmployeeRole;
@@ -13,11 +14,9 @@ import java.util.UUID;
 
 public class UpdateEmployeeHandler extends AbstractSocketHandler {
     private final EmployeeService employeeService;
-    private final EmployeeRepositoryReader employeeRepositoryReader;
 
     public UpdateEmployeeHandler(EmployeeService employeeService) {
         this.employeeService = employeeService;
-        this.employeeRepositoryReader = new EmployeeRepositoryReader();
     }
 
     @Override
@@ -42,7 +41,7 @@ public class UpdateEmployeeHandler extends AbstractSocketHandler {
 
             Employee saved = employeeService.updateEmployee(updated);
             sendMessage(clientSocket,
-                    new SocketMessage(EventType.UPDATE_EMPLOYEE, EmployeeResponse.from(saved)));
+                    new SocketMessage(EventType.UPDATE_EMPLOYEE, EmployeeMapper.toDto(saved)));
         } catch (Exception e) {
             sendMessage(clientSocket, new SocketMessage(EventType.UPDATE_EMPLOYEE, e.getMessage()));
         }
@@ -52,29 +51,14 @@ public class UpdateEmployeeHandler extends AbstractSocketHandler {
         if (request == null) {
             throw new IllegalArgumentException("request is required");
         }
-        if (request.getEmployeeNumber() != null && !request.getEmployeeNumber().trim().isEmpty()) {
-            UUID employeeNumber = parseRequiredUuid(request.getEmployeeNumber(), "employeeNumber is required");
-            Optional<Employee> existing = employeeService.getEmployee(employeeNumber);
-            if (existing.isEmpty()) {
-                throw new IllegalArgumentException("employee not found: " + employeeNumber);
-            }
-            return existing.get();
-        }
         if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
-            Optional<Employee> existing = employeeRepositoryReader.findByEmail(request.getEmail().trim());
+            Optional<Employee> existing = employeeService.getEmployee(request.getEmail().trim());
             if (existing.isEmpty()) {
                 throw new IllegalArgumentException("employee not found: " + request.getEmail().trim());
             }
             return existing.get();
         }
-        throw new IllegalArgumentException("employeeNumber or email is required");
-    }
-
-    private UUID parseRequiredUuid(String raw, String errorMessage) {
-        if (raw == null || raw.trim().isEmpty()) {
-            throw new IllegalArgumentException(errorMessage);
-        }
-        return UUID.fromString(raw.trim());
+        throw new IllegalArgumentException("email is required");
     }
 
     private UUID resolveBranchId(String raw, UUID fallback) {
@@ -102,51 +86,4 @@ public class UpdateEmployeeHandler extends AbstractSocketHandler {
         return value.trim();
     }
 
-    private static class EmployeeUpdateRequest {
-        private String employeeNumber;
-        private String branchId;
-        private String fullName;
-        private String employeeId;
-        private String phoneNumber;
-        private String bankAccountNumber;
-        private String role;
-        private String email;
-        private String password;
-
-        public String getEmployeeNumber() {
-            return employeeNumber;
-        }
-
-        public String getBranchId() {
-            return branchId;
-        }
-
-        public String getFullName() {
-            return fullName;
-        }
-
-        public String getEmployeeId() {
-            return employeeId;
-        }
-
-        public String getPhoneNumber() {
-            return phoneNumber;
-        }
-
-        public String getBankAccountNumber() {
-            return bankAccountNumber;
-        }
-
-        public String getRole() {
-            return role;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-    }
 }
