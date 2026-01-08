@@ -1,8 +1,10 @@
 package frontend;
 
+import frontend.cli.CliResult;
 import frontend.cli.auth.LoginController;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
-import frontend.cli.employeemanagement.EmployeeManagementController;
+
+import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
 import frontend.transport.mock.MockSocketClient;
@@ -33,7 +35,7 @@ public class App {
         int port = params.size() > 1 ? Integer.parseInt(params.get(1)) : DEFAULT_PORT;
 
         try (IClientTransport client = createClient(offline, host, port); Scanner scanner = new Scanner(System.in)) {
-            LoginController loginController = new frontend.cli.auth.LoginController();
+            LoginController loginController = new LoginController();
             boolean repeat;
             do {
                 EmployeeDto loggedInEmployee = loginController.login(client, scanner);
@@ -42,8 +44,11 @@ public class App {
                     return;
                 }
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
-                EmployeeManagementController.ControllerResult result = new EmployeeManagementCli().run(client, scanner);
-                if (result == EmployeeManagementController.ControllerResult.LOGGED_OUT) {
+                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli()));
+                CliResult result = homeCli.run(client, scanner);
+
+                if (result == CliResult.LOGOUT) {
+                    frontend.util.SessionManager.getInstance().logout();
                     System.out.println("You have been logged out.");
                     repeat = true;
                 } else {
