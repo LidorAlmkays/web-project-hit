@@ -35,7 +35,11 @@ public class ReportHandler extends AbstractSocketHandler {
                 if (!(data instanceof String)) {
                     throw new IllegalArgumentException("Error: Branch report requires a Branch ID (String).");
                 }
-                response = reportService.getBranchInventoryReportJson(UUID.fromString((String) data));
+                try { 
+                    response = reportService.getBranchInventoryReportJson(UUID.fromString((String) data));
+                } catch (IllegalArgumentException e) {
+                    response = "{ \"error\": \"Invalid Branch ID format\" }";
+                }
                 break;
                 
             case BRANCH_WORD:
