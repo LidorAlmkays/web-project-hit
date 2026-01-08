@@ -11,8 +11,6 @@ import frontend.util.SessionManager;
 import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -21,13 +19,7 @@ public class App {
     private static final String DEFAULT_HOST = "127.0.0.1";
 
     public static void main(String[] args) {
-        List<String> params = new ArrayList<>();
-        Collections.addAll(params, args);
-
-        String host = !params.isEmpty() ? params.get(0) : DEFAULT_HOST;
-        int port = params.size() > 1 ? Integer.parseInt(params.get(1)) : DEFAULT_PORT;
-
-        try (IClientTransport client = new SocketClient(host, port); Scanner scanner = new Scanner(System.in)) {
+        try (IClientTransport client = new SocketClient(DEFAULT_HOST, DEFAULT_PORT); Scanner scanner = new Scanner(System.in)) {
             LoginController loginController = new LoginController();
             boolean repeat;
             do {
