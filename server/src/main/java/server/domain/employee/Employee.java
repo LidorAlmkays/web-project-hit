@@ -1,5 +1,7 @@
 package server.domain.employee;
 
+import shareddto.employeemanagement.response.EmployeeDto;
+
 import java.util.UUID;
 
 public class Employee {
@@ -172,5 +174,17 @@ public class Employee {
                 this.role,
                 this.email,
                 this.password);
+    }
+
+    public EmployeeDto toDto() {
+        return new EmployeeDto(
+                this.employeeNumber != null ? this.employeeNumber.toString() : null,
+                this.branchId != null ? this.branchId.toString() : null,
+                this.fullName,
+                this.employeeId,
+                this.phoneNumber,
+                this.bankAccountNumber,
+                this.role != null ? this.role.name() : null,
+                this.email);
     }
 }
