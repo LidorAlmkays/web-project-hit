@@ -7,12 +7,12 @@ import frontend.cli.employeemanagement.EmployeeManagementCli;
 import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
-import frontend.transport.mock.MockSocketClient;
 import frontend.util.SessionManager;
 import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -22,19 +22,12 @@ public class App {
 
     public static void main(String[] args) {
         List<String> params = new ArrayList<>();
-        boolean offline = false;
-        for (String arg : args) {
-            if ("--offline".equalsIgnoreCase(arg) || "--mock".equalsIgnoreCase(arg)) {
-                offline = true;
-            } else {
-                params.add(arg);
-            }
-        }
+        Collections.addAll(params, args);
 
-        String host = params.size() > 0 ? params.get(0) : DEFAULT_HOST;
+        String host = !params.isEmpty() ? params.get(0) : DEFAULT_HOST;
         int port = params.size() > 1 ? Integer.parseInt(params.get(1)) : DEFAULT_PORT;
 
-        try (IClientTransport client = createClient(offline, host, port); Scanner scanner = new Scanner(System.in)) {
+        try (IClientTransport client = new SocketClient(host, port); Scanner scanner = new Scanner(System.in)) {
             LoginController loginController = new LoginController();
             boolean repeat;
             do {
@@ -59,16 +52,5 @@ public class App {
         } catch (IOException e) {
             System.out.println("Failed to connect to server: " + e.getMessage());
         }
-    }
-
-    /**
-     * Creates a transport based on CLI flags (mock or socket).
-     */
-    private static IClientTransport createClient(boolean offline, String host, int port) throws IOException {
-        if (offline) {
-            System.out.println("Running in mock mode (no server connection).");
-            return new MockSocketClient();
-        }
-        return new SocketClient(host, port);
     }
 }
