@@ -10,7 +10,7 @@ public interface EmployeeService {
     Employee createEmployee(UUID branchId, String fullName, String employeeId, String phoneNumber,
             String bankAccountNumber, EmployeeRole role, String email, String password);
 
-    Optional<Employee> getEmployee(UUID employeeNumber);
+    Optional<Employee> getEmployee(String email);
 
     Employee updateEmployee(Employee employeeToUpdate);
 

@@ -76,12 +76,30 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Optional<Employee> getEmployee(UUID employeeNumber) {
+    public Optional<Employee> getEmployee(String email) {
+        logRepository.info("Getting employee by email: " + email);
+
+        if (email == null || email.trim().isEmpty()) {
+            Error error = new Error("Get employee failed, email is null or empty");
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
         try {
-            return employeeRepository.findByEmployeeNumber(employeeNumber);
+            Optional<Employee> employee = employeeRepository.findByEmail(email);
+            if (employee.isPresent()) {
+                logRepository.info("Employee found by email, email=" + email
+                        + ", employeeNumber=" + employee.get().getEmployeeNumber());
+            } else {
+                logRepository.info("Employee not found by email, email=" + email);
+            }
+            return employee;
+        } catch (IllegalArgumentException ex) {
+            // Already logged above
+            throw ex;
         } catch (Exception e) {
-            Error error = new Error(
-                    "get employee error, when trying to find employee: " + employeeNumber + ", " + e.getMessage());
+            Error error = new Error("Get employee error, when trying to find employee by email: " + email
+                    + ", " + e.getMessage());
             logRepository.error(error);
             return Optional.empty();
         }
@@ -93,7 +111,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Object lock = getEmployeeLock(employeeNumber);
 
         synchronized (lock) {
-            Optional<Employee> existingEmployeeOpt = getEmployee(employeeNumber);
+            Optional<Employee> existingEmployeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
             if (existingEmployeeOpt.isEmpty()) {
                 Error error = new Error("update failed, employee not found: " + employeeNumber);
                 logRepository.error(error);
@@ -118,7 +136,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void deleteEmployee(UUID employeeNumber) {
         Object lock = getEmployeeLock(employeeNumber);
         synchronized (lock) {
-            if (getEmployee(employeeNumber).isEmpty()) {
+            Optional<Employee> existingEmployeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
+            if (existingEmployeeOpt.isEmpty()) {
                 Error error = new Error("delete failed, employee not found: " + employeeNumber);
                 logRepository.error(error);
                 throw new IllegalArgumentException(error);
