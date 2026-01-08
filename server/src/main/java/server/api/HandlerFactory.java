@@ -1,8 +1,7 @@
 package server.api;
 
 import shareddto.EventType;
-import server.api.handlers.LoginEmployeeHandler;
-import server.api.handlers.SocketHandler;
+import server.api.handlers.*;
 import server.application.adaptors.*;
 
 
