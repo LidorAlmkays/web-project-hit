@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import frontend.cli.employeemanagement.config.EmployeeManagementEvents;
 import frontend.transport.IClientTransport;
+import frontend.util.SessionManager;
 import shareddto.EventType;
 import shareddto.SocketMessage;
 import shareddto.employeemanagement.request.*;
@@ -15,23 +16,24 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Coordinates user input, API calls, and view rendering for employee management tasks.
+ * Coordinates user input, API calls, and view rendering for employee management
+ * tasks.
  */
 public class EmployeeManagementController {
     private static final Gson gson = new Gson();
     private final IClientTransport client;
     private final EmployeeManagementView view;
     private final Scanner scanner;
-    private final EmployeeDto currentUser;
 
-    public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner, EmployeeDto currentUser) {
+    public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner) {
         this.client = client;
         this.view = view;
         this.scanner = scanner;
-        this.currentUser = currentUser;
     }
 
-    public enum ControllerResult { LOGGED_OUT, EXITED }
+    public enum ControllerResult {
+        LOGGED_OUT, EXITED
+    }
 
     public ControllerResult run() throws IOException {
         view.header("Task 8 - Employee Management");
@@ -132,15 +134,19 @@ public class EmployeeManagementController {
 
     private void logout() throws IOException {
         view.section("Logout");
-        if (currentUser == null) {
+        SessionManager session = SessionManager.getInstance();
+        EmployeeDto currentEmployee = session.getCurrentEmployee();
+
+        if (currentEmployee == null) {
             view.error("No logged-in user information available");
             return;
         }
-        LogoutEmployeeRequest request = new LogoutEmployeeRequest(currentUser.getEmployeeNumber());
+        LogoutEmployeeRequest request = new LogoutEmployeeRequest(currentEmployee.getEmployeeNumber());
         SocketMessage response = sendOrReport(EventType.LOGOUT_EMPLOYEE, request, "Logout failed: ");
         if (response == null) {
             return;
         }
+        session.logout();
         view.success("Logged out.");
     }
 

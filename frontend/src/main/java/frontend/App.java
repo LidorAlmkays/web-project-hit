@@ -6,6 +6,7 @@ import frontend.cli.employeemanagement.EmployeeManagementController;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
 import frontend.transport.mock.MockSocketClient;
+import frontend.util.SessionManager;
 import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
@@ -40,8 +41,8 @@ public class App {
                     System.out.println("Login failed after multiple attempts. Exiting.");
                     return;
                 }
-
-                EmployeeManagementController.ControllerResult result = new EmployeeManagementCli().run(client, scanner, loggedInEmployee);
+                SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
+                EmployeeManagementController.ControllerResult result = new EmployeeManagementCli().run(client, scanner);
                 if (result == EmployeeManagementController.ControllerResult.LOGGED_OUT) {
                     System.out.println("You have been logged out.");
                     repeat = true;
