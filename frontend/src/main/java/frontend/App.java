@@ -1,12 +1,16 @@
 package frontend;
 
+import frontend.cli.CliResult;
+import frontend.cli.auth.LoginController;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
+
+import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
-import frontend.transport.mock.MockSocketClient;
 import frontend.transport.SocketClient;
+import frontend.util.SessionManager;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -15,35 +19,30 @@ public class App {
     private static final String DEFAULT_HOST = "127.0.0.1";
 
     public static void main(String[] args) {
-        List<String> params = new ArrayList<>();
-        boolean offline = false;
-        for (String arg : args) {
-            if ("--offline".equalsIgnoreCase(arg) || "--mock".equalsIgnoreCase(arg)) {
-                offline = true;
-            } else {
-                params.add(arg);
-            }
-        }
+        try (IClientTransport client = new SocketClient(DEFAULT_HOST, DEFAULT_PORT); Scanner scanner = new Scanner(System.in)) {
+            LoginController loginController = new LoginController();
+            boolean repeat;
+            do {
+                EmployeeDto loggedInEmployee = loginController.login(client, scanner);
+                if (loggedInEmployee == null) {
+                    System.out.println("Login failed after multiple attempts. Exiting.");
+                    return;
+                }
+                SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
+                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli()));
+                CliResult result = homeCli.run(client, scanner);
 
-        String host = params.size() > 0 ? params.get(0) : DEFAULT_HOST;
-        int port = params.size() > 1 ? Integer.parseInt(params.get(1)) : DEFAULT_PORT;
-
-        try (IClientTransport client = createClient(offline, host, port);
-                Scanner scanner = new Scanner(System.in)) {
-            new EmployeeManagementCli().run(client, scanner);
+                if (result == CliResult.LOGOUT) {
+                    frontend.util.SessionManager.getInstance().logout();
+                    System.out.println("You have been logged out.");
+                    repeat = true;
+                } else {
+                    repeat = false;
+                }
+            } while (repeat);
+            // exit after user chose Exit
         } catch (IOException e) {
             System.out.println("Failed to connect to server: " + e.getMessage());
         }
-    }
-
-    /**
-     * Creates a transport based on CLI flags (mock or socket).
-     */
-    private static IClientTransport createClient(boolean offline, String host, int port) throws IOException {
-        if (offline) {
-            System.out.println("Running in mock mode (no server connection).");
-            return new MockSocketClient();
-        }
-        return new SocketClient(host, port);
     }
 }
