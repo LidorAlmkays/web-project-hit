@@ -27,13 +27,10 @@ public class EmployeeManagementView {
 
     public void menu() {
         section("Main Menu");
-        System.out.println("1. Create employee");
-        System.out.println("2. Update employee");
-        System.out.println("3. Delete employee");
-        System.out.println("4. Get employee");
-        System.out.println("5. List branch employees");
-        System.out.println("6. Logout");
-        System.out.println("7. Exit");
+        System.out.println("1. Update employee (by email)");
+        System.out.println("2. Get employee (by email)");
+        System.out.println("3. List employees (all or by branch)");
+        System.out.println("4. Exit");
         System.out.print("Choose: ");
     }
 

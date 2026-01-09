@@ -3,6 +3,11 @@ package frontend.cli.home;
 import frontend.cli.CliResult;
 import frontend.cli.IOptionCli;
 import frontend.transport.IClientTransport;
+import frontend.util.SessionManager;
+import shareddto.EventType;
+import shareddto.SocketMessage;
+import shareddto.employeemanagement.request.LogoutEmployeeRequest;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
 import java.util.List;
@@ -53,7 +58,8 @@ public class HomeController {
                 // If BACK, loop continues
             } else if (choice == options.size() + 1) {
                 // Logout
-                return CliResult.LOGOUT;
+                logout();
+                return CliResult.BACK;
             } else if (choice == options.size() + 2) {
                 // Exit
                 return CliResult.EXIT;
@@ -61,5 +67,22 @@ public class HomeController {
                 view.error("Unknown option.");
             }
         }
+    }
+
+   private void logout() throws IOException {
+        SessionManager session = SessionManager.getInstance();
+        EmployeeDto currentEmployee = session.getCurrentEmployee();
+
+        if (currentEmployee == null) {
+            view.error("No logged-in user information available");
+            return;
+        }
+        LogoutEmployeeRequest request = new LogoutEmployeeRequest(currentEmployee.getEmployeeNumber());
+        SocketMessage response = client.send(EventType.LOGOUT_EMPLOYEE, request);
+        if (response == null) {
+            return;
+        }
+        session.setCurrentEmployee(null);
+        view.info("Logged out.");
     }
 }

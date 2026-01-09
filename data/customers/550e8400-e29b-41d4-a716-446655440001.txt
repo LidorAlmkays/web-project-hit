@@ -1,8 +1,0 @@
-550e8400-e29b-41d4-a716-446655440001
-John Smith
-123456789
-050-1234567
-john.smith@email.com
-NEW
-0
-0.0

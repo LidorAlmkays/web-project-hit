@@ -1,10 +1,8 @@
 package server.api;
 
-import server.api.handlers.LoginEmployeeHandler;
-import server.api.handlers.LogoutEmployeeHandler;
-import server.api.handlers.SocketHandler;
-import server.application.adaptors.*;
 import shareddto.EventType;
+import server.api.handlers.*;
+import server.application.adaptors.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +30,11 @@ public class HandlerFactory {
 
     private void initializeHandlers() {
         handlers.put(EventType.LOGIN_EMPLOYEE, new LoginEmployeeHandler(authService));
+        handlers.put(EventType.CREATE_EMPLOYEE, new CreateEmployeeHandler(employeeService));
+        handlers.put(EventType.UPDATE_EMPLOYEE, new UpdateEmployeeHandler(employeeService));
+        handlers.put(EventType.DELETE_EMPLOYEE, new DeleteEmployeeHandler(employeeService));
+        handlers.put(EventType.GET_EMPLOYEE, new GetEmployeeHandler(employeeService));
+        handlers.put(EventType.LIST_BRANCH_EMPLOYEES, new ListBranchEmployeesHandler());
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
     }
 

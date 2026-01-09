@@ -1,20 +1,20 @@
 package shareddto.employeemanagement.request;
 
 public class EmployeeDeleteRequest {
-    private String employeeNumber;
+    private String email;
 
     public EmployeeDeleteRequest() {
     }
 
-    public EmployeeDeleteRequest(String employeeNumber) {
-        this.employeeNumber = employeeNumber;
+    public EmployeeDeleteRequest(String email) {
+        this.email = email;
     }
 
-    public String getEmployeeNumber() {
-        return employeeNumber;
+    public String getEmail() {
+        return email;
     }
 
-    public void setEmployeeNumber(String employeeNumber) {
-        this.employeeNumber = employeeNumber;
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
