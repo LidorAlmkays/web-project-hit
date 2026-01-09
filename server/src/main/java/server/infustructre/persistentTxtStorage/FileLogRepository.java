@@ -46,17 +46,26 @@ public class FileLogRepository implements LogRepository {
     }
     
     @Override
-    public void info(String message) {
-        LogEntry entry = new LogEntry("SYSTEM", LogEntry.LogType.LOGIN, message, LogEntry.LogLevel.INFO);
+    public void info(LogEntry.LogType type, String message) {
+        info(type, "SYSTEM", message);
+    }
+    @Override
+    public void info(LogEntry.LogType type, String userId, String message) {
+        LogEntry entry = new LogEntry(userId, type, message, LogEntry.LogLevel.INFO);
         save(entry);
-        System.out.println("[INFO] " + message);
+        System.out.println("[INFO] [" + type + "] " + message);
     }
 
     @Override
-    public void error(Error error) {
-        LogEntry entry = new LogEntry("SYSTEM", LogEntry.LogType.ERROR, error.getMessage(), LogEntry.LogLevel.ERROR);
+    public void error(LogEntry.LogType type, String message) {
+        error(type, "SYSTEM", message);
+    }
+
+    @Override
+    public void error(LogEntry.LogType type, String userId, String message) {
+        LogEntry entry = new LogEntry(userId, type, message, LogEntry.LogLevel.ERROR);
         save(entry);
-        System.err.println("[ERROR] " + error.getMessage());
+        System.err.println("[ERROR] [" + type + "] " + message);
     }
 
 
@@ -70,7 +79,7 @@ public class FileLogRepository implements LogRepository {
 
     private LogEntry decode(String line) {
         try {
-            String[] parts = line.split("\\|", 5); // מפצל מקסימום ל-5 חלקים
+            String[] parts = line.split("\\|", 5);
             if (parts.length < 5) return null;
 
             LocalDateTime timestamp = LocalDateTime.parse(parts[0]);
@@ -80,7 +89,7 @@ public class FileLogRepository implements LogRepository {
             try {
                 type = LogEntry.LogType.valueOf(parts[2]);
             } catch (Exception e) {
-                type = LogEntry.LogType.LOGIN; // ברירת מחדל אם הסוג לא מוכר
+                type = LogEntry.LogType.LOGIN;
             }
             
             String email = parts[3];

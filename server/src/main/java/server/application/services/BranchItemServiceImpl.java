@@ -68,32 +68,32 @@ public class BranchItemServiceImpl implements BranchItemService {
     @Override
     public List<BranchInventoryItem> getBranchItems(UUID branchId) {
         try {
-            logRepository.info("Getting items for branch (BranchItemService): " + branchId);
+            logRepository.info(LogEntry.LogType.INVENTORY_MANAGEMENT, "Getting items for branch (BranchItemService): " + branchId);
             List<BranchInventoryItem> items = branchInventoryItemRepository.findByBranchId(branchId);
             return items;
         } catch (Exception e) {
             Error error = new Error(
                     "Get branch items error in BranchItemService, when trying to find items for branch: "
                             + branchId + ", " + e.getMessage());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             return new ArrayList<>();
         }
     }
 
     @Override
     public BranchInventoryItem buyItem(UUID branchId, UUID itemId, UUID customerId, int quantity) {
-        logRepository.info("Buying item, branchId=" + branchId + ", itemId=" + itemId
+        logRepository.info(LogEntry.LogType.PURCHASE, "Buying item, branchId=" + branchId + ", itemId=" + itemId
                 + ", customerId=" + customerId + ", quantity=" + quantity);
 
         if (branchId == null || itemId == null || customerId == null) {
             Error error = new Error("Buy item failed, one of the ids is null");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (quantity <= 0) {
             Error error = new Error("Buy item failed, quantity must be > 0, got: " + quantity);
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
@@ -102,7 +102,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             Optional<Branch> branchOpt = branchRepository.findById(branchId);
             if (branchOpt.isEmpty()) {
                 Error error = new Error("Buy item failed, branch not found: " + branchId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -110,7 +110,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             Optional<Customer> customerOpt = customerRepository.findById(customerId);
             if (customerOpt.isEmpty()) {
                 Error error = new Error("Buy item failed, customer not found: " + customerId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -118,7 +118,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             Optional<BranchInventoryItem> itemOpt = branchInventoryItemRepository.findById(itemId);
             if (itemOpt.isEmpty()) {
                 Error error = new Error("Buy item failed, item not found: " + itemId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -127,7 +127,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             if (!item.getBranchId().equals(branchId)) {
                 Error error = new Error("Buy item failed, item does not belong to branch, itemId: "
                         + itemId + ", branchId: " + branchId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -145,7 +145,7 @@ public class BranchItemServiceImpl implements BranchItemService {
                     itemOpt = branchInventoryItemRepository.findById(itemId);
                     if (itemOpt.isEmpty()) {
                         Error error = new Error("Buy item failed, item not found after lock: " + itemId);
-                        logRepository.error(error);
+                        logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                         throw new IllegalArgumentException(error);
                     }
                     item = itemOpt.get();
@@ -153,7 +153,7 @@ public class BranchItemServiceImpl implements BranchItemService {
                     customerOpt = customerRepository.findById(customerId);
                     if (customerOpt.isEmpty()) {
                         Error error = new Error("Buy item failed, customer not found after lock: " + customerId);
-                        logRepository.error(error);
+                        logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                         throw new IllegalArgumentException(error);
                     }
                     customer = customerOpt.get();
@@ -169,11 +169,11 @@ public class BranchItemServiceImpl implements BranchItemService {
                     int totalPurchases = customer.getTotalPurchases();
                     if (totalPurchases >= 5 && customer.getCustomerType() != CustomerType.VIP) {
                         customer.setCustomerType(CustomerType.VIP);
-                        logRepository.info("Customer upgraded to VIP, customerId=" + customerId
+                        logRepository.info(LogEntry.LogType.CUSTOMER_MANAGEMENT, "Customer upgraded to VIP, customerId=" + customerId
                                 + ", totalPurchases=" + totalPurchases);
                     } else if (totalPurchases >= 3 && customer.getCustomerType() == CustomerType.NEW) {
                         customer.setCustomerType(CustomerType.RETURNING);
-                        logRepository.info("Customer upgraded to RETURNING, customerId=" + customerId
+                        logRepository.info(LogEntry.LogType.CUSTOMER_MANAGEMENT, "Customer upgraded to RETURNING, customerId=" + customerId
                                 + ", totalPurchases=" + totalPurchases);
                     }
 
@@ -184,7 +184,7 @@ public class BranchItemServiceImpl implements BranchItemService {
                     item.sell(quantity);
                     branchInventoryItemRepository.update(item);
 
-                    logRepository.info("Buy item succeeded, itemId=" + itemId + ", branchId=" + branchId
+                    logRepository.info(LogEntry.LogType.PURCHASE, "Buy item succeeded, itemId=" + itemId + ", branchId=" + branchId
                             + ", customerId=" + customerId + ", quantity=" + quantity
                             + ", originalPrice=" + originalPrice + ", finalPrice=" + finalPrice
                             + ", remainingStock=" + item.getQuantityInStock()
@@ -201,25 +201,25 @@ public class BranchItemServiceImpl implements BranchItemService {
         } catch (Exception e) {
             Error error = new Error("Buy item error, itemId=" + itemId + ", branchId=" + branchId
                     + ", customerId=" + customerId + ", message=" + e.getMessage());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
             throw new RuntimeException(error);
         }
     }
 
     @Override
     public BranchInventoryItem restockItem(UUID branchId, UUID itemId, int quantity) {
-        logRepository.info("Restocking item, branchId=" + branchId + ", itemId=" + itemId
+        logRepository.info(LogEntry.LogType.INVENTORY_MANAGEMENT, "Restocking item, branchId=" + branchId + ", itemId=" + itemId
                 + ", quantity=" + quantity);
 
         if (branchId == null || itemId == null) {
             Error error = new Error("Restock item failed, branchId or itemId is null");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (quantity <= 0) {
             Error error = new Error("Restock item failed, quantity must be > 0, got: " + quantity);
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
@@ -228,7 +228,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             Optional<Branch> branchOpt = branchRepository.findById(branchId);
             if (branchOpt.isEmpty()) {
                 Error error = new Error("Restock item failed, branch not found: " + branchId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -236,7 +236,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             Optional<BranchInventoryItem> itemOpt = branchInventoryItemRepository.findById(itemId);
             if (itemOpt.isEmpty()) {
                 Error error = new Error("Restock item failed, item not found: " + itemId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -245,7 +245,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             if (!item.getBranchId().equals(branchId)) {
                 Error error = new Error("Restock item failed, item does not belong to branch, itemId: "
                         + itemId + ", branchId: " + branchId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -256,7 +256,7 @@ public class BranchItemServiceImpl implements BranchItemService {
                 itemOpt = branchInventoryItemRepository.findById(itemId);
                 if (itemOpt.isEmpty()) {
                     Error error = new Error("Restock item failed, item not found after lock: " + itemId);
-                    logRepository.error(error);
+                    logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
                     throw new IllegalArgumentException(error);
                 }
                 item = itemOpt.get();
@@ -266,7 +266,7 @@ public class BranchItemServiceImpl implements BranchItemService {
 
                 branchInventoryItemRepository.update(item);
 
-                logRepository.info("Restock item succeeded, itemId=" + itemId + ", branchId=" + branchId
+                logRepository.info(LogEntry.LogType.INVENTORY_MANAGEMENT, "Restock item succeeded, itemId=" + itemId + ", branchId=" + branchId
                         + ", quantity=" + quantity + ", newStock=" + item.getQuantityInStock());
 
                 return item;
@@ -277,7 +277,7 @@ public class BranchItemServiceImpl implements BranchItemService {
         } catch (Exception e) {
             Error error = new Error("Restock item error, itemId=" + itemId + ", branchId=" + branchId
                     + ", message=" + e.getMessage());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new RuntimeException(error);
         }
     }
@@ -285,36 +285,36 @@ public class BranchItemServiceImpl implements BranchItemService {
     @Override
     public BranchInventoryItem addItem(UUID branchId, String productName, String category, double unitPrice,
             int initialQuantity) {
-        logRepository.info("Adding new item, branchId=" + branchId + ", productName=" + productName
+        logRepository.info(LogEntry.LogType.INVENTORY_MANAGEMENT, "Adding new item, branchId=" + branchId + ", productName=" + productName
                 + ", category=" + category + ", unitPrice=" + unitPrice + ", initialQuantity=" + initialQuantity);
 
         if (branchId == null) {
             Error error = new Error("Add item failed, branchId is null");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (productName == null || productName.trim().isEmpty()) {
             Error error = new Error("Add item failed, productName must not be null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (category == null || category.trim().isEmpty()) {
             Error error = new Error("Add item failed, category must not be null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (unitPrice < 0) {
             Error error = new Error("Add item failed, unitPrice must be non-negative, got: " + unitPrice);
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (initialQuantity < 0) {
             Error error = new Error("Add item failed, initialQuantity must be non-negative, got: " + initialQuantity);
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
@@ -323,7 +323,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             Optional<Branch> branchOpt = branchRepository.findById(branchId);
             if (branchOpt.isEmpty()) {
                 Error error = new Error("Add item failed, branch not found: " + branchId);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -338,7 +338,7 @@ public class BranchItemServiceImpl implements BranchItemService {
             // Save the new item to repository
             branchInventoryItemRepository.save(newItem);
 
-            logRepository.info("Add item succeeded, itemId=" + newItem.getItemId() + ", branchId=" + branchId
+            logRepository.info(LogEntry.LogType.INVENTORY_MANAGEMENT, "Add item succeeded, itemId=" + newItem.getItemId() + ", branchId=" + branchId
                     + ", productName=" + productName + ", category=" + category + ", unitPrice=" + unitPrice
                     + ", initialQuantity=" + initialQuantity + ", quantityInStock=" + newItem.getQuantityInStock());
 
@@ -349,7 +349,7 @@ public class BranchItemServiceImpl implements BranchItemService {
         } catch (Exception e) {
             Error error = new Error("Add item error, branchId=" + branchId + ", productName=" + productName
                     + ", message=" + e.getMessage());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.INVENTORY_MANAGEMENT, error.getMessage());
             throw new RuntimeException(error);
         }
     }

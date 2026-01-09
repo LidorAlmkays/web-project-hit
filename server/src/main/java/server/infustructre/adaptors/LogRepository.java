@@ -8,6 +8,9 @@ public interface LogRepository {
     void save(LogEntry entry);
     List<LogEntry> findAll();
 
-    void info(String message);
-    void error(Error error);
+    void info(LogEntry.LogType type, String message);
+    void info(LogEntry.LogType type, String userId, String message);
+    
+    void error(LogEntry.LogType type, String message);
+    void error(LogEntry.LogType type, String userId, String message);
 }

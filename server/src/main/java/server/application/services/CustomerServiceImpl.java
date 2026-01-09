@@ -24,17 +24,17 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (idNumber == null || idNumber.trim().isEmpty()) {
             Error error = new Error("Get customer by idNumber failed, idNumber is null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         try {
             Optional<Customer> customer = customerRepository.findByIdNumber(idNumber);
             if (customer.isPresent()) {
-                logRepository.info("Customer found by idNumber, idNumber=" + idNumber
+                logRepository.info(LogEntry.LogType.CUSTOMER_MANAGEMENT, "Customer found by idNumber, idNumber=" + idNumber
                         + ", customerId=" + customer.get().getCustomerId());
             } else {
-                logRepository.info("Customer not found by idNumber, idNumber=" + idNumber);
+                logRepository.info(LogEntry.LogType.CUSTOMER_MANAGEMENT, "Customer not found by idNumber, idNumber=" + idNumber);
             }
             return customer;
         } catch (IllegalArgumentException ex) {
@@ -43,7 +43,7 @@ public class CustomerServiceImpl implements CustomerService {
         } catch (Exception e) {
             Error error = new Error("Get customer by idNumber error, idNumber=" + idNumber
                     + ", message=" + e.getMessage());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new RuntimeException(error);
         }
     }
@@ -55,25 +55,25 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (fullName == null || fullName.trim().isEmpty()) {
             Error error = new Error("Add customer failed, fullName must not be null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (idNumber == null || idNumber.trim().isEmpty()) {
             Error error = new Error("Add customer failed, idNumber (ת.ז) must not be null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (phone == null || phone.trim().isEmpty()) {
             Error error = new Error("Add customer failed, phone must not be null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         if (email == null || email.trim().isEmpty()) {
             Error error = new Error("Add customer failed, email must not be null or empty");
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
@@ -82,7 +82,7 @@ public class CustomerServiceImpl implements CustomerService {
             if (existingByIdNumber.isPresent()) {
                 Error error = new Error(
                         "Add customer failed, customer with idNumber (ת.ז) already exists: " + idNumber);
-                logRepository.error(error);
+                logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
@@ -101,7 +101,7 @@ public class CustomerServiceImpl implements CustomerService {
         } catch (Exception e) {
             Error error = new Error("Add customer error, fullName=" + fullName + ", idNumber=" + idNumber
                     + ", message=" + e.getMessage());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.CUSTOMER_MANAGEMENT, error.getMessage());
             throw new RuntimeException(error);
         }
     }
