@@ -1,10 +1,12 @@
-package frontend;
+package frontend.cli.storagemanagement;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import frontend.transport.SocketClient;
+import frontend.cli.CliResult;
+import frontend.cli.IOptionCli;
+import frontend.transport.IClientTransport;
 import shareddto.BuyItemRequest;
 import shareddto.EventType;
 import shareddto.SocketMessage;
@@ -16,30 +18,27 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.UUID;
 
-public class StorageManagementConsole {
+public class StorageManagementConsole implements IOptionCli {
     
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
     private UUID branchId;
     
-    public static void main(String[] args) {
-        new StorageManagementConsole().start();
+    @Override
+    public String getOptionName() {
+        return "Storage Management";
     }
 
-    public void start() {
+    @Override
+    public CliResult run(IClientTransport client, Scanner scanner) {
         System.out.println("Starting Storage Management Console...");
 
-        try (SocketClient client = new SocketClient(SERVER_HOST, SERVER_PORT);
-             Scanner scanner = new Scanner(System.in)) {
-
-            System.out.println("Connected to server at " + SERVER_HOST + ":" + SERVER_PORT);
+        // Note: client and scanner are passed from App.java
 
             System.out.print("Enter Branch ID to manage: ");
             try {
                 this.branchId = UUID.fromString(scanner.nextLine());
             } catch (IllegalArgumentException e) {
                 System.out.println("Invalid Branch UUID format. Exiting.");
-                return;
+                return CliResult.BACK;
             }
 
             boolean running = true;
@@ -73,9 +72,7 @@ public class StorageManagementConsole {
                 }
             }
 
-        } catch (IOException e) {
-            System.err.println("Connection error: " + e.getMessage());
-        }
+        return CliResult.BACK;
     }
 
     private void printMenu() {
@@ -88,12 +85,12 @@ public class StorageManagementConsole {
         System.out.print("Select option: ");
     }
 
-    private JsonElement sendRequest(SocketClient client, EventType eventType, Object data) throws IOException {
+    private JsonElement sendRequest(IClientTransport client, EventType eventType, Object data) throws IOException {
         SocketMessage response = client.send(eventType, data);
         return new Gson().toJsonTree(response.getData());
     }
 
-    private void handleRestockExistingItem(SocketClient client, Scanner scanner) throws IOException {
+    private void handleRestockExistingItem(IClientTransport client, Scanner scanner) throws IOException {
         System.out.print("Item ID (UUID): ");
         String pidInput = scanner.nextLine();
         
@@ -122,7 +119,7 @@ public class StorageManagementConsole {
         printSingleItem(response);
     }
 
-    private void handleBuyItem(SocketClient client, Scanner scanner) throws IOException {
+    private void handleBuyItem(IClientTransport client, Scanner scanner) throws IOException {
         System.out.print("Item ID (UUID) to buy: ");
         String pidInput = scanner.nextLine();
         
