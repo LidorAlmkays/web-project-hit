@@ -45,18 +45,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee createEmployee(UUID branchId, String fullName, String employeeId, String phoneNumber,
             String bankAccountNumber, EmployeeRole role, String email, String password) {
         this.logRepository
-                .info(LogEntry.LogType.EMPLOYEE_MANAGEMENT, "creating employee: " + fullName + " " + employeeId + " " + phoneNumber + " " + bankAccountNumber
+                .info(LogEntry.LogType.MANAGEMENT, "[CREATE EMPLOYEE] creating employee: " + fullName + " " + employeeId + " " + phoneNumber + " " + bankAccountNumber
                         + " " + role + " " + email + " " + password);
         if (role != EmployeeRole.ADMIN && branchId != null) {
             try {
                 if (branchRepository.findById(branchId).isEmpty()) {
-                    Error error = new Error("create employee failed, branch not found: " + branchId);
-                    logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+                    Error error = new Error("[CREATE EMPLOYEE] failed, branch not found: " + branchId);
+                    logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
                     throw new IllegalArgumentException(error);
                 }
             } catch (Exception e) {
-                Error error = new Error("create employee error, when trying to find branch: " + e.getMessage());
-                logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+                Error error = new Error("[CREATE EMPLOYEE] error, when trying to find branch: " + e.getMessage());
+                logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
                 throw new RuntimeException(error);
             }
         }
@@ -66,40 +66,40 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         try {
             employeeRepository.save(newEmployee);
-            logRepository.info(LogEntry.LogType.EMPLOYEE_MANAGEMENT, email, "new employee created: " + newEmployee.getEmployeeNumber());
+            logRepository.info(LogEntry.LogType.MANAGEMENT, email, "[CREATE EMPLOYEE] new employee created: " + newEmployee.getEmployeeNumber());
             return newEmployee;
         } catch (Exception e) {
-            Error error = new Error("create employee error, when trying to save employee: " + e.getMessage());
-            logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+            Error error = new Error("[CREATE EMPLOYEE] error, when trying to save employee: " + e.getMessage());
+            logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
             throw new RuntimeException(error);
         }
     }
 
     @Override
     public Optional<Employee> getEmployee(String email) {
-        logRepository.info(LogEntry.LogType.EMPLOYEE_MANAGEMENT, "Getting employee by email: " + email);
+        logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET EMPLOYEE] getting employee by email: " + email);
 
         if (email == null || email.trim().isEmpty()) {
-            Error error = new Error("Get employee failed, email is null or empty");
-            logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+            Error error = new Error("[GET EMPLOYEE] failed, email is null or empty");
+            logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
         try {
             Optional<Employee> employee = employeeRepository.findByEmail(email);
             if (employee.isPresent()) {
-                logRepository.info(LogEntry.LogType.EMPLOYEE_MANAGEMENT, "Employee found by email, email=" + email
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET EMPLOYEE] employee found by email, email=" + email
                         + ", employeeNumber=" + employee.get().getEmployeeNumber());
             } else {
-                logRepository.info(LogEntry.LogType.EMPLOYEE_MANAGEMENT, "Employee not found by email, email=" + email);
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET EMPLOYEE] employee not found by email, email=" + email);
             }
             return employee;
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception e) {
-            Error error = new Error("Get employee error, when trying to find employee by email: " + email
+            Error error = new Error("[GET EMPLOYEE] error, when trying to find employee by email: " + email
                     + ", " + e.getMessage());
-            logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+            logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
             return Optional.empty();
         }
     }
@@ -112,20 +112,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         synchronized (lock) {
             Optional<Employee> existingEmployeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
             if (existingEmployeeOpt.isEmpty()) {
-                Error error = new Error("update failed, employee not found: " + employeeNumber);
-                logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+                Error error = new Error("[UPDATE EMPLOYEE] failed, employee not found: " + employeeNumber);
+                logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
             try {
                 employeeRepository.update(employeeToUpdate);
-                logRepository.info(LogEntry.LogType.EMPLOYEE_MANAGEMENT, employeeNumber.toString(), "employee updated: " + employeeNumber);
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[UPDATE EMPLOYEE] employee updated: " + employeeNumber);
                 return employeeToUpdate;
             } catch (Exception e) {
                 Error error = new Error(
-                        "employee update error, when trying to update into repository: " + employeeNumber
+                        "[UPDATE EMPLOYEE] error, when trying to update into repository: " + employeeNumber
                                 + ", " + e.getMessage());
-                logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+                logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
                 throw new RuntimeException(error);
             }
         }
@@ -137,18 +137,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         synchronized (lock) {
             Optional<Employee> existingEmployeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
             if (existingEmployeeOpt.isEmpty()) {
-                Error error = new Error("delete failed, employee not found: " + employeeNumber);
-                logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+                Error error = new Error("[DELETE EMPLOYEE] failed, employee not found: " + employeeNumber);
+                logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
                 throw new IllegalArgumentException(error);
             }
 
             try {
                 employeeRepository.delete(employeeNumber);
-                logRepository.info("employee deleted: " + employeeNumber);
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[DELETE EMPLOYEE] Successful for employee: " + employeeNumber);
             } catch (Exception e) {
-                Error error = new Error("employee delete error, when trying to delete from repository: "
+                Error error = new Error("[DELETE EMPLOYEE] error, when trying to delete from repository: "
                         + employeeNumber + ", " + e.getMessage());
-                logRepository.error(LogEntry.LogType.EMPLOYEE_MANAGEMENT, error.getMessage());
+                logRepository.error(LogEntry.LogType.MANAGEMENT, error.getMessage());
                 throw new RuntimeException(error);
             }
         }

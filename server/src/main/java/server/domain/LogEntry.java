@@ -5,16 +5,10 @@ import java.time.LocalDateTime;
 public class LogEntry {
     
     public enum LogType {
-        LOGIN,
-        LOGOUT,
-        REGISTER,
-        EMPLOYEE_MANAGEMENT,
-        CUSTOMER_MANAGEMENT,
-        INVENTORY_MANAGEMENT,
+        AUTHENTICATION,
+        MANAGEMENT,
         PURCHASE,
-        CHAT_START,
-        CHAT_EVENT,
-        CHAT_MESSAGE,
+        CHAT,
         ERROR,
         INFO
     }
