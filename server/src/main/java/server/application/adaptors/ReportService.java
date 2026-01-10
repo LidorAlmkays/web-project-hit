@@ -1,11 +1,11 @@
 package server.application.adaptors;
 
+import shareddto.reporting.SystemReportDto;;
 import java.util.UUID;
 
 public interface ReportService {
-    String getDailySystemReportJson();
-    String getDailySystemReportWord();
-
+    SystemReportDto getSystemReportData();
+    
     // דרישה: דוח מלאי לסניף (JSON)
     String getBranchInventoryReportJson(UUID branchId);
     

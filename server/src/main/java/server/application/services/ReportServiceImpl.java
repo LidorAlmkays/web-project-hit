@@ -34,23 +34,17 @@ public class ReportServiceImpl implements ReportService {
                 .create();
     }
 
-
-
     @Override
     public String getDailySystemReportJson() {
-        // 1. שולפים את הנתונים
         List<LogEntry> todayLogs = getLogsFromLast24Hours();
 
-        // 2. יוצרים מפה (Map) שתייצג את מבנה ה-JSON שאנחנו רוצים
         Map<String, Object> reportData = new HashMap<>();
         reportData.put("reportDate", LocalDateTime.now());
         reportData.put("totalEvents", todayLogs.size());
-        reportData.put("events", todayLogs); // Gson יודע להפוך את הרשימה הזו למערך JSON לבד!
+        reportData.put("events", todayLogs);
 
-        // 3. המרה אוטומטית למחרוזת
         return gson.toJson(reportData);
     }
-
 
     @Override
     public String getBranchInventoryReportJson(UUID branchId) {
@@ -64,7 +58,6 @@ public class ReportServiceImpl implements ReportService {
         return gson.toJson(reportData);
     }
 
-
     @Override
     public String getDailySystemReportWord() {
         return generateHtmlForLogs(getLogsFromLast24Hours());
@@ -74,7 +67,6 @@ public class ReportServiceImpl implements ReportService {
     public String getBranchInventoryReportWord(UUID branchId) {
         return generateHtmlForInventory(inventoryRepository.findByBranchId(branchId), branchId);
     }
-
     
     private List<LogEntry> getLogsFromLast24Hours() {
         LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
@@ -85,16 +77,40 @@ public class ReportServiceImpl implements ReportService {
     
     private String generateHtmlForLogs(List<LogEntry> logs) {
         StringBuilder doc = new StringBuilder();
-        doc.append("<html><body>");
-        doc.append("<h1 style='color:blue'>Daily System Report</h1>");
+        doc.append("<html><head><style>")
+           .append("table {border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;}")
+           .append("th, td {border: 1px solid #ddd; padding: 8px; text-align: left;}")
+           .append("th {background-color: #f2f2f2;}")
+           .append("</style></head><body>");
+           
+        doc.append("<h1 style='color:darkblue'>Daily System Report</h1>");
         doc.append("<p>Date: <b>").append(LocalDateTime.now().toLocalDate()).append("</b></p>");
-        doc.append("<table border='1' cellpadding='5'>");
-        doc.append("<tr style='background-color:#eee'><th>Time</th><th>Level</th><th>Message</th></tr>");
+        doc.append("<table>");
+        
+        doc.append("<tr><th>Time</th><th>Level</th><th>Type</th><th>User/ID</th><th>Message</th></tr>");
+        
         for (LogEntry log : logs) {
-             String color = log.getLevel().name().equals("ERROR") ? "red" : "black";
+             String color = "black";
+             String fontWeight = "normal";
+
+             switch (log.getType()) {
+                 case ERROR -> { color = "red"; fontWeight = "bold"; }
+                 case AUTHENTICATION -> color = "blue";
+                 case PURCHASE -> color = "green";
+                 case MANAGEMENT -> color = "#800080"; // Purple
+                 case CHAT -> color = "#008080"; // Teal
+                 case INFO -> color = "gray";
+             }
+
              doc.append("<tr>");
-             doc.append("<td>").append(log.getTimestamp().toLocalTime().toString().substring(0,8)).append("</td>");
-             doc.append("<td style='color:").append(color).append("'>").append(log.getLevel()).append("</td>");
+             doc.append("<td>").append(log.getTimestamp().toLocalTime().toString().split("\\.")[0]).append("</td>"); // חיתוך מילי-שניות
+             doc.append("<td>").append(log.getLevel()).append("</td>");
+             
+             // עיצוב עמודת הסוג
+             doc.append("<td style='color:").append(color).append("; font-weight:").append(fontWeight).append("'>")
+                .append(log.getType()).append("</td>");
+                
+             doc.append("<td>").append(log.getEmail()).append("</td>");
              doc.append("<td>").append(log.getMessage()).append("</td>");
              doc.append("</tr>");
         }
@@ -104,18 +120,21 @@ public class ReportServiceImpl implements ReportService {
 
     private String generateHtmlForInventory(List<BranchInventoryItem> items, UUID branchId) {
         StringBuilder doc = new StringBuilder();
-        doc.append("<html><body>");
+        doc.append("<html><head><style>table {border-collapse: collapse; width: 100%; font-family: Arial;} th, td {border: 1px solid #ddd; padding: 8px;}</style></head><body>");
         doc.append("<h1>Branch Inventory Report</h1>");
         doc.append("<p>Branch ID: ").append(branchId).append("</p>");
-        doc.append("<table border='1' width='100%'>");
-        doc.append("<tr style='background-color:#ddd'><th>Product</th><th>Category</th><th>Quantity</th><th>Price</th></tr>");
+        doc.append("<table>");
+        doc.append("<tr style='background-color:#eee'><th>Product</th><th>Category</th><th>Quantity</th><th>Price</th></tr>");
+        
         for (BranchInventoryItem item : items) {
             String qtyColor = item.getQuantityInStock() < 5 ? "red" : "green";
+            String qtyStyle = item.getQuantityInStock() < 5 ? "font-weight:bold; color:red;" : "color:green;";
+            
             doc.append("<tr>");
             doc.append("<td>").append(item.getProductName()).append("</td>");
             doc.append("<td>").append(item.getCategory()).append("</td>");
-            doc.append("<td style='color:").append(qtyColor).append("'><b>").append(item.getQuantityInStock()).append("</b></td>");
-            doc.append("<td>").append(item.getUnitPrice()).append("</td>");
+            doc.append("<td style='").append(qtyStyle).append("'>").append(item.getQuantityInStock()).append("</td>");
+            doc.append("<td>").append(String.format("%.2f", item.getUnitPrice())).append("</td>");
             doc.append("</tr>");
         }
         doc.append("</table></body></html>");
