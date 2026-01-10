@@ -1,12 +1,16 @@
 package server.api.handlers;
 
 import server.application.adaptors.AuthService;
+import server.chat.ChatManager;
 import server.domain.employee.Employee;
 import shareddto.EventType;
 import shareddto.SocketMessage;
 import shareddto.employeemanagement.request.LoginEmployeeRequest;
+import shareddto.employeemanagement.response.EmployeeDto;
 
+import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.UUID;
 
 /**
  * Handles login requests from clients.
@@ -48,6 +52,18 @@ public class LoginEmployeeHandler extends AbstractSocketHandler {
     }
 
     private void sendSuccess(Socket clientSocket, Object payload) throws Exception {
+        if (payload instanceof EmployeeDto) {
+            try {
+                EmployeeDto dto = (EmployeeDto) payload;
+                if (dto.getEmployeeNumber() != null) {
+                    UUID userId = UUID.fromString(dto.getEmployeeNumber());
+                    ChatManager.getInstance().registerSession(userId,
+                            new DataOutputStream(clientSocket.getOutputStream()));
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to register chat session: " + e.getMessage());
+            }
+        }
         sendMessage(clientSocket, new SocketMessage(EventType.LOGIN_EMPLOYEE, payload));
     }
 
