@@ -16,7 +16,8 @@ public class EmployeeDto {
     public EmployeeDto() {
     }
 
-    public EmployeeDto(String employeeNumber, String branchId, String fullName, String employeeId, String phoneNumber, String bankAccountNumber, String role, String email) {
+    public EmployeeDto(String employeeNumber, String branchId, String fullName, String employeeId, String phoneNumber,
+            String bankAccountNumber, String role, String email) {
         this.employeeNumber = employeeNumber;
         this.branchId = branchId;
         this.fullName = fullName;

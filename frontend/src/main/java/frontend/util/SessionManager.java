@@ -23,8 +23,4 @@ public class SessionManager {
     public EmployeeDto getCurrentEmployee() {
         return currentEmployee;
     }
-
-    public void logout() {
-        this.currentEmployee = null;
-    }
 }
