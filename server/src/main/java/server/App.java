@@ -26,12 +26,16 @@ public class App {
                                 .createBranchInventoryItemRepository();
                 EmployeeRepository employeeRepository = infrastructureFactory.createEmployeeRepository();
                 LogRepository logRepository = infrastructureFactory.createLogRepository();
+                PasswordSettingsRepository passwordSettingsRepository = infrastructureFactory.createPasswordSettingsRepository();
                 System.out.println("Creating application");
                 UserManagementService userManagementService = applicationFactory
                                 .createUserManagementService(logRepository);
+                PasswordSettingsService passwordSettingsService = applicationFactory
+                                .createPasswordSettingsService(passwordSettingsRepository);
                 EmployeeService employeeService = applicationFactory.createEmployeeService(employeeRepository,
                                 branchRepository,
-                                logRepository);
+                                logRepository,
+                                passwordSettingsService);
                 BranchService branchService = applicationFactory.createBranchService(branchRepository,
                                 branchInventoryItemRepository, employeeRepository, logRepository);
                 LoggerService logService = applicationFactory.createLoggerService(logRepository);
@@ -43,7 +47,7 @@ public class App {
                                 logRepository);
                 System.out.println("Starting API");
                 SocketServer socketServer = new SocketServer(authService, logService, employeeService,
-                                branchItemService, branchService, customerService);
+                                branchItemService, branchService, customerService, passwordSettingsService);
                 socketServer.start();
 
     }
