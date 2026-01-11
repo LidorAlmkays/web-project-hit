@@ -12,9 +12,9 @@ public class SocketServer {
     private final AuthService authService;
     private final LoggerService logService;
     private final EmployeeService employeeService;
+    private final BranchItemService branchItemService;
     private final BranchService branchService;
     private final CustomerService customerService;
-    private final BranchItemService branchItemService;
     private ServerSocket serverSocket;
     private boolean running;
     private HandlerFactory handlerFactory;

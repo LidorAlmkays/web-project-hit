@@ -1,6 +1,5 @@
 package server.api;
 
-import server.application.adaptors.*;
 import shareddto.EventType;
 import server.api.handlers.*;
 import server.application.adaptors.*;
@@ -12,9 +11,9 @@ public class HandlerFactory {
     private final AuthService authService;
     private final LoggerService logService;
     private final EmployeeService employeeService;
+    private final BranchItemService branchItemService;
     private final BranchService branchService;
     private final CustomerService customerService;
-    private final BranchItemService branchItemService;
     private final Map<EventType, SocketHandler> handlers;
 
     public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService,
