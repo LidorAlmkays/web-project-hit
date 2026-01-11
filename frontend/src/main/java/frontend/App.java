@@ -3,6 +3,7 @@ package frontend;
 import frontend.cli.CliResult;
 import frontend.cli.auth.LoginController;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
+import frontend.cli.customermanagement.CustomerManagementCli;
 
 import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
@@ -28,7 +29,9 @@ public class App {
                     return;
                 }
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
-                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli()));
+                HomeCli homeCli = new HomeCli(List.of(
+                        new EmployeeManagementCli(),
+                        new CustomerManagementCli()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
                  repeat = false;
