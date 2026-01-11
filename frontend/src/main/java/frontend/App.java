@@ -6,6 +6,7 @@ import frontend.cli.auth.LoginController;
 import frontend.cli.adminmanagement.AdminManagementCli;
 import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
+import frontend.cli.customermanagement.CustomerManagementCli;
 
 import frontend.cli.storagemanagement.StorageManagementConsole;
 import frontend.cli.home.HomeCli;
@@ -41,6 +42,7 @@ public class App {
                 if (role != null && ("ADMIN".equalsIgnoreCase(role) || "SELLER".equalsIgnoreCase(role))) {
                     options.add(new EmployeeManagementCli());
                 }
+                options.add(new CustomerManagementCli());
                 options.add(new StorageManagementConsole());
                 options.add(new ChatManagementCli());
                 HomeCli homeCli = new HomeCli(options);
