@@ -15,9 +15,8 @@ public class FrontendLoggerService {
     }
 
     public SystemEventLogDto fetchSystemLogs() {
-        clientTransport.sendMessage("GET_SYSTEM_LOGS_DOCUMENT");
         
-        String jsonResponse = clientTransport.receiveMessage();
+        String jsonResponse = clientTransport.send("GET_SYSTEM_LOGS_DOCUMENT");
         if (jsonResponse.startsWith("ERROR")) {
             throw new RuntimeException("Server returned error: " + jsonResponse);
         }
