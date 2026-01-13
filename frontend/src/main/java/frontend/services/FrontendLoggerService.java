@@ -21,21 +21,14 @@ public class FrontendLoggerService {
     public SystemEventLogDto fetchSystemLogs() {
         try {
             SocketMessage response = clientTransport.send(EventType.GET_SYSTEM_LOGS_DOCUMENT, null);
-            
-            if (response == null) {
-                throw new RuntimeException("Server returned null response");
-            }
-            
             Object data = response.getData();
             
-            if (data == null) {
-                throw new RuntimeException("Server returned null data");
-            }
-            
+            // Check if data is an error string
             if (data instanceof String && ((String) data).startsWith("ERROR")) {
                 throw new RuntimeException("Server returned error: " + data);
             }
             
+            // Parse the data as JSON - if it's already a String, use it directly; otherwise serialize it first
             String jsonData = data instanceof String ? (String) data : gson.toJson(data);
             return gson.fromJson(jsonData, SystemEventLogDto.class);
         } catch (IOException e) {
