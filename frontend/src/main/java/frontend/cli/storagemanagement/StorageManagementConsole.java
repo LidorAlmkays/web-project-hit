@@ -7,6 +7,8 @@ import com.google.gson.JsonObject;
 import frontend.cli.CliResult;
 import frontend.cli.IOptionCli;
 import frontend.transport.IClientTransport;
+import frontend.util.SessionManager;
+import shareddto.employeemanagement.response.EmployeeDto;
 import shareddto.AddItemRequest;
 import shareddto.BuyItemRequest;
 import shareddto.EventType;
@@ -34,13 +36,12 @@ public class StorageManagementConsole implements IOptionCli {
 
         // Note: client and scanner are passed from App.java
 
-            System.out.print("Enter Branch ID to manage: ");
-            try {
-                this.branchId = UUID.fromString(scanner.nextLine());
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid Branch UUID format. Exiting.");
-                return CliResult.BACK;
-            }
+        EmployeeDto employee = SessionManager.getInstance().getCurrentEmployee();
+        if (employee == null || employee.getBranchId() == null) {
+            System.out.println("Error: No branch assigned to the current user.");
+            return CliResult.BACK;
+        }
+        this.branchId = UUID.fromString(employee.getBranchId());
 
             boolean running = true;
             while (running) {
