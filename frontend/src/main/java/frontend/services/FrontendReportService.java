@@ -1,11 +1,11 @@
-package frontend.application.services;
+package frontend.services;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import frontend.transport.IClientTransport;
-import shareddto.reporting.SystemReportDto;
-import java.lang.reflect.Type;
-import java.util.Map;
+import shareddto.reporting.BranchInventoryReportDto;
+import shareddto.reporting.SalesStatsReportDto;
+
+import java.util.UUID;
 
 public class FrontendReportService {
 
@@ -17,29 +17,33 @@ public class FrontendReportService {
         this.gson = new Gson();
     }
 
-    public SystemReportDto getSystemReport() {
-        clientTransport.sendMessage("GET_SYSTEM_REPORT");
-        return fetchReportAndParse("GET_DAILY_REPORT_WORD", SystemReportDto.class);
-    }
-
-
-    public Map<String, Object> getSalesByBranchReport() {
-        Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        return fetchReportAndParse("GET_SALES_STATS_BRANCH", type);
-    }
-
-    public Map<String, Object> getSalesByProductReport() {
-        Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        return fetchReportAndParse("GET_SALES_STATS_PRODUCT", type);
-    }
-
-    private <T> T fetchReportAndParse(String messageType, Type typeOfT) {
-        clientTransport.sendMessage(messageType);
-        String jsonResponse = clientTransport.receiveMessage();
-
+    // --- Inventory ---
+    public BranchInventoryReportDto getBranchInventoryReport(UUID branchId) {
+        
+        String jsonResponse = clientTransport.send"GET_BRANCH_INVENTORY_REPORT", branchId.toString());
+        
         if (jsonResponse.startsWith("ERROR")) {
-            throw new RuntimeException("Server returned error: " + jsonResponse);
+            throw new RuntimeException("Server error: " + jsonResponse);
         }
-        return gson.fromJson(jsonResponse, typeOfT);
+        return gson.fromJson(jsonResponse, BranchInventoryReportDto.class);
+    }
+
+    // --- Sales Stats ---
+    public SalesStatsReportDto getSalesByBranchReport() {
+        return fetchStatsReport("GET_SALES_STATS_BRANCH");
+    }
+
+    public SalesStatsReportDto getSalesByProductReport() {
+        return fetchStatsReport("GET_SALES_STATS_PRODUCT");
+    }
+
+    private SalesStatsReportDto fetchStatsReport(String messageType) {
+        
+        String jsonResponse = clientTransport.send(messageType);
+        
+        if (jsonResponse.startsWith("ERROR")) {
+            throw new RuntimeException("Server error: " + jsonResponse);
+        }
+        return gson.fromJson(jsonResponse, SalesStatsReportDto.class);
     }
 }

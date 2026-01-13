@@ -1,31 +1,37 @@
 package frontend.cli.reports;
 
-import frontend.application.services.FrontendReportService;
+import frontend.services.FrontendLoggerService;
+import frontend.services.FrontendReportService;
 import frontend.util.ReportFileGenerator;
-import shareddto.reporting.SystemReportDto;
+import shareddto.reporting.BranchInventoryReportDto;
+import shareddto.reporting.SalesStatsReportDto;
+import shareddto.reporting.SystemEventLogDto;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class ReportController {
 
     private final FrontendReportService reportService;
+    private final FrontendLoggerService loggerService;
     private final ReportFileGenerator fileGenerator;
     private final Scanner scanner;
 
-    public ReportController(FrontendReportService reportService) {
+    public ReportController(FrontendReportService reportService, FrontendLoggerService loggerService) {
         this.reportService = reportService;
+        this.loggerService = loggerService;
         this.fileGenerator = new ReportFileGenerator();
         this.scanner = new Scanner(System.in);
     }
 
     public void showMenu() {
         while (true) {
-            System.out.println("\n--- Report Management (Admin) ---");
-            System.out.println("1. Generate Daily System Report (Logs)");
-            System.out.println("2. Generate Sales Report by Branch"); 
-            System.out.println("3. Generate Sales Report by Product");
+            System.out.println("\n--- System & Reports Management ---");
+            System.out.println("1. Export System Logs (Last 24h)"); // שם חדש ומדויק
+            System.out.println("2. Generate Branch Inventory Report"); // חדש
+            System.out.println("3. Generate Sales Report (By Branch)");
+            System.out.println("4. Generate Sales Report (By Product)");
             System.out.println("0. Back");
             
             System.out.print("Select option: ");
@@ -33,13 +39,16 @@ public class ReportController {
 
             switch (input) {
                 case "1":
-                    generateDailyReport();
+                    exportSystemLogs();
                     break;
                 case "2":
-                    generateSalesByBranchReport();
+                    generateBranchInventoryReport();
                     break;
                 case "3":
-                    generateSalesByProductReport();
+                    generateSalesByBranch();
+                    break;
+                case "4":
+                    generateSalesByProduct();
                     break;
                 case "0":
                     return;
@@ -49,37 +58,54 @@ public class ReportController {
         }
     }
 
-    private void generateDailyReport() {
-        System.out.println("Fetching log data from server...");
+    private void exportSystemLogs() {
+        System.out.println("Fetching system logs...");
         try {
-            SystemReportDto data = reportService.getSystemReport();
-            String fileName = "System_Report_" + LocalDate.now() + ".doc";
-            fileGenerator.generateSystemReportFile(data, fileName);
+            SystemEventLogDto logs = loggerService.fetchSystemLogs();
+            String fileName = "System_Logs_" + LocalDate.now() + ".html"; // שיניתי ל-html כי זה הפורמט ש-Generator מייצר
+            fileGenerator.generateLogDumpFile(logs, fileName);
+        } catch (Exception e) {
+            System.err.println("Error fetching logs: " + e.getMessage());
+        }
+    }
+
+    private void generateBranchInventoryReport() {
+        System.out.print("Enter Branch ID (UUID): ");
+        String idStr = scanner.nextLine();
+        try {
+            UUID branchId = UUID.fromString(idStr);
+            System.out.println("Fetching inventory data...");
+            BranchInventoryReportDto report = reportService.getBranchInventoryReport(branchId);
+            
+            String fileName = "Inventory_Branch_" + branchId.toString().substring(0,8) + ".html";
+            fileGenerator.generateInventoryReportFile(report, fileName);
+            
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid UUID format.");
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
         }
     }
 
-
-    private void generateSalesByBranchReport() {
-        System.out.println("Generating Sales by Branch Report...");
+    private void generateSalesByBranch() {
+        System.out.println("Generating Sales Report (By Branch)...");
         try {
-            Map<String, Object> data = reportService.getSalesByBranchReport();
-            String fileName = "Sales_By_Branch_" + LocalDate.now() + ".doc";
-            fileGenerator.generateStatsReportFile("Sales Report - By Branch", data, fileName);
+            SalesStatsReportDto report = reportService.getSalesByBranchReport();
+            String fileName = "Sales_By_Branch_" + LocalDate.now() + ".html";
+            fileGenerator.generateSalesReportFile("Sales Report - By Branch", report, fileName);
         } catch (Exception e) {
-            System.err.println("Error generating report: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
     }
 
-    private void generateSalesByProductReport() {
-        System.out.println("Generating Sales by Product Report...");
+    private void generateSalesByProduct() {
+        System.out.println("Generating Sales Report (By Product)...");
         try {
-            Map<String, Object> data = reportService.getSalesByProductReport();
-            String fileName = "Sales_By_Product_" + LocalDate.now() + ".doc";
-            fileGenerator.generateStatsReportFile("Sales Report - By Product", data, fileName);
+            SalesStatsReportDto report = reportService.getSalesByProductReport();
+            String fileName = "Sales_By_Product_" + LocalDate.now() + ".html";
+            fileGenerator.generateSalesReportFile("Sales Report - By Product", report, fileName);
         } catch (Exception e) {
-            System.err.println("Error generating report: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
     }
 }
