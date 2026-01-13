@@ -3,13 +3,12 @@ package server.application.adaptors;
 import java.util.UUID;
 
 public interface ReportService {
-    // דוחות קיימים
-    String getDailySystemReportJson();
-    String getDailySystemReportWord();
+    // --- Business Reports Only ---
     
+    // Returns JSON of BranchInventoryReportDto
     String getBranchInventoryReportJson(UUID branchId);
-    String getBranchInventoryReportWord(UUID branchId);
-
+    
+    // Returns JSON of SalesStatsReportDto
     String getSalesStatsByBranchJson();
     String getSalesStatsByProductJson();
 }

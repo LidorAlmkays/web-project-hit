@@ -9,11 +9,12 @@ public enum EventType {
     GET_EMPLOYEE,
     LIST_BRANCH_EMPLOYEES,
 
-    // Logs and Reports
-    GET_DAILY_REPORT_JSON,
-    GET_DAILY_REPORT_WORD,
-    GET_BRANCH_REPORT_JSON,
-    GET_BRANCH_REPORT_WORD
+    // --- Technical Logs ---
+    GET_SYSTEM_LOGS_JSON,
+    GET_SYSTEM_LOGS_DOCUMENT,
+
+    // --- Business Reports ---
+    GET_BRANCH_INVENTORY_REPORT,
     GET_SALES_STATS_BRANCH,
     GET_SALES_STATS_PRODUCT
 }

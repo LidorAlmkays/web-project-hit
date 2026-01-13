@@ -36,19 +36,24 @@ public class HandlerFactory {
     private void initializeHandlers() {
         handlers.put(EventType.LOGIN_EMPLOYEE, new LoginEmployeeHandler(authService));
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
-        handlers.put(EventType.GET_DAILY_REPORT_JSON, new ReportHandler(reportService, ReportHandler.ReportType.DAILY_JSON));
-        handlers.put(EventType.GET_DAILY_REPORT_WORD, new ReportHandler(reportService, ReportHandler.ReportType.DAILY_WORD));
-        handlers.put(EventType.GET_BRANCH_REPORT_JSON, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_JSON));
-        handlers.put(EventType.GET_BRANCH_REPORT_WORD, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_WORD));
+
+        // --- System Logs Handlers ---
+        handlers.put(EventType.GET_SYSTEM_LOGS_JSON, new SystemLogHandler(logService, SystemLogHandler.LogRequestType.JSON));
+        handlers.put(EventType.GET_SYSTEM_LOGS_DOCUMENT, new SystemLogHandler(logService, SystemLogHandler.LogRequestType.DOCUMENT));
+
+        // --- Business Reports Handlers ---
+        handlers.put(EventType.GET_BRANCH_INVENTORY_REPORT, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_INVENTORY));
         handlers.put(EventType.GET_SALES_STATS_BRANCH, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_BRANCH));
         handlers.put(EventType.GET_SALES_STATS_PRODUCT, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_PRODUCT));
+        
     }
 
     public SocketHandler createHandler(EventType eventType) {
         SocketHandler handler = handlers.get(eventType);
         if (handler == null) {
+            System.err.println("Warning: No handler found for event type: " + eventType);
             throw new IllegalArgumentException("Invalid handler type: " + eventType);
-        }
+            }
         return handler;
     }
 }

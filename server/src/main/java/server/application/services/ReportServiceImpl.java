@@ -9,6 +9,8 @@ import server.domain.BranchInventoryItem;
 import server.domain.LogEntry;
 import server.infustructre.adaptors.BranchInventoryItemRepository;
 import server.infustructre.adaptors.LogRepository;
+import shareddto.reporting.BranchInventoryReportDto;
+import shareddto.reporting.SalesStatsReportDto;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -27,25 +29,10 @@ public class ReportServiceImpl implements ReportService {
         this.inventoryRepository = inventoryRepository;
         
         this.gson = new GsonBuilder()
-                .setPrettyPrinting() 
+                .setPrettyPrinting()
                 .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) -> 
                         new JsonPrimitive(src.toString())) 
                 .create();
-    }
-
-    @Override
-    public String getDailySystemReportJson() {
-        logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated Daily System Report (Logs)");
-
-        List<LogEntry> todayLogs = getLogsFromLast24Hours();
-
-        Map<String, Object> reportData = new HashMap<>();
-        reportData.put("reportDate", LocalDateTime.now());
-        reportData.put("type", "SYSTEM_LOGS");
-        reportData.put("totalEvents", todayLogs.size());
-        reportData.put("events", todayLogs);
-
-        return gson.toJson(reportData);
     }
 
     @Override
@@ -54,17 +41,26 @@ public class ReportServiceImpl implements ReportService {
 
         List<BranchInventoryItem> items = inventoryRepository.findByBranchId(branchId);
 
-        Map<String, Object> reportData = new HashMap<>();
-        reportData.put("reportDate", LocalDateTime.now());
-        reportData.put("type", "BRANCH_INVENTORY");
-        reportData.put("branchId", branchId);
-        reportData.put("totalItems", items.size());
-        reportData.put("inventory", items);
+        List<BranchInventoryReportDto.InventoryItemDto> itemDtos = items.stream()
+            .map(item -> new BranchInventoryReportDto.InventoryItemDto(
+                item.getItemId().toString(),
+                item.getProductName(),
+                item.getCategory(),
+                item.getQuantityInStock()
+            ))
+            .collect(Collectors.toList());
 
-        return gson.toJson(reportData);
+        BranchInventoryReportDto reportDto = new BranchInventoryReportDto(
+            LocalDateTime.now().toString(),
+            branchId,
+            items.size(),
+            itemDtos
+        );
+
+        return gson.toJson(reportDto);
     }
 
-
+    @Override
     public String getSalesStatsByBranchJson() {
         logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated Sales Statistics by Branch Report");
 
@@ -76,19 +72,24 @@ public class ReportServiceImpl implements ReportService {
             String quantityStr = extractValueFromLog(log.getMessage(), "quantity");
 
             if (branchId != null && quantityStr != null) {
-                int quantity = Integer.parseInt(quantityStr);
-                salesByBranch.put(branchId, salesByBranch.getOrDefault(branchId, 0) + quantity);
+                try {
+                    int quantity = Integer.parseInt(quantityStr);
+                    salesByBranch.put(branchId, salesByBranch.getOrDefault(branchId, 0) + quantity);
+                } catch (NumberFormatException e) {
+                }
             }
         }
 
-        Map<String, Object> reportData = new HashMap<>();
-        reportData.put("reportDate", LocalDateTime.now());
-        reportData.put("type", "SALES_BY_BRANCH");
-        reportData.put("data", salesByBranch);
+        SalesStatsReportDto reportDto = new SalesStatsReportDto(
+            LocalDateTime.now().toString(),
+            "SALES_BY_BRANCH",
+            salesByBranch
+        );
 
-        return gson.toJson(reportData);
+        return gson.toJson(reportDto);
     }
 
+    @Override
     public String getSalesStatsByProductJson() {
         logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated Sales Statistics by Product Report");
 
@@ -96,42 +97,27 @@ public class ReportServiceImpl implements ReportService {
         Map<String, Integer> salesByProduct = new HashMap<>();
 
         for (LogEntry log : purchaseLogs) {
-            String itemId = extractValueFromLog(log.getMessage(), "itemId");
+            String itemId = extractValueFromLog(log.getMessage(), "itemId"); // Assuming logs store itemId or name
             String quantityStr = extractValueFromLog(log.getMessage(), "quantity");
 
             if (itemId != null && quantityStr != null) {
-                int quantity = Integer.parseInt(quantityStr);
-                salesByProduct.put(itemId, salesByProduct.getOrDefault(itemId, 0) + quantity);
+                try {
+                    int quantity = Integer.parseInt(quantityStr);
+                    salesByProduct.put(itemId, salesByProduct.getOrDefault(itemId, 0) + quantity);
+                } catch (NumberFormatException e) {
+                }
             }
         }
 
-        Map<String, Object> reportData = new HashMap<>();
-        reportData.put("reportDate", LocalDateTime.now());
-        reportData.put("type", "SALES_BY_PRODUCT");
-        reportData.put("data", salesByProduct);
+        SalesStatsReportDto reportDto = new SalesStatsReportDto(
+            LocalDateTime.now().toString(),
+            "SALES_BY_PRODUCT",
+            salesByProduct
+        );
 
-        return gson.toJson(reportData);
+        return gson.toJson(reportDto);
     }
 
-    
-    @Override
-    public String getDailySystemReportWord() {
-        return getDailySystemReportJson(); 
-    }
-
-    @Override
-    public String getBranchInventoryReportWord(UUID branchId) {
-        return getBranchInventoryReportJson(branchId);
-    }
-
-
-    private List<LogEntry> getLogsFromLast24Hours() {
-        LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        return logRepository.findAll().stream()
-                .filter(log -> log.getTimestamp().isAfter(yesterday))
-                .collect(Collectors.toList());
-    }
-    
     private List<LogEntry> getPurchaseLogs() {
         return logRepository.findAll().stream()
                 .filter(log -> log.getType() == LogEntry.LogType.PURCHASE && log.getMessage().contains("succeeded"))
@@ -146,6 +132,7 @@ public class ReportServiceImpl implements ReportService {
                 return matcher.group(1).trim();
             }
         } catch (Exception e) {
+            return null;
         }
         return null;
     }
