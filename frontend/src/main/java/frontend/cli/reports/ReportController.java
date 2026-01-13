@@ -5,6 +5,7 @@ import frontend.util.ReportFileGenerator;
 import shareddto.reporting.SystemReportDto;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Scanner;
 
 public class ReportController {
@@ -20,34 +21,63 @@ public class ReportController {
     }
 
     public void showMenu() {
-        System.out.println("\n--- Report Management ---");
-        System.out.println("1. Generate Daily System Report (Word/Doc)");
-        System.out.println("0. Back");
-        
-        System.out.print("Select option: ");
-        String input = scanner.nextLine();
+        while (true) {
+            System.out.println("\n--- Report Management (Admin) ---");
+            System.out.println("1. Generate Daily System Report (Logs)");
+            System.out.println("2. Generate Sales Report by Branch"); 
+            System.out.println("3. Generate Sales Report by Product");
+            System.out.println("0. Back");
+            
+            System.out.print("Select option: ");
+            String input = scanner.nextLine();
 
-        if ("1".equals(input)) {
-            generateDailyReport();
+            switch (input) {
+                case "1":
+                    generateDailyReport();
+                    break;
+                case "2":
+                    generateSalesByBranchReport();
+                    break;
+                case "3":
+                    generateSalesByProductReport();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid option.");
+            }
         }
     }
 
     private void generateDailyReport() {
-        System.out.println("Fetching data from server...");
+        System.out.println("Fetching log data from server...");
         try {
             SystemReportDto data = reportService.getSystemReport();
-            
-            if (data.getEvents().isEmpty()) {
-                System.out.println("No logs found for the last 24 hours.");
-                return;
-            }
-
             String fileName = "System_Report_" + LocalDate.now() + ".doc";
-            
             fileGenerator.generateSystemReportFile(data, fileName);
-            
-            System.out.println("Done! Open '" + fileName + "' to view the report.");
-            
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+
+    private void generateSalesByBranchReport() {
+        System.out.println("Generating Sales by Branch Report...");
+        try {
+            Map<String, Object> data = reportService.getSalesByBranchReport();
+            String fileName = "Sales_By_Branch_" + LocalDate.now() + ".doc";
+            fileGenerator.generateStatsReportFile("Sales Report - By Branch", data, fileName);
+        } catch (Exception e) {
+            System.err.println("Error generating report: " + e.getMessage());
+        }
+    }
+
+    private void generateSalesByProductReport() {
+        System.out.println("Generating Sales by Product Report...");
+        try {
+            Map<String, Object> data = reportService.getSalesByProductReport();
+            String fileName = "Sales_By_Product_" + LocalDate.now() + ".doc";
+            fileGenerator.generateStatsReportFile("Sales Report - By Product", data, fileName);
         } catch (Exception e) {
             System.err.println("Error generating report: " + e.getMessage());
         }

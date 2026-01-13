@@ -1,6 +1,7 @@
 package server.api.handlers;
 
 import server.application.adaptors.ReportService;
+import server.application.services.ReportServiceImpl;
 import java.net.Socket;
 import java.util.UUID;
 
@@ -10,7 +11,8 @@ public class ReportHandler extends AbstractSocketHandler {
     private final ReportType type;
 
     public enum ReportType {
-        DAILY_JSON, DAILY_WORD, BRANCH_JSON, BRANCH_WORD
+        DAILY_JSON, DAILY_WORD, BRANCH_JSON, BRANCH_WORD,
+        SALES_STATS_BRANCH, SALES_STATS_PRODUCT
     }
 
     public ReportHandler(ReportService reportService, ReportType type) {
@@ -22,31 +24,32 @@ public class ReportHandler extends AbstractSocketHandler {
     public void handle(Object data, Socket clientSocket) throws Exception {
         String response = "";
 
+        ReportServiceImpl serviceImpl = (ReportServiceImpl) reportService; 
+
         switch (type) {
             case DAILY_JSON:
-                response = reportService.getDailySystemReportJson();
-                break;
-                
-            case DAILY_WORD:
-                response = reportService.getDailySystemReportWord();
+            case DAILY_WORD: 
+                response = serviceImpl.getDailySystemReportJson();
                 break;
                 
             case BRANCH_JSON:
-                if (!(data instanceof String)) {
-                    throw new IllegalArgumentException("Error: Branch report requires a Branch ID (String).");
-                }
-                try { 
-                    response = reportService.getBranchInventoryReportJson(UUID.fromString((String) data));
-                } catch (IllegalArgumentException e) {
-                    response = "{ \"error\": \"Invalid Branch ID format\" }";
-                }
-                break;
-                
             case BRANCH_WORD:
                 if (!(data instanceof String)) {
                     throw new IllegalArgumentException("Error: Branch report requires a Branch ID (String).");
                 }
-                response = reportService.getBranchInventoryReportWord(UUID.fromString((String) data));
+                try { 
+                    response = serviceImpl.getBranchInventoryReportJson(UUID.fromString((String) data));
+                } catch (IllegalArgumentException e) {
+                    response = "{ \"error\": \"Invalid Branch ID format\" }";
+                }
+                break;
+
+            case SALES_STATS_BRANCH:
+                response = serviceImpl.getSalesStatsByBranchJson();
+                break;
+
+            case SALES_STATS_PRODUCT:
+                response = serviceImpl.getSalesStatsByProductJson();
                 break;
         }
 
