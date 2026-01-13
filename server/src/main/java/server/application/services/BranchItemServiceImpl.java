@@ -98,7 +98,6 @@ public class BranchItemServiceImpl implements BranchItemService {
         }
 
         try {
-            // Validate branch exists
             Optional<Branch> branchOpt = branchRepository.findById(branchId);
             if (branchOpt.isEmpty()) {
                 Error error = new Error("[BUY ITEM] failed, branch not found: " + branchId);
@@ -106,7 +105,6 @@ public class BranchItemServiceImpl implements BranchItemService {
                 throw new IllegalArgumentException(error);
             }
 
-            // Validate customer exists
             Optional<Customer> customerOpt = customerRepository.findById(customerId);
             if (customerOpt.isEmpty()) {
                 Error error = new Error("[BUY ITEM] failed, customer not found: " + customerId);
@@ -114,7 +112,6 @@ public class BranchItemServiceImpl implements BranchItemService {
                 throw new IllegalArgumentException(error);
             }
 
-            // Load item
             Optional<BranchInventoryItem> itemOpt = branchInventoryItemRepository.findById(itemId);
             if (itemOpt.isEmpty()) {
                 Error error = new Error("[BUY ITEM] failed, item not found: " + itemId);
@@ -133,15 +130,11 @@ public class BranchItemServiceImpl implements BranchItemService {
 
             Customer customer = customerOpt.get();
 
-            // Lock on both item and customer to ensure thread safety
             Object itemLock = getItemLock(itemId);
             Object customerLock = getCustomerLock(customerId);
 
-            // Acquire locks in consistent order to avoid deadlock (always item first, then
-            // customer)
             synchronized (itemLock) {
                 synchronized (customerLock) {
-                    // Reload item and customer to get latest state after acquiring locks
                     itemOpt = branchInventoryItemRepository.findById(itemId);
                     if (itemOpt.isEmpty()) {
                         Error error = new Error("[BUY ITEM] failed, item not found after lock: " + itemId);
@@ -158,14 +151,11 @@ public class BranchItemServiceImpl implements BranchItemService {
                     }
                     customer = customerOpt.get();
 
-                    // Calculate original price and final price using customer's pricing strategy
                     double originalPrice = item.getUnitPrice() * quantity;
                     double finalPrice = customer.calculateFinalPrice(originalPrice);
 
-                    // Update customer purchase history
                     customer.addPurchase(finalPrice);
 
-                    // Update customer status based on total purchases
                     int totalPurchases = customer.getTotalPurchases();
                     if (totalPurchases >= 5 && customer.getCustomerType() != CustomerType.VIP) {
                         customer.setCustomerType(CustomerType.VIP);
@@ -177,10 +167,8 @@ public class BranchItemServiceImpl implements BranchItemService {
                                 + ", totalPurchases=" + totalPurchases);
                     }
 
-                    // Update customer in repository
                     customerRepository.update(customer);
 
-                    // Sell from inventory
                     item.sell(quantity);
                     branchInventoryItemRepository.update(item);
 
@@ -196,7 +184,6 @@ public class BranchItemServiceImpl implements BranchItemService {
                 }
             }
         } catch (IllegalArgumentException ex) {
-            // Already logged above
             throw ex;
         } catch (Exception e) {
             Error error = new Error("[BUY ITEM] error, itemId=" + itemId + ", branchId=" + branchId
@@ -224,7 +211,6 @@ public class BranchItemServiceImpl implements BranchItemService {
         }
 
         try {
-            // Validate branch exists
             Optional<Branch> branchOpt = branchRepository.findById(branchId);
             if (branchOpt.isEmpty()) {
                 Error error = new Error("[RESTOCK ITEM] failed, branch not found: " + branchId);
@@ -232,7 +218,6 @@ public class BranchItemServiceImpl implements BranchItemService {
                 throw new IllegalArgumentException(error);
             }
 
-            // Load item
             Optional<BranchInventoryItem> itemOpt = branchInventoryItemRepository.findById(itemId);
             if (itemOpt.isEmpty()) {
                 Error error = new Error("[RESTOCK ITEM] failed, item not found: " + itemId);
@@ -249,10 +234,8 @@ public class BranchItemServiceImpl implements BranchItemService {
                 throw new IllegalArgumentException(error);
             }
 
-            // Lock on item to ensure thread safety
             Object itemLock = getItemLock(itemId);
             synchronized (itemLock) {
-                // Reload item to get latest state after acquiring lock
                 itemOpt = branchInventoryItemRepository.findById(itemId);
                 if (itemOpt.isEmpty()) {
                     Error error = new Error("[RESTOCK ITEM] failed, item not found after lock: " + itemId);
@@ -261,7 +244,6 @@ public class BranchItemServiceImpl implements BranchItemService {
                 }
                 item = itemOpt.get();
 
-                // Domain logic: restock inventory
                 item.restock(quantity);
 
                 branchInventoryItemRepository.update(item);
@@ -272,7 +254,6 @@ public class BranchItemServiceImpl implements BranchItemService {
                 return item;
             }
         } catch (IllegalArgumentException ex) {
-            // Already logged above
             throw ex;
         } catch (Exception e) {
             Error error = new Error("[RESTOCK ITEM] error, itemId=" + itemId + ", branchId=" + branchId
@@ -319,7 +300,6 @@ public class BranchItemServiceImpl implements BranchItemService {
         }
 
         try {
-            // Validate branch exists
             Optional<Branch> branchOpt = branchRepository.findById(branchId);
             if (branchOpt.isEmpty()) {
                 Error error = new Error("[ADD ITEM] failed, branch not found: " + branchId);
@@ -327,15 +307,12 @@ public class BranchItemServiceImpl implements BranchItemService {
                 throw new IllegalArgumentException(error);
             }
 
-            // Create new item (itemId is auto-generated in constructor)
             BranchInventoryItem newItem = new BranchInventoryItem(branchId, productName, category, unitPrice);
 
-            // If initial quantity is provided, restock the item
             if (initialQuantity > 0) {
                 newItem.restock(initialQuantity);
             }
 
-            // Save the new item to repository
             branchInventoryItemRepository.save(newItem);
 
             logRepository.info(LogEntry.LogType.MANAGEMENT, "[ADD ITEM] succeeded, itemId=" + newItem.getItemId() + ", branchId=" + branchId
@@ -344,7 +321,6 @@ public class BranchItemServiceImpl implements BranchItemService {
 
             return newItem;
         } catch (IllegalArgumentException ex) {
-            // Already logged above
             throw ex;
         } catch (Exception e) {
             Error error = new Error("[ADD ITEM] error, branchId=" + branchId + ", productName=" + productName

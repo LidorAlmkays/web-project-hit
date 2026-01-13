@@ -40,6 +40,8 @@ public class HandlerFactory {
         handlers.put(EventType.GET_DAILY_REPORT_WORD, new ReportHandler(reportService, ReportHandler.ReportType.DAILY_WORD));
         handlers.put(EventType.GET_BRANCH_REPORT_JSON, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_JSON));
         handlers.put(EventType.GET_BRANCH_REPORT_WORD, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_WORD));
+        handlers.put(EventType.GET_SALES_STATS_BRANCH, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_BRANCH));
+        handlers.put(EventType.GET_SALES_STATS_PRODUCT, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_PRODUCT));
     }
 
     public SocketHandler createHandler(EventType eventType) {
