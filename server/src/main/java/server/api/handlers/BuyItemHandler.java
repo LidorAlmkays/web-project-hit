@@ -1,6 +1,5 @@
 package server.api.handlers;
 
-import com.google.gson.JsonObject;
 import java.net.Socket;
 import java.util.UUID;
 import server.application.adaptors.BranchItemService;
@@ -47,13 +46,21 @@ public class BuyItemHandler extends AbstractSocketHandler {
 
             BranchInventoryItem updatedItem = branchItemService.buyItem(branchId, itemId, customerId, quantity);
            
-            sendMessage(clientSocket, new SocketMessage(EventType.BUY_INVENTORY_ITEM, updatedItem));
+            sendSuccess(clientSocket, updatedItem);
+        } catch (IllegalArgumentException e) {
+            sendError(clientSocket, e.getMessage());
         } catch (Exception e) {
             System.err.println("Error in BuyItemHandler:");
             e.printStackTrace();
-            JsonObject errorData = new JsonObject();
-            errorData.addProperty("error", e.getMessage());
-            sendMessage(clientSocket, new SocketMessage(EventType.BUY_INVENTORY_ITEM, errorData));
+            sendError(clientSocket, "Internal server error: " + e.getMessage());
         }
+    }
+
+    private void sendSuccess(Socket clientSocket, Object payload) throws Exception {
+        sendMessage(clientSocket, new SocketMessage(EventType.BUY_INVENTORY_ITEM, payload));
+    }
+
+    private void sendError(Socket clientSocket, String message) throws Exception {
+        sendMessage(clientSocket, new SocketMessage(EventType.BUY_INVENTORY_ITEM, message));
     }
 }

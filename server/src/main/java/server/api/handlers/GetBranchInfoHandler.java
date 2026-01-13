@@ -1,6 +1,5 @@
 package server.api.handlers;
 
-import com.google.gson.JsonObject;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,13 +25,21 @@ public class GetBranchInfoHandler extends AbstractSocketHandler {
             UUID branchId = UUID.fromString(request.getBranchId());
 
             Optional<Branch> branchOptional = branchService.getBranch(branchId);
-            Branch branch = branchOptional.orElseThrow(() -> new Exception("Branch not found"));
+            Branch branch = branchOptional.orElseThrow(() -> new IllegalArgumentException("Branch not found"));
 
-            sendMessage(clientSocket, new SocketMessage(EventType.GET_BRANCH_INFO, branch));
+            sendSuccess(clientSocket, branch);
+        } catch (IllegalArgumentException e) {
+            sendError(clientSocket, e.getMessage());
         } catch (Exception e) {
-            JsonObject errorData = new JsonObject();
-            errorData.addProperty("error", e.getMessage());
-            sendMessage(clientSocket, new SocketMessage(EventType.GET_BRANCH_INFO, errorData));
+            sendError(clientSocket, "Internal server error: " + e.getMessage());
         }
+    }
+
+    private void sendSuccess(Socket clientSocket, Object payload) throws Exception {
+        sendMessage(clientSocket, new SocketMessage(EventType.GET_BRANCH_INFO, payload));
+    }
+
+    private void sendError(Socket clientSocket, String message) throws Exception {
+        sendMessage(clientSocket, new SocketMessage(EventType.GET_BRANCH_INFO, message));
     }
 }

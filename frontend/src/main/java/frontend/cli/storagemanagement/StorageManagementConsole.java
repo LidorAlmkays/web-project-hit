@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import frontend.cli.CliResult;
 import frontend.cli.IOptionCli;
 import frontend.transport.IClientTransport;
+import shareddto.AddItemRequest;
 import shareddto.BuyItemRequest;
 import shareddto.EventType;
 import shareddto.SocketMessage;
@@ -61,6 +62,9 @@ public class StorageManagementConsole implements IOptionCli {
                             handleBuyItem(client, scanner);
                             break;
                         case "5":
+                            handleAddItem(client, scanner);
+                            break;
+                        case "6":
                             System.out.println("Exiting...");
                             running = false;
                             break;
@@ -81,7 +85,8 @@ public class StorageManagementConsole implements IOptionCli {
         System.out.println("2. View Inventory");
         System.out.println("3. Restock Item");
         System.out.println("4. Buy Item");
-        System.out.println("5. Exit");
+        System.out.println("5. Add New Item");
+        System.out.println("6. Exit");
         System.out.print("Select option: ");
     }
 
@@ -150,6 +155,38 @@ public class StorageManagementConsole implements IOptionCli {
         printSingleItem(response);
     }
 
+    private void handleAddItem(IClientTransport client, Scanner scanner) throws IOException {
+        System.out.print("Product Name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Category: ");
+        String category = scanner.nextLine();
+
+        System.out.print("Unit Price: ");
+        double price;
+        try {
+            price = Double.parseDouble(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.err.println("Validation Error: Price must be a number.");
+            return;
+        }
+
+        System.out.print("Initial Quantity: ");
+        int qty;
+        try {
+            qty = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.err.println("Validation Error: Quantity must be a number.");
+            return;
+        }
+
+        AddItemRequest request = new AddItemRequest(branchId.toString(), name, category, price, qty);
+        JsonElement response = sendRequest(client, EventType.ADD_INVENTORY_ITEM, request);
+        if (checkForError(response)) return;
+        System.out.println("Item added successfully:");
+        printSingleItem(response);
+    }
+
     private void printBranchInfo(JsonElement json) {
         if (json == null || json.isJsonNull()) return;
         JsonObject data = json.getAsJsonObject();
@@ -211,8 +248,18 @@ public class StorageManagementConsole implements IOptionCli {
     }
 
     private boolean checkForError(JsonElement json) {
-        if (json != null && json.isJsonObject() && json.getAsJsonObject().has("error")) {
-            System.out.println("Error: " + json.getAsJsonObject().get("error").getAsString());
+        if (json == null || json.isJsonNull()) {
+            return false;
+        }
+        // Handle structured error: {"error": "message"}
+        if (json.isJsonObject() && json.getAsJsonObject().has("error")) {
+            JsonElement errorElement = json.getAsJsonObject().get("error");
+            System.out.println("Error: " + (errorElement.isJsonNull() ? "Unknown error" : errorElement.getAsString()));
+            return true;
+        }
+        // Handle cases where the server sends a plain string as an error
+        if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
+            System.out.println("Error: " + json.getAsString());
             return true;
         }
         return false;

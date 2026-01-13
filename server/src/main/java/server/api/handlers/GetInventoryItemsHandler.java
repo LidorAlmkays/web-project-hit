@@ -1,6 +1,5 @@
 package server.api.handlers;
 
-import com.google.gson.JsonObject;
 import java.net.Socket;
 import java.util.List;
 import java.util.UUID;
@@ -25,12 +24,20 @@ public class GetInventoryItemsHandler extends AbstractSocketHandler {
             UUID branchId = UUID.fromString(request.getBranchId());
 
             List<BranchInventoryItem> items = branchItemService.getBranchItems(branchId);
-            
-            sendMessage(clientSocket, new SocketMessage(EventType.GET_INVERTORY_ITEMS, items));
+
+            sendSuccess(clientSocket, items);
+        } catch (IllegalArgumentException e) {
+            sendError(clientSocket, e.getMessage());
         } catch (Exception e) {
-            JsonObject errorData = new JsonObject();
-            errorData.addProperty("error", e.getMessage());
-            sendMessage(clientSocket, new SocketMessage(EventType.GET_INVERTORY_ITEMS, errorData));
+            sendError(clientSocket, "Internal server error: " + e.getMessage());
         }
+    }
+
+    private void sendSuccess(Socket clientSocket, Object payload) throws Exception {
+        sendMessage(clientSocket, new SocketMessage(EventType.GET_INVERTORY_ITEMS, payload));
+    }
+
+    private void sendError(Socket clientSocket, String message) throws Exception {
+        sendMessage(clientSocket, new SocketMessage(EventType.GET_INVERTORY_ITEMS, message));
     }
 }
