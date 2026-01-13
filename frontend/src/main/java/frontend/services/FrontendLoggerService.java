@@ -1,7 +1,6 @@
 package frontend.services;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import frontend.transport.IClientTransport;
 import shareddto.EventType;
 import shareddto.SocketMessage;
