@@ -3,8 +3,11 @@ package frontend.cli.chat;
 import frontend.cli.CliResult;
 import frontend.cli.IOptionCli;
 import frontend.transport.IClientTransport;
+import frontend.util.SessionManager;
+import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -12,10 +15,6 @@ import java.util.Scanner;
  * Submenu for chat management options.
  */
 public class ChatManagementCli implements IOptionCli {
-
-    private final List<IOptionCli> chatOptions = List.of(
-            new StartBranchChatCli(),
-            new ChatRequestsCli());
 
     @Override
     public String getOptionName() {
@@ -25,6 +24,17 @@ public class ChatManagementCli implements IOptionCli {
     @Override
     public CliResult run(IClientTransport client, Scanner scanner) throws IOException {
         while (true) {
+            // Build options dynamically based on role
+            List<IOptionCli> chatOptions = new ArrayList<>();
+            chatOptions.add(new StartBranchChatCli());
+            chatOptions.add(new ChatRequestsCli());
+
+            // Add JoinChatCli for managers only
+            EmployeeDto currentEmployee = SessionManager.getInstance().getCurrentEmployee();
+            if (currentEmployee != null && isManager(currentEmployee.getRole())) {
+                chatOptions.add(new JoinChatCli());
+            }
+
             System.out.println("\n=== Chat Management ===");
             for (int i = 0; i < chatOptions.size(); i++) {
                 System.out.println((i + 1) + ". " + chatOptions.get(i).getOptionName());
@@ -54,7 +64,10 @@ public class ChatManagementCli implements IOptionCli {
             if (result == CliResult.EXIT) {
                 return CliResult.EXIT;
             }
-            // BACK or LOGOUT just returns to this submenu
         }
+    }
+
+    private boolean isManager(String role) {
+        return "ADMIN".equalsIgnoreCase(role) || "SHIFT_MANAGER".equalsIgnoreCase(role);
     }
 }

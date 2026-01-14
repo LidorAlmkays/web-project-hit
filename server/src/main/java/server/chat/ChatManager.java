@@ -38,9 +38,9 @@ public class ChatManager {
     private UserManagementService userManagementService;
     private EmployeeRepository employeeRepository;
 
-    private final Map<String, String> activeChats = new ConcurrentHashMap<>();
+    private final Map<String, ChatSession> chatSessions = new ConcurrentHashMap<>();
+    private final Map<String, String> userToSession = new ConcurrentHashMap<>();
     private final Map<String, List<PendingRequest>> pendingRequests = new ConcurrentHashMap<>();
-    private final Map<String, PrintWriter> chatLogs = new ConcurrentHashMap<>();
     private static final String CHAT_LOG_DIR = "data/chats";
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -82,7 +82,7 @@ public class ChatManager {
                 continue;
             }
 
-            if (activeChats.containsKey(email)) {
+            if (userToSession.containsKey(email)) {
                 continue;
             }
 
@@ -141,14 +141,27 @@ public class ChatManager {
         activeRequests.remove(requesterEmail);
         pendingRequests.values().forEach(list -> list.removeIf(r -> r.getRequesterEmail().equals(requesterEmail)));
         pendingRequests.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-        activeChats.put(requesterEmail, accepterEmail);
-        activeChats.put(accepterEmail, requesterEmail);
+
+        // Create new chat session
+        String sessionId = UUID.randomUUID().toString();
+        ChatSession session = new ChatSession(sessionId);
+
+        // Get branch IDs for participants
+        UUID requesterBranchId = getBranchIdForEmail(requesterEmail);
+        UUID accepterBranchId = getBranchIdForEmail(accepterEmail);
+
+        session.addParticipant(new ChatParticipant(requesterEmail, requesterBranchId, false));
+        session.addParticipant(new ChatParticipant(accepterEmail, accepterBranchId, false));
+
+        chatSessions.put(sessionId, session);
+        userToSession.put(requesterEmail, sessionId);
+        userToSession.put(accepterEmail, sessionId);
 
         sendSystemMessage(requesterEmail, "Chat accepted! You are now connected to " + accepterEmail);
         sendSystemMessage(accepterEmail, "You are now connected to " + requesterEmail);
 
         // Start chat log
-        startChatLog(requesterEmail, accepterEmail);
+        startChatLog(session, requesterEmail, accepterEmail);
 
         System.out.println("[ChatManager] Chat established: " + requesterEmail + " <-> " + accepterEmail);
         return true;
@@ -211,40 +224,147 @@ public class ChatManager {
     }
 
     public boolean isInChat(String email) {
-        return activeChats.containsKey(email);
+        return userToSession.containsKey(email);
     }
 
-    public String getChatPartner(String email) {
-        return activeChats.get(email);
+    /**
+     * Get list of active chat sessions for managers.
+     * SHIFT_MANAGER sees only their branch chats, ADMIN sees all.
+     */
+    public List<ChatSession> getActiveChats(String managerEmail, UUID managerBranchId, boolean isAdmin) {
+        List<ChatSession> result = new ArrayList<>();
+        for (ChatSession session : chatSessions.values()) {
+            if (isAdmin) {
+                result.add(session);
+            } else {
+                // SHIFT_MANAGER sees only chats involving their branch
+                boolean involvesMyBranch = session.getParticipants().stream()
+                        .anyMatch(p -> managerBranchId.equals(p.getBranchId()));
+                if (involvesMyBranch) {
+                    result.add(session);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Manager joins an active chat session.
+     */
+    public synchronized boolean joinChat(String managerEmail, String sessionId) {
+        ChatSession session = chatSessions.get(sessionId);
+        if (session == null) {
+            sendSystemMessage(managerEmail, "Chat session not found.");
+            return false;
+        }
+
+        if (userToSession.containsKey(managerEmail)) {
+            sendSystemMessage(managerEmail, "You are already in a chat.");
+            return false;
+        }
+
+        UUID managerBranchId = getBranchIdForEmail(managerEmail);
+        session.addParticipant(new ChatParticipant(managerEmail, managerBranchId, true));
+        userToSession.put(managerEmail, sessionId);
+
+        // Notify existing participants
+        for (String participantEmail : session.getParticipantEmails()) {
+            if (!participantEmail.equals(managerEmail)) {
+                sendSystemMessage(participantEmail, "Manager " + managerEmail + " has joined the chat.");
+            }
+        }
+
+        // Send chat history to manager
+        sendChatHistory(managerEmail, session);
+
+        sendSystemMessage(managerEmail, "You have joined the chat.");
+        System.out.println("[ChatManager] Manager " + managerEmail + " joined session " + sessionId);
+        return true;
+    }
+
+    /**
+     * Send chat history to a newly joined manager.
+     */
+    private void sendChatHistory(String managerEmail, ChatSession session) {
+        String logPath = session.getLogFilePath();
+        if (logPath != null) {
+            try {
+                java.nio.file.Path path = java.nio.file.Paths.get(logPath);
+                if (java.nio.file.Files.exists(path)) {
+                    String history = java.nio.file.Files.readString(path);
+                    sendSystemMessage(managerEmail, "=== Chat History ===\n" + history + "\n=== End History ===");
+                }
+            } catch (IOException e) {
+                System.err.println("[ChatManager] Failed to read chat history: " + e.getMessage());
+            }
+        }
+    }
+
+    public ChatSession getSession(String sessionId) {
+        return chatSessions.get(sessionId);
+    }
+
+    public Set<String> getChatPartners(String email) {
+        String sessionId = userToSession.get(email);
+        if (sessionId == null)
+            return Set.of();
+        ChatSession session = chatSessions.get(sessionId);
+        if (session == null)
+            return Set.of();
+        Set<String> partners = new java.util.HashSet<>(session.getParticipantEmails());
+        partners.remove(email);
+        return partners;
     }
 
     public synchronized void handleMessage(String senderEmail, String message) {
-        String partnerEmail = activeChats.get(senderEmail);
+        String sessionId = userToSession.get(senderEmail);
+        if (sessionId == null) {
+            sendSystemMessage(senderEmail, "You are not in an active chat.");
+            return;
+        }
 
-        if (partnerEmail == null) {
+        ChatSession session = chatSessions.get(sessionId);
+        if (session == null) {
             sendSystemMessage(senderEmail, "You are not in an active chat.");
             return;
         }
 
         // Log message
-        logMessage(senderEmail, message);
+        logMessage(session, senderEmail, message);
 
-        sendChatMessage(partnerEmail, senderEmail, message);
+        // Send to all other participants
+        for (String participantEmail : session.getParticipantEmails()) {
+            if (!participantEmail.equals(senderEmail)) {
+                sendChatMessage(participantEmail, senderEmail, message);
+            }
+        }
     }
 
     public synchronized void closeChat(String email) {
         // 1. Handle active chat cleanup
-        String partnerEmail = activeChats.remove(email);
-        if (partnerEmail != null) {
-            activeChats.remove(partnerEmail);
+        String sessionId = userToSession.remove(email);
+        if (sessionId != null) {
+            ChatSession session = chatSessions.get(sessionId);
+            if (session != null) {
+                session.removeParticipant(email);
 
-            // Close chat log
-            closeChatLog(email);
-            closeChatLog(partnerEmail);
+                // Notify remaining participants
+                for (String participantEmail : session.getParticipantEmails()) {
+                    sendSystemMessage(participantEmail, email + " has left the chat.");
+                }
 
-            sendSystemMessage(partnerEmail, "The other user has left the chat.");
-            sendCloseConfirmation(partnerEmail); // Ensure partner also exits chat mode
-            System.out.println("[ChatManager] Chat closed: " + email + " <-> " + partnerEmail);
+                // Check if chat should remain open (2+ participants from different branches)
+                if (!session.shouldRemainOpen()) {
+                    // Close the entire session
+                    closeChatLog(session);
+                    for (String participantEmail : session.getParticipantEmails()) {
+                        userToSession.remove(participantEmail);
+                        sendCloseConfirmation(participantEmail);
+                    }
+                    chatSessions.remove(sessionId);
+                    System.out.println("[ChatManager] Chat session " + sessionId + " closed.");
+                }
+            }
         }
 
         // 2. Handle pending request cleanup (if this user was a target)
@@ -253,7 +373,6 @@ public class ChatManager {
         // 3. Handle active request cleanup (if this user was a requester waiting)
         Set<String> targets = activeRequests.remove(email);
         if (targets != null) {
-            // Remove the pending request from all targets
             for (String targetEmail : targets) {
                 List<PendingRequest> queue = pendingRequests.get(targetEmail);
                 if (queue != null) {
@@ -323,7 +442,7 @@ public class ChatManager {
 
     // ==================== Chat Logging ====================
 
-    private void startChatLog(String email1, String email2) {
+    private void startChatLog(ChatSession session, String email1, String email2) {
         try {
             File dir = new File(CHAT_LOG_DIR);
             if (!dir.exists()) {
@@ -340,8 +459,8 @@ public class ChatManager {
             writer.println();
             writer.flush();
 
-            chatLogs.put(email1, writer);
-            chatLogs.put(email2, writer);
+            session.setLogWriter(writer);
+            session.setLogFilePath(filename);
 
             System.out.println("[ChatManager] Chat log started: " + filename);
         } catch (IOException e) {
@@ -349,8 +468,8 @@ public class ChatManager {
         }
     }
 
-    private void logMessage(String senderEmail, String message) {
-        PrintWriter writer = chatLogs.get(senderEmail);
+    private void logMessage(ChatSession session, String senderEmail, String message) {
+        PrintWriter writer = session.getLogWriter();
         if (writer != null) {
             String timestamp = LocalDateTime.now().format(TIME_FORMAT);
             writer.println("[" + timestamp + "] " + senderEmail + ": " + message);
@@ -358,13 +477,20 @@ public class ChatManager {
         }
     }
 
-    private void closeChatLog(String email) {
-        PrintWriter writer = chatLogs.remove(email);
+    private void closeChatLog(ChatSession session) {
+        PrintWriter writer = session.getLogWriter();
         if (writer != null) {
             writer.println();
             writer.println("=== Chat ended at " + LocalDateTime.now().format(TIME_FORMAT) + " ===");
             writer.close();
+            session.setLogWriter(null);
         }
+    }
+
+    private UUID getBranchIdForEmail(String email) {
+        return employeeRepository.findByEmail(email)
+                .map(Employee::getBranchId)
+                .orElse(null);
     }
 
     private String sanitize(String email) {
