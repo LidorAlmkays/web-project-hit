@@ -79,6 +79,7 @@ public class ChatManager {
 
         if (selectedEmail == null) {
             sendSystemMessage(requesterEmail, "No employees available in that branch. Try again later.");
+            sendCloseConfirmation(requesterEmail); // Close client's chat mode
             return null;
         }
 

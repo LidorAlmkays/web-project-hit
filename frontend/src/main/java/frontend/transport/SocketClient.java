@@ -33,6 +33,15 @@ public class SocketClient implements IClientTransport {
     }
 
     @Override
+    public void sendOnly(EventType eventType, Object data) throws IOException {
+        SocketMessage message = new SocketMessage(eventType, data);
+        synchronized (outputStream) {
+            outputStream.writeUTF(gson.toJson(message));
+            outputStream.flush();
+        }
+    }
+
+    @Override
     public SocketMessage receive() throws IOException {
         String responseJson = inputStream.readUTF();
         return gson.fromJson(responseJson, SocketMessage.class);
