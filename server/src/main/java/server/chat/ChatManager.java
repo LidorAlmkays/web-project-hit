@@ -1,6 +1,6 @@
 package server.chat;
 
-import server.api.handlers.AbstractSocketHandler;
+import com.google.gson.Gson;
 import server.application.adaptors.UserManagementService;
 import server.domain.employee.Employee;
 import server.domain.employee.EmployeeRole;
@@ -18,8 +18,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ChatManager extends AbstractSocketHandler {
+/**
+ * Singleton state manager for chat sessions between branches.
+ * Does not handle socket events directly - that's done by chat handlers.
+ */
+public class ChatManager {
     private static ChatManager instance;
+    private final Gson gson = new Gson();
 
     private UserManagementService userManagementService;
     private EmployeeRepository employeeRepository;
@@ -198,19 +203,6 @@ public class ChatManager extends AbstractSocketHandler {
                 // Ignore
             }
         }
-    }
-
-    @Override
-    public void handle(Object data, Socket clientSocket) throws Exception {
-        ChatPacket packet;
-        if (data instanceof ChatPacket) {
-            packet = (ChatPacket) data;
-        } else {
-            packet = gson.fromJson(gson.toJson(data), ChatPacket.class);
-        }
-
-        if (packet == null)
-            return;
     }
 
     public static class PendingRequest {

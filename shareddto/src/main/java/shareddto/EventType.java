@@ -12,5 +12,7 @@ public enum EventType {
     CHAT_MESSAGE,
     CHAT_QUEUE_UPDATE,
     CHAT_CLOSE,
+    CHAT_ACCEPT,
+    CHAT_DECLINE,
     MANAGER_JOIN
 }
