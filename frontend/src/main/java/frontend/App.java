@@ -18,11 +18,13 @@ public class App {
     private static final String DEFAULT_HOST = "127.0.0.1";
 
     public static void main(String[] args) {
-        try (IClientTransport client = new SocketClient(DEFAULT_HOST, DEFAULT_PORT); Scanner scanner = new Scanner(System.in)) {
+        try (IClientTransport client = new SocketClient(DEFAULT_HOST, DEFAULT_PORT);
+                Scanner scanner = new Scanner(System.in)) {
             LoginController loginController = new LoginController();
-            boolean repeat=true;
+            boolean repeat = true;
             do {
-                shareddto.employeemanagement.response.EmployeeDto loggedInEmployee = loginController.login(client, scanner);
+                shareddto.employeemanagement.response.EmployeeDto loggedInEmployee = loginController.login(client,
+                        scanner);
                 if (loggedInEmployee == null) {
                     System.out.println("Login failed after multiple attempts. Exiting.");
                     return;
@@ -31,7 +33,7 @@ public class App {
                 HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
-                 repeat = false;
+                    repeat = false;
                 }
             } while (repeat);
             // exit after user chose Exit

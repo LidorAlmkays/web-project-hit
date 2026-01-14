@@ -1,7 +1,6 @@
 package server.api.handlers;
 
 import server.application.adaptors.AuthService;
-import server.chat.ChatManager;
 import shareddto.EventType;
 import shareddto.SocketMessage;
 import shareddto.employeemanagement.request.LogoutEmployeeRequest;
@@ -31,7 +30,6 @@ public class LogoutEmployeeHandler extends AbstractSocketHandler {
             }
 
             UUID employeeNumber = UUID.fromString(employeeNumberStr.trim());
-            ChatManager.getInstance().unregisterSession(employeeNumber);
             authService.logout(employeeNumber);
             sendSuccess(clientSocket);
         } catch (IllegalArgumentException e) {

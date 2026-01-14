@@ -36,14 +36,6 @@ public class HandlerFactory {
         handlers.put(EventType.GET_EMPLOYEE, new GetEmployeeHandler(employeeService));
         handlers.put(EventType.LIST_BRANCH_EMPLOYEES, new ListBranchEmployeesHandler());
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
-
-        // Chat Handlers
-        server.api.handlers.SocketHandler chatHandler = server.chat.ChatManager.getInstance();
-        handlers.put(EventType.CHAT_MESSAGE, chatHandler);
-        handlers.put(EventType.CHAT_REQUEST, chatHandler); // If we use specific request packet later, we might need
-                                                           // logic in handle() to distinguish
-        handlers.put(EventType.MANAGER_JOIN, chatHandler);
-        handlers.put(EventType.CHAT_CLOSE, chatHandler);
     }
 
     public SocketHandler createHandler(EventType eventType) {
