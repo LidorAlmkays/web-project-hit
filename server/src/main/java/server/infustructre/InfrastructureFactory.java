@@ -27,4 +27,8 @@ public class InfrastructureFactory {
     public LogRepository createLogRepository() {
         return new FileLogRepository();
     }
+
+    public PasswordSettingsRepository createPasswordSettingsRepository() {
+        return new FilePasswordSettingsRepository();
+    }
 }
