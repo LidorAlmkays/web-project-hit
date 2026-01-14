@@ -7,17 +7,18 @@ import server.api.SocketServer;
 import server.application.ApplicationFactory;
 import server.application.adaptors.*;
 
+
 public class App {
-        private final InfrastructureFactory infrastructureFactory;
-        private final ApplicationFactory applicationFactory;
+    private final InfrastructureFactory infrastructureFactory;
+    private final ApplicationFactory applicationFactory;
 
-        public App() {
-                this.infrastructureFactory = new InfrastructureFactory();
-                this.applicationFactory = new ApplicationFactory();
-        }
+    public App() {
+        this.infrastructureFactory = new InfrastructureFactory();
+        this.applicationFactory = new ApplicationFactory();
+    }
 
-        public void start() {
-                System.out.println("Starting application");
+    public void start() {
+        System.out.println("Starting application");
 
                 System.out.println("Creating infrastructure");
                 CustomerRepository customerRepository = infrastructureFactory.createCustomerRepository();
@@ -26,12 +27,16 @@ public class App {
                                 .createBranchInventoryItemRepository();
                 EmployeeRepository employeeRepository = infrastructureFactory.createEmployeeRepository();
                 LogRepository logRepository = infrastructureFactory.createLogRepository();
+                PasswordSettingsRepository passwordSettingsRepository = infrastructureFactory.createPasswordSettingsRepository();
                 System.out.println("Creating application");
                 UserManagementService userManagementService = applicationFactory
                                 .createUserManagementService(logRepository);
+                PasswordSettingsService passwordSettingsService = applicationFactory
+                                .createPasswordSettingsService(passwordSettingsRepository);
                 EmployeeService employeeService = applicationFactory.createEmployeeService(employeeRepository,
                                 branchRepository,
-                                logRepository);
+                                logRepository,
+                                passwordSettingsService);
                 BranchService branchService = applicationFactory.createBranchService(branchRepository,
                                 branchInventoryItemRepository, employeeRepository, logRepository);
                 LoggerService logService = applicationFactory.createLoggerService(logRepository);
@@ -44,7 +49,10 @@ public class App {
                 ChatManager.getInstance().setDependencies(userManagementService, employeeRepository);
                 System.out.println("Starting API");
                 SocketServer socketServer = new SocketServer(authService, logService, employeeService,
-                                branchItemService, branchService, customerService, employeeRepository);
+                                branchItemService, branchService, customerService, passwordSettingsService,
+                                employeeRepository);
                 socketServer.start();
-        }
+
+    }
+
 }
