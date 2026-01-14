@@ -39,7 +39,7 @@ public class StartBranchChatHandler extends AbstractSocketHandler {
         }
 
         ChatManager chatManager = ChatManager.getInstance();
-        String selectedEmployee = chatManager.requestBranchChat(requesterEmail, targetBranchId);
+        chatManager.requestBranchChat(requesterEmail, targetBranchId);
 
         // Response is sent by ChatManager via the socket
     }

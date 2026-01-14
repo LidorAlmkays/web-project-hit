@@ -46,6 +46,7 @@ public class HandlerFactory {
         handlers.put(EventType.CHAT_CLOSE, new CloseChatHandler());
         handlers.put(EventType.CHAT_ACCEPT, new AcceptChatHandler());
         handlers.put(EventType.CHAT_DECLINE, new DeclineChatHandler());
+        handlers.put(EventType.GET_PENDING_REQUESTS, new GetPendingRequestsHandler());
     }
 
     public SocketHandler createHandler(EventType eventType) {

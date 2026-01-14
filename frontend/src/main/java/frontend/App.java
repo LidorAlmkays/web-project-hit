@@ -2,7 +2,7 @@ package frontend;
 
 import frontend.cli.CliResult;
 import frontend.cli.auth.LoginController;
-import frontend.cli.chat.StartBranchChatCli;
+import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 
 import frontend.cli.home.HomeCli;
@@ -33,7 +33,7 @@ public class App {
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
                 HomeCli homeCli = new HomeCli(List.of(
                         new EmployeeManagementCli(),
-                        new StartBranchChatCli()));
+                        new ChatManagementCli()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
                     repeat = false;

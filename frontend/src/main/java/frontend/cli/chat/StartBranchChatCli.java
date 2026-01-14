@@ -131,6 +131,7 @@ public class StartBranchChatCli implements IOptionCli {
             if (!running.get())
                 break;
 
+            System.out.print("> ");
             String message = scanner.nextLine();
 
             if (!running.get())
@@ -146,6 +147,7 @@ public class StartBranchChatCli implements IOptionCli {
                 // Send message
                 ChatPacket msgPacket = new ChatPacket(null, null, myEmail + ":" + message);
                 client.sendOnly(EventType.CHAT_MESSAGE, msgPacket);
+                System.out.println("You: " + message);
             }
         }
 

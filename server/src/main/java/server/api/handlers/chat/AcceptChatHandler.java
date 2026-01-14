@@ -27,15 +27,21 @@ public class AcceptChatHandler extends AbstractSocketHandler {
             return;
         }
 
-        String accepterEmail = packet.getMessage();
-
-        if (accepterEmail == null || accepterEmail.isEmpty()) {
-            sendError(clientSocket, "Missing accepter email");
+        String message = packet.getMessage();
+        if (message == null || !message.contains(":")) {
+            sendError(clientSocket, "Invalid accept format");
             return;
         }
 
+        String[] parts = message.split(":");
+        String accepterEmail = parts[0];
+        String targetRequesterEmail = parts[1];
+
         ChatManager chatManager = ChatManager.getInstance();
-        chatManager.acceptChat(accepterEmail);
+        if (!chatManager.acceptChat(accepterEmail, targetRequesterEmail)) {
+            // Log error or handle failure silently if needed, or send error back?
+            // Currently acceptChat sends its own system messages on failure.
+        }
     }
 
     private void sendError(Socket clientSocket, String message) throws Exception {

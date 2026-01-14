@@ -8,13 +8,17 @@ import server.infustructre.adaptors.EmployeeRepository;
 import shareddto.EventType;
 import shareddto.SocketMessage;
 import shareddto.chat.ChatPacket;
+import shareddto.chat.PendingRequestInfo;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,7 +34,11 @@ public class ChatManager {
     private EmployeeRepository employeeRepository;
 
     private final Map<String, String> activeChats = new ConcurrentHashMap<>();
-    private final Map<String, PendingRequest> pendingRequests = new ConcurrentHashMap<>();
+    private final Map<String, List<PendingRequest>> pendingRequests = new ConcurrentHashMap<>();
+
+    // Map of requesterEmail -> Set of targetEmails (to track who they are waiting
+    // for)
+    private final Map<String, Set<String>> activeRequests = new ConcurrentHashMap<>();
 
     private ChatManager() {
     }
@@ -48,10 +56,11 @@ public class ChatManager {
         this.employeeRepository = employeeRepository;
     }
 
-    public synchronized String requestBranchChat(String requesterEmail, UUID targetBranchId) {
+    public synchronized void requestBranchChat(String requesterEmail, UUID targetBranchId) {
         List<Employee> branchEmployees = employeeRepository.findByBranchId(targetBranchId);
 
-        String selectedEmail = null;
+        // Collect all available employees
+        List<String> availableEmails = new ArrayList<>();
         for (Employee emp : branchEmployees) {
             String email = emp.getEmail();
             EmployeeRole role = emp.getRole();
@@ -69,38 +78,61 @@ public class ChatManager {
                 continue;
             }
 
-            if (pendingRequests.containsKey(email)) {
-                continue;
-            }
-
-            selectedEmail = email;
-            break;
+            availableEmails.add(email);
         }
 
-        if (selectedEmail == null) {
+        if (availableEmails.isEmpty()) {
             sendSystemMessage(requesterEmail, "No employees available in that branch. Try again later.");
-            sendCloseConfirmation(requesterEmail); // Close client's chat mode
-            return null;
+            sendCloseConfirmation(requesterEmail);
+            return;
         }
 
-        PendingRequest request = new PendingRequest(requesterEmail, selectedEmail, System.currentTimeMillis());
-        pendingRequests.put(selectedEmail, request);
+        // Initialize activeRequests set for this requester
+        activeRequests.put(requesterEmail, ConcurrentHashMap.newKeySet());
+        activeRequests.get(requesterEmail).addAll(availableEmails);
 
-        sendChatRequest(selectedEmail, requesterEmail);
-        sendSystemMessage(requesterEmail, "Request sent. Waiting for " + selectedEmail + " to accept...");
+        // Send request to ALL available employees
+        for (String email : availableEmails) {
+            PendingRequest request = new PendingRequest(requesterEmail, email, System.currentTimeMillis());
+            pendingRequests.computeIfAbsent(email, k -> new ArrayList<>()).add(request);
+//            sendChatRequest(email, requesterEmail);
+        }
 
-        return selectedEmail;
+        sendSystemMessage(requesterEmail,
+                "Request sent to " + availableEmails.size() + " employee(s). Waiting for someone to accept...");
     }
 
-    public synchronized boolean acceptChat(String accepterEmail) {
-        PendingRequest request = pendingRequests.remove(accepterEmail);
-        if (request == null) {
-            sendSystemMessage(accepterEmail, "No pending chat request found.");
+    public synchronized boolean acceptChat(String accepterEmail, String targetRequesterEmail) {
+        List<PendingRequest> queue = pendingRequests.get(accepterEmail);
+        if (queue == null || queue.isEmpty()) {
+            sendSystemMessage(accepterEmail, "No pending chat requests found.");
             return false;
+        }
+
+        // Find the specific request
+        PendingRequest request = null;
+        for (PendingRequest r : queue) {
+            if (r.getRequesterEmail().equals(targetRequesterEmail)) {
+                request = r;
+                break;
+            }
+        }
+
+        if (request == null) {
+            sendSystemMessage(accepterEmail, "Request from " + targetRequesterEmail + " no longer exists.");
+            return false;
+        }
+
+        queue.remove(request);
+        if (queue.isEmpty()) {
+            pendingRequests.remove(accepterEmail);
         }
 
         String requesterEmail = request.getRequesterEmail();
 
+        activeRequests.remove(requesterEmail);
+        pendingRequests.values().forEach(list -> list.removeIf(r -> r.getRequesterEmail().equals(requesterEmail)));
+        pendingRequests.entrySet().removeIf(entry -> entry.getValue().isEmpty());
         activeChats.put(requesterEmail, accepterEmail);
         activeChats.put(accepterEmail, requesterEmail);
 
@@ -111,16 +143,60 @@ public class ChatManager {
         return true;
     }
 
-    public synchronized void declineChat(String declinerEmail) {
-        PendingRequest request = pendingRequests.remove(declinerEmail);
-        if (request != null) {
-            String requesterEmail = request.getRequesterEmail();
-            sendSystemMessage(requesterEmail, "Chat request was declined. Try again later.");
+    public synchronized void declineChat(String declinerEmail, String targetRequesterEmail) {
+        List<PendingRequest> queue = pendingRequests.get(declinerEmail);
+        if (queue != null && !queue.isEmpty()) {
+            // Find and remove the specific request
+            PendingRequest request = null;
+            for (PendingRequest r : queue) {
+                if (r.getRequesterEmail().equals(targetRequesterEmail)) {
+                    request = r;
+                    break;
+                }
+            }
+
+            if (request != null) {
+                queue.remove(request);
+                if (queue.isEmpty()) {
+                    pendingRequests.remove(declinerEmail);
+                }
+
+                String requesterEmail = request.getRequesterEmail();
+
+                // Remove decliner from active set
+                Set<String> targets = activeRequests.get(requesterEmail);
+                if (targets != null) {
+                    targets.remove(declinerEmail);
+
+                    // If no more targets left, close the requester's chat mode
+                    if (targets.isEmpty()) {
+                        activeRequests.remove(requesterEmail);
+                        sendSystemMessage(requesterEmail, "All available employees declined your request.");
+                        sendCloseConfirmation(requesterEmail);
+                    }
+                }
+            }
         }
     }
 
-    public PendingRequest getPendingRequest(String email) {
+    public List<PendingRequest> getPendingRequests(String email) {
         return pendingRequests.get(email);
+    }
+
+    /**
+     * Get pending request info for a user as a formatted string.
+     * Returns requester email of the OLDEST request (FIFO), null otherwise.
+     */
+    public List<PendingRequestInfo> getPendingRequestInfos(String email) {
+        List<PendingRequest> queue = pendingRequests.get(email);
+        List<PendingRequestInfo> infos = new ArrayList<>();
+
+        if (queue != null) {
+            for (PendingRequest r : queue) {
+                infos.add(new PendingRequestInfo(r.getRequesterEmail(), r.getTimestamp()));
+            }
+        }
+        return infos;
     }
 
     public boolean isInChat(String email) {
@@ -143,14 +219,34 @@ public class ChatManager {
     }
 
     public synchronized void closeChat(String email) {
+        // 1. Handle active chat cleanup
         String partnerEmail = activeChats.remove(email);
         if (partnerEmail != null) {
             activeChats.remove(partnerEmail);
             sendSystemMessage(partnerEmail, "The other user has left the chat.");
+            sendCloseConfirmation(partnerEmail); // Ensure partner also exits chat mode
             System.out.println("[ChatManager] Chat closed: " + email + " <-> " + partnerEmail);
         }
 
+        // 2. Handle pending request cleanup (if this user was a target)
         pendingRequests.remove(email);
+
+        // 3. Handle active request cleanup (if this user was a requester waiting)
+        Set<String> targets = activeRequests.remove(email);
+        if (targets != null) {
+            // Remove the pending request from all targets
+            for (String targetEmail : targets) {
+                List<PendingRequest> queue = pendingRequests.get(targetEmail);
+                if (queue != null) {
+                    queue.removeIf(r -> r.getRequesterEmail().equals(email));
+                    if (queue.isEmpty()) {
+                        pendingRequests.remove(targetEmail);
+                    }
+                }
+            }
+            System.out.println("[ChatManager] Cancelled request from " + email);
+        }
+
         sendCloseConfirmation(email);
     }
 
@@ -227,10 +323,6 @@ public class ChatManager {
 
         public long getTimestamp() {
             return timestamp;
-        }
-
-        public boolean isExpired(long timeoutMs) {
-            return System.currentTimeMillis() - timestamp > timeoutMs;
         }
     }
 }
