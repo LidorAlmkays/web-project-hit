@@ -11,8 +11,13 @@ import shareddto.chat.ChatPacket;
 import shareddto.chat.PendingRequestInfo;
 
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import java.util.List;
@@ -35,6 +40,9 @@ public class ChatManager {
 
     private final Map<String, String> activeChats = new ConcurrentHashMap<>();
     private final Map<String, List<PendingRequest>> pendingRequests = new ConcurrentHashMap<>();
+    private final Map<String, PrintWriter> chatLogs = new ConcurrentHashMap<>();
+    private static final String CHAT_LOG_DIR = "data/chats";
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // Map of requesterEmail -> Set of targetEmails (to track who they are waiting
     // for)
@@ -95,7 +103,7 @@ public class ChatManager {
         for (String email : availableEmails) {
             PendingRequest request = new PendingRequest(requesterEmail, email, System.currentTimeMillis());
             pendingRequests.computeIfAbsent(email, k -> new ArrayList<>()).add(request);
-//            sendChatRequest(email, requesterEmail);
+            // sendChatRequest(email, requesterEmail);
         }
 
         sendSystemMessage(requesterEmail,
@@ -138,6 +146,9 @@ public class ChatManager {
 
         sendSystemMessage(requesterEmail, "Chat accepted! You are now connected to " + accepterEmail);
         sendSystemMessage(accepterEmail, "You are now connected to " + requesterEmail);
+
+        // Start chat log
+        startChatLog(requesterEmail, accepterEmail);
 
         System.out.println("[ChatManager] Chat established: " + requesterEmail + " <-> " + accepterEmail);
         return true;
@@ -215,6 +226,9 @@ public class ChatManager {
             return;
         }
 
+        // Log message
+        logMessage(senderEmail, message);
+
         sendChatMessage(partnerEmail, senderEmail, message);
     }
 
@@ -223,6 +237,11 @@ public class ChatManager {
         String partnerEmail = activeChats.remove(email);
         if (partnerEmail != null) {
             activeChats.remove(partnerEmail);
+
+            // Close chat log
+            closeChatLog(email);
+            closeChatLog(partnerEmail);
+
             sendSystemMessage(partnerEmail, "The other user has left the chat.");
             sendCloseConfirmation(partnerEmail); // Ensure partner also exits chat mode
             System.out.println("[ChatManager] Chat closed: " + email + " <-> " + partnerEmail);
@@ -300,6 +319,56 @@ public class ChatManager {
                 // Ignore
             }
         }
+    }
+
+    // ==================== Chat Logging ====================
+
+    private void startChatLog(String email1, String email2) {
+        try {
+            File dir = new File(CHAT_LOG_DIR);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String filename = CHAT_LOG_DIR + "/chat_" + timestamp + "_" + sanitize(email1) + "_" + sanitize(email2)
+                    + ".txt";
+
+            PrintWriter writer = new PrintWriter(new FileWriter(filename, true));
+            writer.println("=== Chat started at " + LocalDateTime.now().format(TIME_FORMAT) + " ===");
+            writer.println("Participants: " + email1 + " <-> " + email2);
+            writer.println();
+            writer.flush();
+
+            chatLogs.put(email1, writer);
+            chatLogs.put(email2, writer);
+
+            System.out.println("[ChatManager] Chat log started: " + filename);
+        } catch (IOException e) {
+            System.err.println("[ChatManager] Failed to create chat log: " + e.getMessage());
+        }
+    }
+
+    private void logMessage(String senderEmail, String message) {
+        PrintWriter writer = chatLogs.get(senderEmail);
+        if (writer != null) {
+            String timestamp = LocalDateTime.now().format(TIME_FORMAT);
+            writer.println("[" + timestamp + "] " + senderEmail + ": " + message);
+            writer.flush();
+        }
+    }
+
+    private void closeChatLog(String email) {
+        PrintWriter writer = chatLogs.remove(email);
+        if (writer != null) {
+            writer.println();
+            writer.println("=== Chat ended at " + LocalDateTime.now().format(TIME_FORMAT) + " ===");
+            writer.close();
+        }
+    }
+
+    private String sanitize(String email) {
+        return email.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
     public static class PendingRequest {
