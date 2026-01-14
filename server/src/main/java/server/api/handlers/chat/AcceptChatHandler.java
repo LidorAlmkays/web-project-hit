@@ -38,10 +38,7 @@ public class AcceptChatHandler extends AbstractSocketHandler {
         String targetRequesterEmail = parts[1];
 
         ChatManager chatManager = ChatManager.getInstance();
-        if (!chatManager.acceptChat(accepterEmail, targetRequesterEmail)) {
-            // Log error or handle failure silently if needed, or send error back?
-            // Currently acceptChat sends its own system messages on failure.
-        }
+        chatManager.acceptChat(accepterEmail, targetRequesterEmail);
     }
 
     private void sendError(Socket clientSocket, String message) throws Exception {

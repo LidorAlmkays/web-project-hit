@@ -77,6 +77,7 @@ public class ChatSession {
     public boolean shouldRemainOpen() {
         Set<UUID> uniqueBranches = participants.stream()
                 .map(ChatParticipant::getBranchId)
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toSet());
         return uniqueBranches.size() >= 2;
     }

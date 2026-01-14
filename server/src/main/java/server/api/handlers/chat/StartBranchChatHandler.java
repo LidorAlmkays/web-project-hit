@@ -28,10 +28,9 @@ public class StartBranchChatHandler extends AbstractSocketHandler {
             return;
         }
 
-        // Extract requester email and target branch ID from packet
-        // For now, we'll use the message field to pass branch ID as string
-        String requesterEmail = packet.getMessage(); // Will be refactored when we update ChatPacket
-        UUID targetBranchId = packet.getReceiverId(); // Using receiverId as branchId for now
+        // Extract requester email from message field, target branch ID from receiverId
+        String requesterEmail = packet.getMessage();
+        UUID targetBranchId = packet.getReceiverId();
 
         if (requesterEmail == null || targetBranchId == null) {
             sendError(clientSocket, "Missing requester email or target branch");

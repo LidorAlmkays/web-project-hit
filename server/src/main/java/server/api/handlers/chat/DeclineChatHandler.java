@@ -27,16 +27,7 @@ public class DeclineChatHandler extends AbstractSocketHandler {
             return;
         }
 
-        String declinerEmail = packet.getMessage(); // Client sends myEmail as message currently? No, wait.
-        // Client previously sent: Message = myEmail.
-        // Now client will send: SenderId = myEmail, Message = targetRequesterEmail.
-
-        // Wait, check ChatRequestsCli logic. Previously:
-        // ChatPacket packet = new ChatPacket(null, null, myEmail);
-
-        // So packet.getMessage() WAS declinerEmail.
-        // We should change this to standard: SenderId = decliner, Message = requester.
-
+        // Message format: "declinerEmail:targetRequesterEmail"
         String message = packet.getMessage();
         if (message == null || !message.contains(":")) {
             sendError(clientSocket, "Invalid decline format");
@@ -44,7 +35,7 @@ public class DeclineChatHandler extends AbstractSocketHandler {
         }
 
         String[] parts = message.split(":");
-        declinerEmail = parts[0];
+        String declinerEmail = parts[0];
         String targetRequesterEmail = parts[1];
 
         ChatManager chatManager = ChatManager.getInstance();

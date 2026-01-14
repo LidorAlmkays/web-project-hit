@@ -5,15 +5,14 @@ import server.chat.ChatManager;
 import shareddto.EventType;
 import shareddto.SocketMessage;
 import shareddto.chat.ChatPacket;
+import shareddto.chat.PendingRequestInfo;
 
 import java.net.Socket;
+import java.util.List;
 
 /**
  * Handles GET_PENDING_REQUESTS - returns pending chat request info for a user.
  */
-import shareddto.chat.PendingRequestInfo;
-import java.util.List;
-
 public class GetPendingRequestsHandler extends AbstractSocketHandler {
 
     @Override

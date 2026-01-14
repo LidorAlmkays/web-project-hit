@@ -39,12 +39,7 @@ public class JoinChatHandler extends AbstractSocketHandler {
         String sessionId = parts[1];
 
         ChatManager chatManager = ChatManager.getInstance();
-        boolean success = chatManager.joinChat(managerEmail, sessionId);
-
-        if (!success) {
-            // Error message already sent by ChatManager
-        }
-        // Success - manager is now in chat mode and will receive messages
+        chatManager.joinChat(managerEmail, sessionId);
     }
 
     private void sendError(Socket clientSocket, String message) throws Exception {

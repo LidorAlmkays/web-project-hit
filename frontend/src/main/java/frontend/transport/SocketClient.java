@@ -43,8 +43,10 @@ public class SocketClient implements IClientTransport {
 
     @Override
     public SocketMessage receive() throws IOException {
-        String responseJson = inputStream.readUTF();
-        return gson.fromJson(responseJson, SocketMessage.class);
+        synchronized (inputStream) {
+            String responseJson = inputStream.readUTF();
+            return gson.fromJson(responseJson, SocketMessage.class);
+        }
     }
 
     @Override

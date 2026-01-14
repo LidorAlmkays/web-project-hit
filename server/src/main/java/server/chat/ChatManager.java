@@ -10,21 +10,11 @@ import shareddto.SocketMessage;
 import shareddto.chat.ChatPacket;
 import shareddto.chat.PendingRequestInfo;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,21 +22,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * Does not handle socket events directly - that's done by chat handlers.
  */
 public class ChatManager {
+    private static final String CHAT_LOG_DIR = "data/chats";
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static ChatManager instance;
     private final Gson gson = new Gson();
-
-    private UserManagementService userManagementService;
-    private EmployeeRepository employeeRepository;
-
     private final Map<String, ChatSession> chatSessions = new ConcurrentHashMap<>();
     private final Map<String, String> userToSession = new ConcurrentHashMap<>();
     private final Map<String, List<PendingRequest>> pendingRequests = new ConcurrentHashMap<>();
-    private static final String CHAT_LOG_DIR = "data/chats";
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     // Map of requesterEmail -> Set of targetEmails (to track who they are waiting
     // for)
     private final Map<String, Set<String>> activeRequests = new ConcurrentHashMap<>();
+    private UserManagementService userManagementService;
+    private EmployeeRepository employeeRepository;
 
     private ChatManager() {
     }
@@ -58,8 +45,7 @@ public class ChatManager {
         return instance;
     }
 
-    public void setDependencies(UserManagementService userManagementService,
-            EmployeeRepository employeeRepository) {
+    public void setDependencies(UserManagementService userManagementService, EmployeeRepository employeeRepository) {
         this.userManagementService = userManagementService;
         this.employeeRepository = employeeRepository;
     }
@@ -103,7 +89,6 @@ public class ChatManager {
         for (String email : availableEmails) {
             PendingRequest request = new PendingRequest(requesterEmail, email, System.currentTimeMillis());
             pendingRequests.computeIfAbsent(email, k -> new ArrayList<>()).add(request);
-            // sendChatRequest(email, requesterEmail);
         }
 
         sendSystemMessage(requesterEmail,
@@ -204,12 +189,12 @@ public class ChatManager {
     }
 
     public List<PendingRequest> getPendingRequests(String email) {
-        return pendingRequests.get(email);
+        List<PendingRequest> list = pendingRequests.get(email);
+        return list != null ? new ArrayList<>(list) : null;
     }
 
     /**
-     * Get pending request info for a user as a formatted string.
-     * Returns requester email of the OLDEST request (FIFO), null otherwise.
+     * Get list of pending request info objects for displaying in UI.
      */
     public List<PendingRequestInfo> getPendingRequestInfos(String email) {
         List<PendingRequest> queue = pendingRequests.get(email);
@@ -251,16 +236,16 @@ public class ChatManager {
     /**
      * Manager joins an active chat session.
      */
-    public synchronized boolean joinChat(String managerEmail, String sessionId) {
+    public synchronized void joinChat(String managerEmail, String sessionId) {
         ChatSession session = chatSessions.get(sessionId);
         if (session == null) {
             sendSystemMessage(managerEmail, "Chat session not found.");
-            return false;
+            return;
         }
 
         if (userToSession.containsKey(managerEmail)) {
             sendSystemMessage(managerEmail, "You are already in a chat.");
-            return false;
+            return;
         }
 
         UUID managerBranchId = getBranchIdForEmail(managerEmail);
@@ -279,7 +264,6 @@ public class ChatManager {
 
         sendSystemMessage(managerEmail, "You have joined the chat.");
         System.out.println("[ChatManager] Manager " + managerEmail + " joined session " + sessionId);
-        return true;
     }
 
     /**
@@ -348,8 +332,11 @@ public class ChatManager {
             if (session != null) {
                 session.removeParticipant(email);
 
+                // Copy to avoid ConcurrentModificationException
+                Set<String> remainingParticipants = new java.util.HashSet<>(session.getParticipantEmails());
+
                 // Notify remaining participants
-                for (String participantEmail : session.getParticipantEmails()) {
+                for (String participantEmail : remainingParticipants) {
                     sendSystemMessage(participantEmail, email + " has left the chat.");
                 }
 
@@ -357,7 +344,7 @@ public class ChatManager {
                 if (!session.shouldRemainOpen()) {
                     // Close the entire session
                     closeChatLog(session);
-                    for (String participantEmail : session.getParticipantEmails()) {
+                    for (String participantEmail : remainingParticipants) {
                         userToSession.remove(participantEmail);
                         sendCloseConfirmation(participantEmail);
                     }
@@ -390,22 +377,6 @@ public class ChatManager {
 
     private void sendSystemMessage(String email, String message) {
         sendChatMessage(email, null, message);
-    }
-
-    private void sendChatRequest(String targetEmail, String requesterEmail) {
-        Optional<Socket> socketOpt = userManagementService.getSocketByEmail(targetEmail);
-        if (socketOpt.isPresent()) {
-            try {
-                DataOutputStream out = new DataOutputStream(socketOpt.get().getOutputStream());
-                ChatPacket packet = new ChatPacket(null, null, "CHAT_REQUEST from " + requesterEmail);
-                SocketMessage msg = new SocketMessage(EventType.CHAT_REQUEST, packet);
-                synchronized (out) {
-                    out.writeUTF(gson.toJson(msg));
-                }
-            } catch (IOException e) {
-                System.err.println("[ChatManager] Failed to send chat request: " + e.getMessage());
-            }
-        }
     }
 
     private void sendChatMessage(String targetEmail, String senderEmail, String message) {
@@ -445,8 +416,9 @@ public class ChatManager {
     private void startChatLog(ChatSession session, String email1, String email2) {
         try {
             File dir = new File(CHAT_LOG_DIR);
-            if (!dir.exists()) {
-                dir.mkdirs();
+            if (!dir.exists() && !dir.mkdirs()) {
+                System.err.println("[ChatManager] Cannot create chat log directory: " + CHAT_LOG_DIR);
+                return;
             }
 
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
@@ -488,9 +460,7 @@ public class ChatManager {
     }
 
     private UUID getBranchIdForEmail(String email) {
-        return employeeRepository.findByEmail(email)
-                .map(Employee::getBranchId)
-                .orElse(null);
+        return employeeRepository.findByEmail(email).map(Employee::getBranchId).orElse(null);
     }
 
     private String sanitize(String email) {
