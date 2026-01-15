@@ -5,6 +5,7 @@ import frontend.cli.auth.LoginController;
 import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 
+import frontend.cli.storagemanagement.StorageManagementConsole;
 import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
@@ -19,24 +20,22 @@ public class App {
     private static final String DEFAULT_HOST = "127.0.0.1";
 
     public static void main(String[] args) {
-        try (IClientTransport client = new SocketClient(DEFAULT_HOST, DEFAULT_PORT);
-                Scanner scanner = new Scanner(System.in)) {
+        try (IClientTransport client = new SocketClient(DEFAULT_HOST, DEFAULT_PORT); Scanner scanner = new Scanner(System.in)) {
             LoginController loginController = new LoginController();
-            boolean repeat = true;
+            boolean repeat=true;
             do {
-                shareddto.employeemanagement.response.EmployeeDto loggedInEmployee = loginController.login(client,
-                        scanner);
+                shareddto.employeemanagement.response.EmployeeDto loggedInEmployee = loginController.login(client, scanner);
                 if (loggedInEmployee == null) {
                     System.out.println("Login failed after multiple attempts. Exiting.");
                     return;
                 }
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
-                HomeCli homeCli = new HomeCli(List.of(
-                        new EmployeeManagementCli(),
+                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli(),
+                        new StorageManagementConsole(),
                         new ChatManagementCli()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
-                    repeat = false;
+                 repeat = false;
                 }
             } while (repeat);
             // exit after user chose Exit

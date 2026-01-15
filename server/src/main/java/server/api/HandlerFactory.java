@@ -34,16 +34,19 @@ public class HandlerFactory {
     }
 
     private void initializeHandlers() {
-        // Employee handlers
         handlers.put(EventType.LOGIN_EMPLOYEE, new LoginEmployeeHandler(authService));
+        handlers.put(EventType.GET_BRANCH_INFO, new GetBranchInfoHandler(branchService));
+        handlers.put(EventType.GET_INVERTORY_ITEMS, new GetInventoryItemsHandler(branchItemService));
+        handlers.put(EventType.BUY_INVENTORY_ITEM, new BuyItemHandler(branchItemService));
+        handlers.put(EventType.UPDATE_INVENTORY_ITEM, new UpdateInventoryItemHandler(branchItemService));
         handlers.put(EventType.CREATE_EMPLOYEE, new CreateEmployeeHandler(employeeService));
         handlers.put(EventType.UPDATE_EMPLOYEE, new UpdateEmployeeHandler(employeeService));
         handlers.put(EventType.DELETE_EMPLOYEE, new DeleteEmployeeHandler(employeeService));
         handlers.put(EventType.GET_EMPLOYEE, new GetEmployeeHandler(employeeService));
         handlers.put(EventType.LIST_BRANCH_EMPLOYEES, new ListBranchEmployeesHandler());
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
-
-        // Chat handlers
+        handlers.put(EventType.ADD_INVENTORY_ITEM, new AddItemHandler(branchItemService));
+        handlers.put(EventType.GET_CUSTOMER, new GetCustomerHandler(customerService));
         handlers.put(EventType.CHAT_REQUEST, new StartBranchChatHandler());
         handlers.put(EventType.CHAT_MESSAGE, new SendMessageHandler());
         handlers.put(EventType.CHAT_CLOSE, new CloseChatHandler());
