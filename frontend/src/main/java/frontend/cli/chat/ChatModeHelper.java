@@ -9,22 +9,13 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Shared utility for chat mode operations - reduces code duplication across
- * chat CLIs.
- */
+
 public class ChatModeHelper {
 
-    /**
-     * Enter full-duplex chat mode with message listener thread.
-     */
     public static void enterChatMode(IClientTransport client, Scanner scanner, String myEmail) throws IOException {
         enterChatMode(client, scanner, myEmail, "Chat");
     }
 
-    /**
-     * Enter full-duplex chat mode with custom mode label.
-     */
     public static void enterChatMode(IClientTransport client, Scanner scanner, String myEmail, String modeLabel)
             throws IOException {
         System.out.println("\n--- " + modeLabel + " Mode ---");
@@ -33,7 +24,6 @@ public class ChatModeHelper {
 
         AtomicBoolean running = new AtomicBoolean(true);
 
-        // Start background listener thread
         Thread listenerThread = new Thread(() -> {
             while (running.get()) {
                 try {
@@ -50,10 +40,8 @@ public class ChatModeHelper {
                 }
             }
         });
-        listenerThread.setDaemon(true);
         listenerThread.start();
 
-        // Main input loop
         while (running.get()) {
             System.out.print("> ");
             String message = scanner.nextLine();
@@ -73,7 +61,6 @@ public class ChatModeHelper {
             }
         }
 
-        // Clean up listener thread
         running.set(false);
         listenerThread.interrupt();
     }
@@ -101,10 +88,6 @@ public class ChatModeHelper {
         }
     }
 
-    /**
-     * Extract ChatPacket from SocketMessage, handling Gson LinkedTreeMap
-     * conversion.
-     */
     public static ChatPacket extractChatPacket(SocketMessage message) {
         if (message.getData() instanceof ChatPacket) {
             return (ChatPacket) message.getData();

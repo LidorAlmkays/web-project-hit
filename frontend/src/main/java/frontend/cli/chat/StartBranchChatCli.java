@@ -16,9 +16,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
-/**
- * CLI for starting a chat with another branch.
- */
 public class StartBranchChatCli implements IOptionCli {
 
     @Override
@@ -37,7 +34,6 @@ public class StartBranchChatCli implements IOptionCli {
         String myBranchId = currentEmployee.getBranchId();
         String myEmail = currentEmployee.getEmail();
 
-        // Display available branches (exclude own branch)
         System.out.println("\n=== Start Branch Chat ===");
         System.out.println("Select a branch to chat with:");
 
@@ -57,7 +53,6 @@ public class StartBranchChatCli implements IOptionCli {
             return CliResult.BACK;
         }
 
-        // Get user selection
         System.out.print("Enter choice: ");
         String input = scanner.nextLine().trim();
         int choice;
@@ -82,14 +77,12 @@ public class StartBranchChatCli implements IOptionCli {
 
         System.out.println("Requesting chat with " + targetBranchName + "...");
 
-        // Send chat request to server
         ChatPacket requestPacket = new ChatPacket(null, UUID.fromString(targetBranchId), myEmail);
         client.sendOnly(EventType.CHAT_REQUEST, requestPacket);
 
         System.out.println("Waiting for someone from " + targetBranchName + " to accept...");
         System.out.println("(You will receive a notification when connected)");
 
-        // Enter chat mode using shared helper
         ChatModeHelper.enterChatMode(client, scanner, myEmail);
 
         return CliResult.BACK;

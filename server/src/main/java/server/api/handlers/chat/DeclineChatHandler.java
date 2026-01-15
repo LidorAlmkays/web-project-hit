@@ -8,9 +8,6 @@ import shareddto.chat.ChatPacket;
 
 import java.net.Socket;
 
-/**
- * Handles declining a chat request.
- */
 public class DeclineChatHandler extends AbstractSocketHandler {
 
     @Override

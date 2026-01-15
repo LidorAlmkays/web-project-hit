@@ -10,9 +10,6 @@ import shareddto.chat.PendingRequestInfo;
 import java.net.Socket;
 import java.util.List;
 
-/**
- * Handles GET_PENDING_REQUESTS - returns pending chat request info for a user.
- */
 public class GetPendingRequestsHandler extends AbstractSocketHandler {
 
     @Override

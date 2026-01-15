@@ -8,9 +8,6 @@ import shareddto.chat.ChatPacket;
 
 import java.net.Socket;
 
-/**
- * Handles MANAGER_JOIN - allows managers to join active chat sessions.
- */
 public class JoinChatHandler extends AbstractSocketHandler {
 
     @Override

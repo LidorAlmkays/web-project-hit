@@ -2,7 +2,7 @@ package server.api.handlers.chat;
 
 import server.api.handlers.AbstractSocketHandler;
 import server.chat.ChatManager;
-import server.chat.ChatSession;
+import server.domain.chat.ChatSession;
 import server.domain.employee.Employee;
 import server.domain.employee.EmployeeRole;
 import server.infustructre.adaptors.EmployeeRepository;
@@ -16,9 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Handles GET_ACTIVE_CHATS - returns list of active chats for managers.
- */
 public class GetActiveChatsHandler extends AbstractSocketHandler {
 
     private final EmployeeRepository employeeRepository;

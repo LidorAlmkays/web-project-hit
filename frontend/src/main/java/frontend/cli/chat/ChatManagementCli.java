@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Submenu for chat management options.
- */
 public class ChatManagementCli implements IOptionCli {
 
     @Override
@@ -24,12 +21,10 @@ public class ChatManagementCli implements IOptionCli {
     @Override
     public CliResult run(IClientTransport client, Scanner scanner) throws IOException {
         while (true) {
-            // Build options dynamically based on role
             List<IOptionCli> chatOptions = new ArrayList<>();
             chatOptions.add(new StartBranchChatCli());
             chatOptions.add(new ChatRequestsCli());
 
-            // Add JoinChatCli for managers only
             EmployeeDto currentEmployee = SessionManager.getInstance().getCurrentEmployee();
             if (currentEmployee != null && isManager(currentEmployee.getRole())) {
                 chatOptions.add(new JoinChatCli());

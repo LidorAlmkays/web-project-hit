@@ -1,10 +1,7 @@
-package server.chat;
+package server.domain.chat;
 
 import java.util.UUID;
 
-/**
- * Represents a participant in a chat session.
- */
 public class ChatParticipant {
     private final String email;
     private final UUID branchId;

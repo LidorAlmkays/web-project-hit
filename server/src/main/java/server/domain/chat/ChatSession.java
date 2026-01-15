@@ -1,4 +1,4 @@
-package server.chat;
+package server.domain.chat;
 
 import java.io.PrintWriter;
 import java.util.HashSet;
@@ -6,9 +6,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Represents an active chat session with multiple participants.
- */
 public class ChatSession {
     private final String sessionId;
     private final Set<ChatParticipant> participants = new HashSet<>();
@@ -37,13 +34,6 @@ public class ChatSession {
         participants.removeIf(p -> p.getEmail().equals(email));
     }
 
-    public ChatParticipant getParticipant(String email) {
-        return participants.stream()
-                .filter(p -> p.getEmail().equals(email))
-                .findFirst()
-                .orElse(null);
-    }
-
     public Set<String> getParticipantEmails() {
         return participants.stream()
                 .map(ChatParticipant::getEmail)
@@ -70,10 +60,6 @@ public class ChatSession {
         return startTime;
     }
 
-    /**
-     * Check if the chat should remain open.
-     * Chat closes when fewer than 2 participants from different branches remain.
-     */
     public boolean shouldRemainOpen() {
         Set<UUID> uniqueBranches = participants.stream()
                 .map(ChatParticipant::getBranchId)
@@ -82,9 +68,6 @@ public class ChatSession {
         return uniqueBranches.size() >= 2;
     }
 
-    /**
-     * Get a display string for the chat session.
-     */
     public String getDisplayString() {
         String emails = participants.stream()
                 .map(ChatParticipant::getEmail)

@@ -14,9 +14,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * CLI for managers to view and join active chat sessions.
- */
 public class JoinChatCli implements IOptionCli {
 
     @Override
@@ -36,7 +33,6 @@ public class JoinChatCli implements IOptionCli {
 
         System.out.println("\n=== Active Chats ===");
 
-        // Fetch active chats from server
         ChatPacket requestPacket = new ChatPacket(null, null, myEmail);
         SocketMessage response = client.send(EventType.GET_ACTIVE_CHATS, requestPacket);
 
@@ -67,7 +63,6 @@ public class JoinChatCli implements IOptionCli {
             return CliResult.BACK;
         }
 
-        // Show numbered list
         System.out.println("\nActive Chat Sessions:");
         for (int i = 0; i < chats.size(); i++) {
             ActiveChatInfo info = chats.get(i);

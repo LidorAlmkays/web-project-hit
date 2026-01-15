@@ -1,15 +1,10 @@
 package shareddto.chat;
 
-/**
- * DTO for active chat session information.
- */
+
 public class ActiveChatInfo {
     private String sessionId;
     private String displayString;
     private long startTime;
-
-    public ActiveChatInfo() {
-    }
 
     public ActiveChatInfo(String sessionId, String displayString, long startTime) {
         this.sessionId = sessionId;

@@ -14,9 +14,6 @@ import shareddto.chat.PendingRequestInfo;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * CLI for checking and responding to incoming chat requests.
- */
 public class ChatRequestsCli implements IOptionCli {
 
     @Override
@@ -36,7 +33,6 @@ public class ChatRequestsCli implements IOptionCli {
 
         System.out.println("\n=== Chat Requests ===");
 
-        // Fetch pending requests from server
         ChatPacket requestPacket = new ChatPacket(null, null, myEmail);
         SocketMessage response = client.send(EventType.GET_PENDING_REQUESTS, requestPacket);
 
@@ -133,7 +129,6 @@ public class ChatRequestsCli implements IOptionCli {
 
     private CliResult acceptChat(IClientTransport client, Scanner scanner, String myEmail, String targetRequesterEmail)
             throws IOException {
-        // Send message in format: "accepter:requester"
         ChatPacket acceptPacket = new ChatPacket(null, null, myEmail + ":" + targetRequesterEmail);
         client.sendOnly(EventType.CHAT_ACCEPT, acceptPacket);
 
