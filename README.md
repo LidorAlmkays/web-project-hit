@@ -23,6 +23,7 @@
    ```
 
    This might take a minute the first time as it downloads libraries from the internet. Don't worry, that's normal!
+
 3. **That's it!** You're all set.
 
 ## Running the Projects
@@ -62,3 +63,19 @@ Open a **different terminal** (keep the server running!) and run:
 ```
 
 The frontend will connect to the server and you can interact with it.
+
+## Running Tests
+
+To run all tests:
+
+**Windows:**
+
+```bash
+.\mvnw.cmd test
+```
+
+**Mac/Linux:**
+
+```bash
+./mvnw test
+```
