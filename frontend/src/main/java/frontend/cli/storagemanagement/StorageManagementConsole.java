@@ -236,12 +236,12 @@ public class StorageManagementConsole implements IOptionCli {
             items = root.has("data") ? root.getAsJsonArray("data") : new JsonArray();
         }
 
-        String rowFormat = "%-38s | %-25s | %-15s | %-10s | %-8s%n";
+        String rowFormat = "%-25s | %-15s | %-10s | %-8s%n";
 
         System.out.println("\n=== Current Inventory ===");
         
-        System.out.printf(rowFormat, "Item ID", "Product Name", "Category", "Price", "Stock");
-        System.out.println("-".repeat(105)); 
+        System.out.printf(rowFormat, "Product Name", "Category", "Price", "Stock");
+        System.out.println("-".repeat(67)); 
 
         for (JsonElement e : items) {
             JsonObject item = e.getAsJsonObject();
@@ -252,7 +252,6 @@ public class StorageManagementConsole implements IOptionCli {
             }
 
             System.out.printf(rowFormat,
-                    getString(item, "itemId"), 
                     name, 
                     getString(item, "category"),
                     String.format("%.2f", item.get("unitPrice").getAsDouble()), 
