@@ -4,6 +4,7 @@ import frontend.cli.CliResult;
 import frontend.cli.auth.LoginController;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 
+import frontend.cli.storagemanagement.StorageManagementConsole;
 import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
@@ -28,7 +29,7 @@ public class App {
                     return;
                 }
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
-                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli()));
+                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli(), new StorageManagementConsole()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
                  repeat = false;
