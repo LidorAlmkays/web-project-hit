@@ -2,6 +2,7 @@ package frontend;
 
 import frontend.cli.CliResult;
 import frontend.cli.auth.LoginController;
+import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 
 import frontend.cli.storagemanagement.StorageManagementConsole;
@@ -29,7 +30,9 @@ public class App {
                     return;
                 }
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
-                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli(), new StorageManagementConsole()));
+                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli(),
+                        new StorageManagementConsole(),
+                        new ChatManagementCli()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
                  repeat = false;

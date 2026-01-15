@@ -2,7 +2,9 @@ package server.api;
 
 import shareddto.EventType;
 import server.api.handlers.*;
+import server.api.handlers.chat.*;
 import server.application.adaptors.*;
+import server.infustructre.adaptors.EmployeeRepository;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,16 +16,19 @@ public class HandlerFactory {
     private final BranchItemService branchItemService;
     private final BranchService branchService;
     private final CustomerService customerService;
+    private final EmployeeRepository employeeRepository;
     private final Map<EventType, SocketHandler> handlers;
 
     public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService,
-                          BranchItemService branchItemService, BranchService branchService, CustomerService customerService) {
+            BranchItemService branchItemService, BranchService branchService, CustomerService customerService,
+            EmployeeRepository employeeRepository) {
         this.branchItemService = branchItemService;
         this.branchService = branchService;
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
         this.customerService = customerService;
+        this.employeeRepository = employeeRepository;
         this.handlers = new HashMap<>();
         initializeHandlers();
     }
@@ -42,6 +47,14 @@ public class HandlerFactory {
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
         handlers.put(EventType.ADD_INVENTORY_ITEM, new AddItemHandler(branchItemService));
         handlers.put(EventType.GET_CUSTOMER, new GetCustomerHandler(customerService));
+        handlers.put(EventType.CHAT_REQUEST, new StartBranchChatHandler());
+        handlers.put(EventType.CHAT_MESSAGE, new SendMessageHandler());
+        handlers.put(EventType.CHAT_CLOSE, new CloseChatHandler());
+        handlers.put(EventType.CHAT_ACCEPT, new AcceptChatHandler());
+        handlers.put(EventType.CHAT_DECLINE, new DeclineChatHandler());
+        handlers.put(EventType.GET_PENDING_REQUESTS, new GetPendingRequestsHandler());
+        handlers.put(EventType.GET_ACTIVE_CHATS, new GetActiveChatsHandler(employeeRepository));
+        handlers.put(EventType.MANAGER_JOIN, new JoinChatHandler());
     }
 
     public SocketHandler createHandler(EventType eventType) {
