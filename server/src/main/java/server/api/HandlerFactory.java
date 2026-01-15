@@ -41,6 +41,7 @@ public class HandlerFactory {
         handlers.put(EventType.LIST_BRANCH_EMPLOYEES, new ListBranchEmployeesHandler());
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
         handlers.put(EventType.ADD_INVENTORY_ITEM, new AddItemHandler(branchItemService));
+        handlers.put(EventType.GET_CUSTOMER, new GetCustomerHandler(customerService));
     }
 
     public SocketHandler createHandler(EventType eventType) {

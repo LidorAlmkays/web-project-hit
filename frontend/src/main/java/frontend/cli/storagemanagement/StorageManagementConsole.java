@@ -34,8 +34,6 @@ public class StorageManagementConsole implements IOptionCli {
     public CliResult run(IClientTransport client, Scanner scanner) {
         System.out.println("Starting Storage Management Console...");
 
-        // Note: client and scanner are passed from App.java
-
         EmployeeDto employee = SessionManager.getInstance().getCurrentEmployee();
         if (employee == null || employee.getBranchId() == null) {
             System.out.println("Error: No branch assigned to the current user.");
@@ -97,16 +95,8 @@ public class StorageManagementConsole implements IOptionCli {
     }
 
     private void handleRestockExistingItem(IClientTransport client, Scanner scanner) throws IOException {
-        System.out.print("Item ID (UUID): ");
-        String pidInput = scanner.nextLine();
-        
-        // Manual validation for clearer error message
-        try {
-            UUID.fromString(pidInput); 
-        } catch (IllegalArgumentException e) {
-            System.err.println("Validation Error: '" + pidInput + "' is not a valid Item UUID format.");
-            return;
-        }
+        String pidInput = selectItemFromInventory(client, scanner);
+        if (pidInput == null) return;
 
         System.out.print("Quantity to add: ");
         String qtyInput = scanner.nextLine();
@@ -126,25 +116,17 @@ public class StorageManagementConsole implements IOptionCli {
     }
 
     private void handleBuyItem(IClientTransport client, Scanner scanner) throws IOException {
-        System.out.print("Item ID (UUID) to buy: ");
-        String pidInput = scanner.nextLine();
-        
-        try {
-            UUID.fromString(pidInput);
-        } catch (IllegalArgumentException e) {
-            System.err.println("Validation Error: '" + pidInput + "' is not a valid Item UUID format.");
-            return;
-        }
+        String pidInput = selectItemFromInventory(client, scanner);
+        if (pidInput == null) return;
 
-        System.out.print("Customer ID (UUID): ");
-        String cid = scanner.nextLine();
-        
-        try {
-            UUID.fromString(cid);
-        } catch (IllegalArgumentException e) {
-            System.err.println("Validation Error: '" + cid + "' is not a valid Customer UUID format.");
-            return;
-        }
+        System.out.print("Customer TZ: ");
+        String tzNumber = scanner.nextLine();
+
+        JsonElement customerResponse = sendRequest(client, EventType.GET_CUSTOMER, tzNumber);
+        if (checkForError(customerResponse)) return;
+
+        JsonObject customerObj = customerResponse.getAsJsonObject();
+        String cid = getString(customerObj, "customerId");
 
         System.out.print("Quantity to buy: ");
         int qty = Integer.parseInt(scanner.nextLine());
@@ -186,6 +168,47 @@ public class StorageManagementConsole implements IOptionCli {
         if (checkForError(response)) return;
         System.out.println("Item added successfully:");
         printSingleItem(response);
+    }
+
+    private String selectItemFromInventory(IClientTransport client, Scanner scanner) throws IOException {
+        JsonElement json = sendRequest(client, EventType.GET_INVERTORY_ITEMS, new GetInventoryItemsRequest(branchId.toString()));
+        JsonArray items = new JsonArray();
+        if (json != null && !json.isJsonNull()) {
+            if (json.isJsonArray()) {
+                items = json.getAsJsonArray();
+            } else {
+                JsonObject root = json.getAsJsonObject();
+                if (root.has("data") && root.get("data").isJsonArray()) {
+                    items = root.getAsJsonArray("data");
+                }
+            }
+        }
+
+        if (items.size() == 0) {
+            System.out.println("No items available.");
+            return null;
+        }
+
+        for (int i = 0; i < items.size(); i++) {
+            JsonObject item = items.get(i).getAsJsonObject();
+            System.out.println((i + 1) + ") " + getString(item, "productName"));
+        }
+
+        System.out.print("Select item number: ");
+        int selection;
+        try {
+            selection = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input.");
+            return null;
+        }
+
+        if (selection < 1 || selection > items.size()) {
+            System.out.println("Invalid selection.");
+            return null;
+        }
+
+        return getString(items.get(selection - 1).getAsJsonObject(), "itemId");
     }
 
     private void printBranchInfo(JsonElement json) {
