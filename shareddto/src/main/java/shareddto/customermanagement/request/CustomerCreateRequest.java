@@ -1,8 +1,6 @@
 package shareddto.customermanagement.request;
 
-/**
- * Request payload for creating a customer.
- */
+
 public class CustomerCreateRequest {
     private String fullName;
     private String idNumber;

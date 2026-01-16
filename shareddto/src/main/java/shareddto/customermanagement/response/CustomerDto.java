@@ -1,8 +1,6 @@
 package shareddto.customermanagement.response;
 
-/**
- * Customer data transfer object for CLI output.
- */
+
 public class CustomerDto {
     private String customerId;
     private String fullName;
