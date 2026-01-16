@@ -16,18 +16,20 @@ public class HandlerFactory {
     private final BranchItemService branchItemService;
     private final BranchService branchService;
     private final CustomerService customerService;
+    private final PasswordSettingsService passwordSettingsService;
     private final EmployeeRepository employeeRepository;
     private final Map<EventType, SocketHandler> handlers;
 
     public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService,
             BranchItemService branchItemService, BranchService branchService, CustomerService customerService,
-            EmployeeRepository employeeRepository) {
+            PasswordSettingsService passwordSettingsService, EmployeeRepository employeeRepository) {
         this.branchItemService = branchItemService;
         this.branchService = branchService;
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
         this.customerService = customerService;
+        this.passwordSettingsService = passwordSettingsService;
         this.employeeRepository = employeeRepository;
         this.handlers = new HashMap<>();
         initializeHandlers();
@@ -55,6 +57,8 @@ public class HandlerFactory {
         handlers.put(EventType.GET_PENDING_REQUESTS, new GetPendingRequestsHandler());
         handlers.put(EventType.GET_ACTIVE_CHATS, new GetActiveChatsHandler(employeeRepository));
         handlers.put(EventType.MANAGER_JOIN, new JoinChatHandler());
+        handlers.put(EventType.GET_PASSWORD_SETTINGS, new GetPasswordSettingsHandler(passwordSettingsService));
+        handlers.put(EventType.UPDATE_PASSWORD_SETTINGS, new UpdatePasswordSettingsHandler(passwordSettingsService));
     }
 
     public SocketHandler createHandler(EventType eventType) {

@@ -1,16 +1,19 @@
-package frontend.cli.employeemanagement;
+package frontend.cli.adminmanagement;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import frontend.transport.IClientTransport;
-import frontend.util.SessionManager;
+import shareddto.EventType;
+import shareddto.SocketMessage;
+import shareddto.admin.PasswordSettingsDto;
+import shareddto.admin.PasswordSettingsUpdateRequest;
+import shareddto.employeemanagement.BranchCatalog;
 import shareddto.employeemanagement.request.BranchEmployeesRequest;
 import shareddto.employeemanagement.request.EmployeeCreateRequest;
+import shareddto.employeemanagement.request.EmployeeDeleteRequest;
 import shareddto.employeemanagement.request.EmployeeGetRequest;
 import shareddto.employeemanagement.request.EmployeeUpdateRequest;
-import shareddto.employeemanagement.BranchCatalog;
 import shareddto.employeemanagement.response.EmployeeDto;
-import shareddto.SocketMessage;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -18,30 +21,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import shareddto.EventType;
 
 /**
- * Coordinates user input, API calls, and view rendering for employee management tasks.
+ * Coordinates user input, API calls, and view rendering for admin management tasks.
  */
-public class EmployeeManagementController {
+public class AdminManagementController {
     private static final Gson gson = new Gson();
     private final IClientTransport client;
-    private final EmployeeManagementView view;
+    private final AdminManagementView view;
     private final Scanner scanner;
     private final List<Map.Entry<String, String>> branchOptions;
 
-    public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner) {
+    public AdminManagementController(IClientTransport client, AdminManagementView view, Scanner scanner) {
         this.client = client;
         this.view = view;
         this.scanner = scanner;
         this.branchOptions = new ArrayList<>(BranchCatalog.KNOWN_BRANCHES.entrySet());
     }
 
-    /**
-     * Runs the main CLI loop until the user exits.
-     */
     public void run() throws IOException {
-        view.header("Task 8 - Employee Management");
+        view.header("Admin Management");
         while (true) {
             view.menu();
             if (!scanner.hasNextLine()) {
@@ -57,12 +56,18 @@ public class EmployeeManagementController {
                     updateEmployee();
                     break;
                 case "3":
-                    getEmployee();
+                    deleteEmployee();
                     break;
                 case "4":
-                    listBranchEmployees();
+                    getEmployee();
                     break;
                 case "5":
+                    listBranchEmployees();
+                    break;
+                case "6":
+                    managePasswordPolicy();
+                    break;
+                case "7":
                     return;
                 default:
                     view.error("Unknown option.");
@@ -73,31 +78,24 @@ public class EmployeeManagementController {
 
     private void createEmployee() throws IOException {
         view.section("Create Employee");
-        EmployeeDto currentEmployee = getCurrentEmployeeWithBranch();
-        if (currentEmployee == null) {
+        String role = view.promptRole(scanner);
+        if (role.isEmpty()) {
+            view.error("Role is required.");
             return;
         }
-        if (!isManager(currentEmployee.getRole())) {
-            view.error("Only shift managers and admins can create employees.");
-            return;
-        }
-        String branchId = currentEmployee.getBranchId();
-        if (branchId == null || branchId.trim().isEmpty()) {
-            view.error("No branch assigned to the current user.");
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+        String branchId = promptBranchId("Branch", isAdmin, isAdmin ? "leave blank for admin" : "required");
+        if (!isAdmin && branchId.isEmpty()) {
+            view.error("Branch is required for non-admin employees.");
             return;
         }
         EmployeeCreateRequest request = new EmployeeCreateRequest();
-        request.setBranchId(branchId);
+        request.setRole(role);
+        request.setBranchId(branchId.isEmpty() ? null : branchId);
         request.setFullName(view.prompt(scanner, "Full name"));
         request.setEmployeeId(view.prompt(scanner, "Employee ID"));
         request.setPhoneNumber(view.prompt(scanner, "Phone number"));
         request.setBankAccountNumber(view.prompt(scanner, "Bank account number"));
-        String role = view.promptRoleNonAdmin(scanner);
-        if ("ADMIN".equalsIgnoreCase(role)) {
-            view.error("Admin employees can only be created from Admin Management.");
-            return;
-        }
-        request.setRole(role);
         request.setEmail(view.prompt(scanner, "Email"));
         request.setPassword(view.prompt(scanner, "Password"));
 
@@ -111,17 +109,9 @@ public class EmployeeManagementController {
 
     private void updateEmployee() throws IOException {
         view.section("Update Employee");
-        EmployeeDto currentEmployee = getCurrentEmployeeWithBranch();
-        if (currentEmployee == null) {
-            return;
-        }
         String email = view.prompt(scanner, "Email");
         EmployeeDto current = fetchEmployeeByEmail(email);
         if (current == null) {
-            return;
-        }
-        if (!isSameBranch(currentEmployee, current)) {
-            view.error("You can only update employees in your branch.");
             return;
         }
         view.info("Current employee data:");
@@ -140,37 +130,71 @@ public class EmployeeManagementController {
         view.printEmployee(toDisplayEmployee(parseEmployee(response)));
     }
 
-    private void getEmployee() throws IOException {
-        view.section("Get Employee");
-        EmployeeDto currentEmployee = getCurrentEmployeeWithBranch();
-        if (currentEmployee == null) {
+    private void deleteEmployee() throws IOException {
+        view.section("Delete Employee");
+        String email = view.prompt(scanner, "Email");
+        if (email == null || email.trim().isEmpty()) {
+            view.error("Email is required.");
             return;
         }
+        EmployeeDeleteRequest request = new EmployeeDeleteRequest(email.trim());
+        SocketMessage response = sendOrReport(EventType.DELETE_EMPLOYEE, request, "Delete failed: ");
+        if (response == null) {
+            return;
+        }
+        view.success("Employee deleted.");
+    }
+
+    private void getEmployee() throws IOException {
+        view.section("Get Employee");
         EmployeeGetRequest request = new EmployeeGetRequest(view.prompt(scanner, "Email"));
         SocketMessage response = sendOrReport(EventType.GET_EMPLOYEE, request, "Get failed: ");
         if (response == null) {
             return;
         }
-        EmployeeDto employee = parseEmployee(response);
-        if (!isSameBranch(currentEmployee, employee)) {
-            view.error("You can only view employees in your branch.");
-            return;
-        }
-        view.printEmployee(toDisplayEmployee(employee));
+        view.printEmployee(toDisplayEmployee(parseEmployee(response)));
     }
 
     private void listBranchEmployees() throws IOException {
         view.section("List Employees");
-        EmployeeDto currentEmployee = getCurrentEmployeeWithBranch();
-        if (currentEmployee == null) {
-            return;
-        }
-        BranchEmployeesRequest request = new BranchEmployeesRequest(currentEmployee.getBranchId());
+        BranchEmployeesRequest request = new BranchEmployeesRequest(promptBranchId("Branch", true, "leave blank for all"));
         SocketMessage response = sendOrReport(EventType.LIST_BRANCH_EMPLOYEES, request, "List failed: ");
         if (response == null) {
             return;
         }
         view.printEmployeeList(toDisplayEmployeeList(parseEmployeeList(response)));
+    }
+
+    private void managePasswordPolicy() throws IOException {
+        view.section("Password Policy");
+        SocketMessage response = sendOrReport(EventType.GET_PASSWORD_SETTINGS, null, "Fetch failed: ");
+        if (response == null) {
+            return;
+        }
+        PasswordSettingsDto current = parsePasswordSettings(response);
+        view.info("Current password settings:");
+        view.printPasswordSettings(current);
+
+        boolean update = view.promptBoolean(scanner, "Update policy now", false);
+        if (!update) {
+            return;
+        }
+        boolean requireLength = view.promptBoolean(scanner, "Require at least 8 characters",
+                current != null && current.isPasswordlength8());
+        boolean requireUpper = view.promptBoolean(scanner, "Require at least one uppercase letter",
+                current != null && current.isOneUpperletter());
+        boolean requireNumber = view.promptBoolean(scanner, "Require at least one number",
+                current != null && current.isOneNumber());
+
+        PasswordSettingsUpdateRequest updateRequest = new PasswordSettingsUpdateRequest(
+                requireLength, requireUpper, requireNumber);
+        SocketMessage updatedResponse = sendOrReport(EventType.UPDATE_PASSWORD_SETTINGS, updateRequest,
+                "Update failed: ");
+        if (updatedResponse == null) {
+            return;
+        }
+        view.success("Password policy updated.");
+        view.printPasswordSettings(parsePasswordSettings(updatedResponse));
     }
 
     private EmployeeDto fetchEmployeeByEmail(String email) throws IOException {
@@ -211,16 +235,27 @@ public class EmployeeManagementController {
 
         while (true) {
             view.section("Select Fields to Edit");
-            view.info("1. Full name");
-            view.info("2. Employee ID");
-            view.info("3. Phone number");
-            view.info("4. Bank account number");
-            view.info("5. Role");
-            view.info("6. Password");
-            view.info("7. Done");
+            view.info("1. Branch");
+            view.info("2. Full name");
+            view.info("3. Employee ID");
+            view.info("4. Phone number");
+            view.info("5. Bank account number");
+            view.info("6. Role");
+            view.info("7. Password");
+            view.info("8. Done");
             String choice = view.prompt(scanner, "Choose");
             switch (choice) {
                 case "1":
+                    String branchId = promptBranchId("Branch", true, "leave blank to keep current");
+                    if (!branchId.isEmpty()) {
+                        request.setBranchId(branchId);
+                        draft.setBranchId(branchId);
+                        hasChanges = true;
+                    }
+                    view.info("Current employee data:");
+                    view.printEmployee(toDisplayEmployee(draft));
+                    break;
+                case "2":
                     String fullName = view.prompt(scanner, "Full name");
                     if (!fullName.trim().isEmpty()) {
                         request.setFullName(fullName);
@@ -230,7 +265,7 @@ public class EmployeeManagementController {
                     view.info("Current employee data:");
                     view.printEmployee(toDisplayEmployee(draft));
                     break;
-                case "2":
+                case "3":
                     String employeeId = view.prompt(scanner, "Employee ID");
                     if (!employeeId.trim().isEmpty()) {
                         request.setEmployeeId(employeeId);
@@ -240,7 +275,7 @@ public class EmployeeManagementController {
                     view.info("Current employee data:");
                     view.printEmployee(toDisplayEmployee(draft));
                     break;
-                case "3":
+                case "4":
                     String phoneNumber = view.prompt(scanner, "Phone number");
                     if (!phoneNumber.trim().isEmpty()) {
                         request.setPhoneNumber(phoneNumber);
@@ -250,7 +285,7 @@ public class EmployeeManagementController {
                     view.info("Current employee data:");
                     view.printEmployee(toDisplayEmployee(draft));
                     break;
-                case "4":
+                case "5":
                     String bankAccountNumber = view.prompt(scanner, "Bank account number");
                     if (!bankAccountNumber.trim().isEmpty()) {
                         request.setBankAccountNumber(bankAccountNumber);
@@ -260,13 +295,9 @@ public class EmployeeManagementController {
                     view.info("Current employee data:");
                     view.printEmployee(toDisplayEmployee(draft));
                     break;
-                case "5":
-                    String role = view.promptRoleNonAdmin(scanner);
+                case "6":
+                    String role = view.promptRole(scanner);
                     if (!role.trim().isEmpty()) {
-                        if ("ADMIN".equalsIgnoreCase(role)) {
-                            view.error("Admin role changes are only allowed in Admin Management.");
-                            break;
-                        }
                         request.setRole(role);
                         draft.setRole(role);
                         hasChanges = true;
@@ -274,7 +305,7 @@ public class EmployeeManagementController {
                     view.info("Current employee data:");
                     view.printEmployee(toDisplayEmployee(draft));
                     break;
-                case "6":
+                case "7":
                     String password = view.prompt(scanner, "Password");
                     if (!password.trim().isEmpty()) {
                         request.setPassword(password);
@@ -283,7 +314,7 @@ public class EmployeeManagementController {
                     view.info("Current employee data:");
                     view.printEmployee(toDisplayEmployee(draft));
                     break;
-                case "7":
+                case "8":
                     return hasChanges ? request : null;
                 default:
                     view.error("Unknown option.");
@@ -330,39 +361,6 @@ public class EmployeeManagementController {
         return null;
     }
 
-    private EmployeeDto getCurrentEmployeeWithBranch() {
-        EmployeeDto currentEmployee = SessionManager.getInstance().getCurrentEmployee();
-        if (currentEmployee == null) {
-            view.error("No logged-in user information available.");
-            return null;
-        }
-        if (currentEmployee.getBranchId() == null || currentEmployee.getBranchId().trim().isEmpty()) {
-            view.error("No branch assigned to the current user. Use Admin Management for cross-branch access.");
-            return null;
-        }
-        return currentEmployee;
-    }
-
-    private boolean isManager(String role) {
-        return "ADMIN".equalsIgnoreCase(role) || "SHIFT_MANAGER".equalsIgnoreCase(role);
-    }
-
-    private boolean isSameBranch(EmployeeDto currentEmployee, EmployeeDto target) {
-        if (currentEmployee == null || target == null) {
-            return false;
-        }
-        String currentBranch = currentEmployee.getBranchId();
-        String targetBranch = target.getBranchId();
-        if (currentBranch == null || targetBranch == null) {
-            return false;
-        }
-        return currentBranch.trim().equalsIgnoreCase(targetBranch.trim());
-    }
-
-
-    /**
-     * Sends a request and renders a user-friendly error on failure.
-     */
     private SocketMessage sendOrReport(EventType event, Object request, String errorPrefix) throws IOException {
         SocketMessage response = client.send(event, request);
         if (response == null) {
@@ -378,15 +376,17 @@ public class EmployeeManagementController {
     }
 
     private EmployeeDto parseEmployee(SocketMessage response) {
-        // SocketMessage data is untyped; Gson maps it into DTOs.
         return gson.fromJson(gson.toJsonTree(response.getData()), EmployeeDto.class);
     }
 
     private List<EmployeeDto> parseEmployeeList(SocketMessage response) {
-        // List mapping mirrors server list payloads.
         Type listType = new TypeToken<List<EmployeeDto>>() {
         }.getType();
         return gson.fromJson(gson.toJsonTree(response.getData()), listType);
+    }
+
+    private PasswordSettingsDto parsePasswordSettings(SocketMessage response) {
+        return gson.fromJson(gson.toJsonTree(response.getData()), PasswordSettingsDto.class);
     }
 
     private EmployeeDto toDisplayEmployee(EmployeeDto employee) {
