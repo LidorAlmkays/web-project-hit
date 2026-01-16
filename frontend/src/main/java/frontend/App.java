@@ -2,9 +2,11 @@ package frontend;
 
 import frontend.cli.CliResult;
 import frontend.cli.auth.LoginController;
+import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 import frontend.cli.customermanagement.CustomerManagementCli;
 
+import frontend.cli.storagemanagement.StorageManagementConsole;
 import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
 import frontend.transport.SocketClient;
@@ -31,7 +33,9 @@ public class App {
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
                 HomeCli homeCli = new HomeCli(List.of(
                         new EmployeeManagementCli(),
-                        new CustomerManagementCli()));
+                        new CustomerManagementCli(),
+                        new StorageManagementConsole(),
+                        new ChatManagementCli()));
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
                  repeat = false;

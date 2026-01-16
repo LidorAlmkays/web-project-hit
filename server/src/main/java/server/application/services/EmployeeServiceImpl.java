@@ -1,6 +1,8 @@
 package server.application.services;
 
 import server.application.adaptors.EmployeeService;
+import server.application.adaptors.PasswordSettingsService;
+import server.domain.PasswordSettings;
 import server.domain.employee.Employee;
 import server.domain.employee.EmployeeRole;
 import server.infustructre.adaptors.BranchRepository;
@@ -17,14 +19,19 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final BranchRepository branchRepository;
     private final LogRepository logRepository;
+    private final PasswordSettingsService passwordSettingsService;
     private final Map<UUID, Object> employeeLocks = new ConcurrentHashMap<>();
     private final Object creationMutex = new Object();
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository, BranchRepository branchRepository,
-            LogRepository logRepository) {
+            LogRepository logRepository, PasswordSettingsService passwordSettingsService) {
+        if (passwordSettingsService == null) {
+            throw new IllegalArgumentException("passwordSettingsService must not be null");
+        }
         this.employeeRepository = employeeRepository;
         this.branchRepository = branchRepository;
         this.logRepository = logRepository;
+        this.passwordSettingsService = passwordSettingsService;
     }
 
     private Object getEmployeeLock(UUID employeeNumber) {
@@ -47,6 +54,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         this.logRepository
                 .info("creating employee: " + fullName + " " + employeeId + " " + phoneNumber + " " + bankAccountNumber
                         + " " + role + " " + email + " " + password);
+        
+       validatePassword(password);
+        
         if (role != EmployeeRole.ADMIN && branchId != null) {
             try {
                 if (branchRepository.findById(branchId).isEmpty()) {
@@ -153,5 +163,60 @@ public class EmployeeServiceImpl implements EmployeeService {
                 throw new RuntimeException(error);
             }
         }
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.trim().isEmpty()) {
+            Error error = new Error("Password validation failed: password is null or empty");
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        PasswordSettings settings = passwordSettingsService.getPasswordSettings();
+        logRepository.info("Validating password against settings: passwordlength8=" + settings.isPasswordlength8()
+                + ", oneUpperletter=" + settings.isOneUpperletter() + ", oneNumber=" + settings.isOneNumber());
+
+        StringBuilder validationErrors = new StringBuilder();
+
+        if (settings.isPasswordlength8() && password.length() < 8) {
+            validationErrors.append("Password must be at least 8 characters long. ");
+            logRepository.info("Password validation failed: length requirement not met (length=" + password.length() + ")");
+        }
+
+        if (settings.isOneUpperletter() && !hasUpperCaseLetter(password)) {
+            validationErrors.append("Password must contain at least one uppercase letter. ");
+            logRepository.info("Password validation failed: uppercase letter requirement not met");
+        }
+
+        if (settings.isOneNumber() && !hasNumber(password)) {
+            validationErrors.append("Password must contain at least one number. ");
+            logRepository.info("Password validation failed: number requirement not met");
+        }
+
+        if (validationErrors.length() > 0) {
+            Error error = new Error("Password validation failed: " + validationErrors.toString().trim());
+            logRepository.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        logRepository.info("Password validation passed for employee creation");
+    }
+
+    private boolean hasUpperCaseLetter(String password) {
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasNumber(String password) {
+        for (char c : password.toCharArray()) {
+            if (Character.isDigit(c)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
