@@ -18,11 +18,13 @@ public class ApplicationFactory {
     }
 
     public EmployeeService createEmployeeService(EmployeeRepository employeeRepository,
-            BranchRepository branchRepository, LogRepository logRepository) {
+            BranchRepository branchRepository, LogRepository logRepository,
+            PasswordSettingsService passwordSettingsService) {
         return new EmployeeServiceImpl(
                 employeeRepository,
                 branchRepository,
-                logRepository);
+                logRepository,
+                passwordSettingsService);
     }
 
     public LoggerService createLoggerService(LogRepository logRepository) {
@@ -61,5 +63,9 @@ public class ApplicationFactory {
 
     public CustomerService createCustomerService(CustomerRepository customerRepository, LogRepository logRepository) {
         return new CustomerServiceImpl(customerRepository, logRepository);
+    }
+
+    public PasswordSettingsService createPasswordSettingsService(PasswordSettingsRepository passwordSettingsRepository) {
+        return new PasswordSettingsServiceImpl(passwordSettingsRepository);
     }
 }
