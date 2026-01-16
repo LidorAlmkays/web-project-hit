@@ -131,7 +131,7 @@ public class CustomerServiceImplTest {
         String email = "jane@example.com";
 
         // Act
-        Customer result = customerService.addCustomer(fullName, idNumber, phone, email);
+        Customer result = customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
 
         // Assert
         assertNotNull("Customer should not be null", result);
@@ -157,7 +157,7 @@ public class CustomerServiceImplTest {
 
         // Act & Assert
         try {
-            customerService.addCustomer(fullName, idNumber, phone, email);
+            customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
             fail("Should have thrown IllegalArgumentException for null fullName");
         } catch (IllegalArgumentException e) {
             assertTrue("Error should be logged", mockLogRepository.hasErrorLogs());
@@ -177,7 +177,7 @@ public class CustomerServiceImplTest {
 
         // Act & Assert
         try {
-            customerService.addCustomer(fullName, idNumber, phone, email);
+            customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
             fail("Should have thrown IllegalArgumentException for empty fullName");
         } catch (IllegalArgumentException e) {
             assertTrue("Error should be logged", mockLogRepository.hasErrorLogs());
@@ -196,7 +196,7 @@ public class CustomerServiceImplTest {
 
         // Act & Assert
         try {
-            customerService.addCustomer(fullName, idNumber, phone, email);
+            customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
             fail("Should have thrown IllegalArgumentException for null idNumber");
         } catch (IllegalArgumentException e) {
             assertTrue("Error should be logged", mockLogRepository.hasErrorLogs());
@@ -215,7 +215,7 @@ public class CustomerServiceImplTest {
 
         // Act & Assert
         try {
-            customerService.addCustomer(fullName, idNumber, phone, email);
+            customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
             fail("Should have thrown IllegalArgumentException for null phone");
         } catch (IllegalArgumentException e) {
             assertTrue("Error should be logged", mockLogRepository.hasErrorLogs());
@@ -234,7 +234,7 @@ public class CustomerServiceImplTest {
 
         // Act & Assert
         try {
-            customerService.addCustomer(fullName, idNumber, phone, email);
+            customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
             fail("Should have thrown IllegalArgumentException for null email");
         } catch (IllegalArgumentException e) {
             assertTrue("Error should be logged", mockLogRepository.hasErrorLogs());
@@ -256,7 +256,7 @@ public class CustomerServiceImplTest {
 
         // Act & Assert
         try {
-            customerService.addCustomer(fullName, idNumber, phone, email);
+            customerService.addCustomer(fullName, idNumber, phone, email, CustomerType.NEW);
             fail("Should have thrown IllegalArgumentException for duplicate idNumber");
         } catch (IllegalArgumentException e) {
             assertTrue("Error should be logged", mockLogRepository.hasErrorLogs());
