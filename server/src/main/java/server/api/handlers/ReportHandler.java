@@ -32,18 +32,18 @@ public class ReportHandler extends AbstractSocketHandler {
                 }
                 try {
                     UUID branchId = UUID.fromString(data.toString());
-                    response = reportService.getBranchInventoryReportJson(branchId);
+                    response = reportService.getBranchInventoryReport(branchId);
                 } catch (IllegalArgumentException e) {
                     response = "{ \"error\": \"Invalid Branch ID format\" }";
                 }
                 break;
 
             case SALES_STATS_BRANCH:
-                response = reportService.getSalesStatsByBranchJson();
+                response = reportService.getSalesStatsByBranch();
                 break;
 
             case SALES_STATS_PRODUCT:
-                response = reportService.getSalesStatsByProductJson();
+                response = reportService.getSalesStatsByProduct();
                 break;
         }
 

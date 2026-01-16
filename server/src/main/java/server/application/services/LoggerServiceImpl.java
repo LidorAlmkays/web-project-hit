@@ -18,15 +18,9 @@ import shareddto.reporting.SystemEventLogDto;
 public class LoggerServiceImpl implements LoggerService {
 
     private final LogRepository logRepository;
-    private final Gson gson;
 
     public LoggerServiceImpl(LogRepository logRepository) {
         this.logRepository = logRepository;
-        this.gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) -> 
-                        new JsonPrimitive(src.toString()))
-                .create();
     }
 
     @Override
@@ -35,7 +29,8 @@ public class LoggerServiceImpl implements LoggerService {
     }
 
     @Override
-    public String getSystemLogsJson() {
+    public SystemEventLogDto getSystemLogs() {
+        logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated System Event Log");
         List<LogEntry> rawLogs = getLogsFromLast24Hours();
 
         List<LogEntryDto> dtos = rawLogs.stream()
@@ -48,13 +43,11 @@ public class LoggerServiceImpl implements LoggerService {
             ))
             .collect(Collectors.toList());
 
-        SystemEventLogDto eventLogDto = new SystemEventLogDto(
+        return new SystemEventLogDto(
             LocalDateTime.now().toString(),
             dtos.size(),
             dtos
         );
-
-        return gson.toJson(eventLogDto);
     }
 
     private List<LogEntry> getLogsFromLast24Hours() {

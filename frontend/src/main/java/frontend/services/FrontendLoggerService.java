@@ -1,6 +1,5 @@
 package frontend.services;
 
-import com.google.gson.Gson;
 import frontend.transport.IClientTransport;
 import shareddto.EventType;
 import shareddto.SocketMessage;
@@ -11,11 +10,9 @@ import java.io.IOException;
 public class FrontendLoggerService {
 
     private final IClientTransport clientTransport;
-    private final Gson gson;
 
     public FrontendLoggerService(IClientTransport clientTransport) {
         this.clientTransport = clientTransport;
-        this.gson = new Gson();
     }
 
     public SystemEventLogDto fetchSystemLogs() {
@@ -24,7 +21,7 @@ public class FrontendLoggerService {
             Object data = response.getData();
             
             // Check if data is an error string
-            if (data instanceof String && ((String) data).startsWith("ERROR")) {
+            if (data instanceof String && ((String) data).startsWith("ERROR") || data == null) {
                 throw new RuntimeException("Server returned error: " + data);
             }
             

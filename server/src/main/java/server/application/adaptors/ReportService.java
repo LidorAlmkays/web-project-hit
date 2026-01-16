@@ -2,13 +2,13 @@ package server.application.adaptors;
 
 import java.util.UUID;
 
+import shareddto.reporting.BranchInventoryReportDto;
+import shareddto.reporting.SalesStatsReportDto;
+
 public interface ReportService {
-    // --- Business Reports Only ---
+    // --- Business Reports  ---
     
-    // Returns JSON of BranchInventoryReportDto
-    String getBranchInventoryReportJson(UUID branchId);
-    
-    // Returns JSON of SalesStatsReportDto
-    String getSalesStatsByBranchJson();
-    String getSalesStatsByProductJson();
+    BranchInventoryReportDto getBranchInventoryReport(UUID branchId);
+    SalesStatsReportDto getSalesStatsByBranch();
+    SalesStatsReportDto getSalesStatsByProduct();
 }

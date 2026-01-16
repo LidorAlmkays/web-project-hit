@@ -1,33 +1,29 @@
 package server.api.handlers;
 
 import server.application.adaptors.LoggerService;
+import shareddto.SocketMessage;
+import shareddto.EventType;
+import shareddto.reporting.SystemEventLogDto;
 import java.net.Socket;
 
 public class SystemLogHandler extends AbstractSocketHandler {
 
     private final LoggerService loggerService;
-    private final LogRequestType type;
 
-    public enum LogRequestType {
-        JSON, DOCUMENT
-    }
-
-    public SystemLogHandler(LoggerService loggerService, LogRequestType type) {
+    public SystemLogHandler(LoggerService loggerService) {
         this.loggerService = loggerService;
-        this.type = type;
     }
 
     @Override
-    public void handle(Object data, Socket clientSocket) {
-        String response = "";
+    public void handle(Object data, Socket clientSocket) throws Exception {
+        SystemEventLogDto logs = loggerService.getSystemLogs();
 
-        switch (type) {
-            case JSON:
-            case DOCUMENT: 
-                response = loggerService.getSystemLogsJson();
-                break;
-        }
+        SocketMessage response = new SocketMessage(
+            EventType.GET_SYSTEM_LOGS_JSON, 
+            logs
+        );
 
-        send(clientSocket, response);
+
+        sendMessage(clientSocket, response);
     }
 }

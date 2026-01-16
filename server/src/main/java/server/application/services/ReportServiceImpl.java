@@ -22,21 +22,14 @@ public class ReportServiceImpl implements ReportService {
 
     private final LogRepository logRepository;
     private final BranchInventoryItemRepository inventoryRepository;
-    private final Gson gson;
 
     public ReportServiceImpl(LogRepository logRepository, BranchInventoryItemRepository inventoryRepository) {
         this.logRepository = logRepository;
         this.inventoryRepository = inventoryRepository;
-        
-        this.gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) -> 
-                        new JsonPrimitive(src.toString())) 
-                .create();
     }
 
     @Override
-    public String getBranchInventoryReportJson(UUID branchId) {
+    public BranchInventoryReportDto getBranchInventoryReport(UUID branchId) {
         logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated Branch Inventory Report for Branch ID: " + branchId);
 
         List<BranchInventoryItem> items = inventoryRepository.findByBranchId(branchId);
@@ -50,18 +43,16 @@ public class ReportServiceImpl implements ReportService {
             ))
             .collect(Collectors.toList());
 
-        BranchInventoryReportDto reportDto = new BranchInventoryReportDto(
+        return new BranchInventoryReportDto(
             LocalDateTime.now().toString(),
             branchId,
             items.size(),
             itemDtos
         );
-
-        return gson.toJson(reportDto);
     }
 
     @Override
-    public String getSalesStatsByBranchJson() {
+    public SalesStatsReportDto getSalesStatsByBranch() {
         logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated Sales Statistics by Branch Report");
 
         List<LogEntry> purchaseLogs = getPurchaseLogs();
@@ -80,17 +71,15 @@ public class ReportServiceImpl implements ReportService {
             }
         }
 
-        SalesStatsReportDto reportDto = new SalesStatsReportDto(
+        return new SalesStatsReportDto(
             LocalDateTime.now().toString(),
             "SALES_BY_BRANCH",
             salesByBranch
         );
-
-        return gson.toJson(reportDto);
     }
 
     @Override
-    public String getSalesStatsByProductJson() {
+    public SalesStatsReportDto getSalesStatsByProduct() {
         logRepository.info(LogEntry.LogType.MANAGEMENT, "Admin generated Sales Statistics by Product Report");
 
         List<LogEntry> purchaseLogs = getPurchaseLogs();
@@ -109,13 +98,11 @@ public class ReportServiceImpl implements ReportService {
             }
         }
 
-        SalesStatsReportDto reportDto = new SalesStatsReportDto(
+        return new SalesStatsReportDto(
             LocalDateTime.now().toString(),
             "SALES_BY_PRODUCT",
             salesByProduct
         );
-
-        return gson.toJson(reportDto);
     }
 
     private List<LogEntry> getPurchaseLogs() {
