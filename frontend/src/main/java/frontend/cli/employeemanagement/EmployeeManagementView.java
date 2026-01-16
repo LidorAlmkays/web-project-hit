@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-/**
- * Handles CLI prompts and rendering for employee management tasks.
- */
+
 public class EmployeeManagementView {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public void header(String title) {

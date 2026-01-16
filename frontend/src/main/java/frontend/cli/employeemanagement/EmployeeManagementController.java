@@ -20,9 +20,7 @@ import java.util.Map;
 import java.util.Scanner;
 import shareddto.EventType;
 
-/**
- * Coordinates user input, API calls, and view rendering for employee management tasks.
- */
+
 public class EmployeeManagementController {
     private static final Gson gson = new Gson();
     private final IClientTransport client;
@@ -37,9 +35,7 @@ public class EmployeeManagementController {
         this.branchOptions = new ArrayList<>(BranchCatalog.KNOWN_BRANCHES.entrySet());
     }
 
-    /**
-     * Runs the main CLI loop until the user exits.
-     */
+
     public void run() throws IOException {
         view.header("Task 8 - Employee Management");
         while (true) {
@@ -360,9 +356,7 @@ public class EmployeeManagementController {
     }
 
 
-    /**
-     * Sends a request and renders a user-friendly error on failure.
-     */
+
     private SocketMessage sendOrReport(EventType event, Object request, String errorPrefix) throws IOException {
         SocketMessage response = client.send(event, request);
         if (response == null) {
