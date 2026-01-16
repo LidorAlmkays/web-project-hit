@@ -39,14 +39,6 @@ public class CustomerManagementView {
         return scanner.nextLine().trim();
     }
 
-    public String promptCustomerType(Scanner scanner) {
-        System.out.print("Customer type (NEW, VIP): ");
-        if (!scanner.hasNextLine()) {
-            return "";
-        }
-        return scanner.nextLine().trim();
-    }
-
     public void success(String message) {
         System.out.println("OK: " + message);
     }

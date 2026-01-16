@@ -49,8 +49,8 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Customer addCustomer(String fullName, String idNumber, String phone, String email,
-            CustomerType customerType) {
+    public Customer addCustomer(String fullName, String idNumber, String phone, String email) {
+        CustomerType customerType = CustomerType.NEW;
         logRepository.info("Adding new customer, fullName=" + fullName + ", idNumber=" + idNumber
                 + ", phone=" + phone + ", email=" + email + ", customerType=" + customerType);
 
@@ -74,18 +74,6 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (email == null || email.trim().isEmpty()) {
             Error error = new Error("Add customer failed, email must not be null or empty");
-            logRepository.error(error);
-            throw new IllegalArgumentException(error);
-        }
-
-        if (customerType == null) {
-            Error error = new Error("Add customer failed, customerType must not be null");
-            logRepository.error(error);
-            throw new IllegalArgumentException(error);
-        }
-
-        if (customerType == CustomerType.RETURNING) {
-            Error error = new Error("Add customer failed, customerType RETURNING is not allowed");
             logRepository.error(error);
             throw new IllegalArgumentException(error);
         }

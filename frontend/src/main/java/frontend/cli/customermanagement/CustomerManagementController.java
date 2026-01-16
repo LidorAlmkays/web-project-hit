@@ -9,7 +9,6 @@ import shareddto.customermanagement.request.CustomerGetRequest;
 import shareddto.customermanagement.response.CustomerDto;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Scanner;
 
 /**
@@ -61,11 +60,7 @@ public class CustomerManagementController {
         String idNumber = view.prompt(scanner, "ID number");
         String phone = view.prompt(scanner, "Phone");
         String email = view.prompt(scanner, "Email");
-        String customerType = promptCustomerType();
-        if (customerType == null) {
-            return;
-        }
-        CustomerCreateRequest request = new CustomerCreateRequest(fullName, idNumber, phone, email, customerType);
+        CustomerCreateRequest request = new CustomerCreateRequest(fullName, idNumber, phone, email);
         SocketMessage response = sendOrReport(EventType.CREATE_CUSTOMER, request, "Add failed: ");
         if (response == null) {
             return;
@@ -82,25 +77,6 @@ public class CustomerManagementController {
             return;
         }
         view.printCustomer(parseCustomer(response));
-    }
-
-    private String promptCustomerType() {
-        while (true) {
-            String customerType = view.promptCustomerType(scanner);
-            if (customerType.isEmpty()) {
-                view.error("Customer type is required.");
-                continue;
-            }
-            String normalized = customerType.toUpperCase(Locale.ROOT);
-            if ("NEW".equals(normalized) || "VIP".equals(normalized)) {
-                return normalized;
-            }
-            if ("RETURNING".equals(normalized)) {
-                view.error("RETURNING customers are created automatically and cannot be added directly.");
-                continue;
-            }
-            view.error("Invalid type. Use NEW or VIP.");
-        }
     }
 
     /**
