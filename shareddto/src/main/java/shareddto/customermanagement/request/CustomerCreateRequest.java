@@ -8,17 +8,15 @@ public class CustomerCreateRequest {
     private String idNumber;
     private String phone;
     private String email;
-    private String customerType;
 
     public CustomerCreateRequest() {
     }
 
-    public CustomerCreateRequest(String fullName, String idNumber, String phone, String email, String customerType) {
+    public CustomerCreateRequest(String fullName, String idNumber, String phone, String email) {
         this.fullName = fullName;
         this.idNumber = idNumber;
         this.phone = phone;
         this.email = email;
-        this.customerType = customerType;
     }
 
     public String getFullName() {
@@ -51,13 +49,5 @@ public class CustomerCreateRequest {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
     }
 }

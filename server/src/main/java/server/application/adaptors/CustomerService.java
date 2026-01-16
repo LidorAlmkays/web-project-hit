@@ -6,6 +6,5 @@ import java.util.Optional;
 public interface CustomerService {
     Optional<Customer> getCustomerByIdNumber(String idNumber);
 
-    Customer addCustomer(String fullName, String idNumber, String phone, String email,
-            server.domain.customer.CustomerType customerType);
+    Customer addCustomer(String fullName, String idNumber, String phone, String email);
 }
