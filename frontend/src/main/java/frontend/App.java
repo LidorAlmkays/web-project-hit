@@ -38,7 +38,7 @@ public class App {
                 if (role != null && "ADMIN".equalsIgnoreCase(role)) {
                     options.add(new AdminManagementCli());
                 }
-                if (role != null && ("ADMIN".equalsIgnoreCase(role) || "SHIFT_MANAGER".equalsIgnoreCase(role))) {
+                if (role != null && ("ADMIN".equalsIgnoreCase(role) || "SELLER".equalsIgnoreCase(role))) {
                     options.add(new EmployeeManagementCli());
                 }
                 options.add(new StorageManagementConsole());
