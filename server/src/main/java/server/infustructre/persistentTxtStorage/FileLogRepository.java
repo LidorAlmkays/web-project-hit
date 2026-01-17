@@ -31,17 +31,26 @@ public class FileLogRepository implements LogRepository {
     @Override
     public List<LogEntry> findAll() {
         List<LogEntry> logs = new ArrayList<>();
+
+        if (!Files.exists(logFilePath)) {
+            return logs;
+        }
+
         try (BufferedReader reader = Files.newBufferedReader(logFilePath)) {
+            
             String line;
             while ((line = reader.readLine()) != null) {
                 LogEntry entry = decode(line);
+                
                 if (entry != null) {
                     logs.add(entry);
                 }
             }
+
         } catch (IOException e) {
             System.err.println("Failed to read logs: " + e.getMessage());
         }
+
         return logs;
     }
     
@@ -102,14 +111,25 @@ public class FileLogRepository implements LogRepository {
     }
 
     private void writeToFile(String line) {
+        if (line == null) {
+            throw new IllegalArgumentException("cant write null entity");
+        }
+
         synchronized (writeLock) {
+            ensureFileExists(); 
+
             File file = logFilePath.toFile();
             PrintWriter writer = null;
+
             try {
-                writer = new PrintWriter(file);
-                
+                writer = new PrintWriter(new FileWriter(file, true));
+                writer.println(line);
             } catch (IOException e) {
-                System.err.println("Failed to write log: " + e.getMessage());
+                throw new RuntimeException("Unable to write to file. Get error: ", e);
+            } finally {
+                if (writer != null) {
+                    writer.close();
+                }
             }
         }
     }

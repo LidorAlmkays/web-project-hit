@@ -28,8 +28,8 @@ public class ReportController {
     public void showMenu() {
         while (true) {
             System.out.println("\n--- System & Reports Management ---");
-            System.out.println("1. Export System Logs (Last 24h)"); // שם חדש ומדויק
-            System.out.println("2. Generate Branch Inventory Report"); // חדש
+            System.out.println("1. Export System Logs (Last 24h)");
+            System.out.println("2. Generate Branch Inventory Report");
             System.out.println("3. Generate Sales Report (By Branch)");
             System.out.println("4. Generate Sales Report (By Product)");
             System.out.println("0. Back");
@@ -62,7 +62,7 @@ public class ReportController {
         System.out.println("Fetching system logs...");
         try {
             SystemEventLogDto logs = loggerService.fetchSystemLogs();
-            String fileName = "System_Logs_" + LocalDate.now() + ".html"; // שיניתי ל-html כי זה הפורמט ש-Generator מייצר
+            String fileName = "System_Logs_" + LocalDate.now() + ".doc";
             fileGenerator.generateLogDumpFile(logs, fileName);
         } catch (Exception e) {
             System.err.println("Error fetching logs: " + e.getMessage());
@@ -77,7 +77,7 @@ public class ReportController {
             System.out.println("Fetching inventory data...");
             BranchInventoryReportDto report = reportService.getBranchInventoryReport(branchId);
             
-            String fileName = "Inventory_Branch_" + branchId.toString().substring(0,8) + ".html";
+            String fileName = "Inventory_Branch_" + branchId.toString().substring(0,8) + ".doc";
             fileGenerator.generateInventoryReportFile(report, fileName);
             
         } catch (IllegalArgumentException e) {
@@ -91,7 +91,7 @@ public class ReportController {
         System.out.println("Generating Sales Report (By Branch)...");
         try {
             SalesStatsReportDto report = reportService.getSalesByBranchReport();
-            String fileName = "Sales_By_Branch_" + LocalDate.now() + ".html";
+            String fileName = "Sales_By_Branch_" + LocalDate.now() + ".doc";
             fileGenerator.generateSalesReportFile("Sales Report - By Branch", report, fileName);
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
@@ -102,7 +102,7 @@ public class ReportController {
         System.out.println("Generating Sales Report (By Product)...");
         try {
             SalesStatsReportDto report = reportService.getSalesByProductReport();
-            String fileName = "Sales_By_Product_" + LocalDate.now() + ".html";
+            String fileName = "Sales_By_Product_" + LocalDate.now() + ".doc";
             fileGenerator.generateSalesReportFile("Sales Report - By Product", report, fileName);
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
