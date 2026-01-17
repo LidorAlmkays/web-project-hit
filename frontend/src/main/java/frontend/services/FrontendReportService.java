@@ -2,9 +2,12 @@ package frontend.services;
 
 import com.google.gson.Gson;
 import frontend.transport.IClientTransport;
+import shareddto.EventType;
+import shareddto.SocketMessage;
 import shareddto.reporting.BranchInventoryReportDto;
 import shareddto.reporting.SalesStatsReportDto;
 
+import java.io.IOException;
 import java.util.UUID;
 
 public class FrontendReportService {
@@ -18,32 +21,37 @@ public class FrontendReportService {
     }
 
     // --- Inventory ---
-    public BranchInventoryReportDto getBranchInventoryReport(UUID branchId) {
+    public BranchInventoryReportDto getBranchInventoryReport(UUID branchId) throws IOException {
+        SocketMessage response = clientTransport.send(EventType.GET_BRANCH_INVENTORY_REPORT, branchId.toString());
         
-        String jsonResponse = clientTransport.send"GET_BRANCH_INVENTORY_REPORT", branchId.toString());
-        
-        if (jsonResponse.startsWith("ERROR")) {
-            throw new RuntimeException("Server error: " + jsonResponse);
-        }
-        return gson.fromJson(jsonResponse, BranchInventoryReportDto.class);
+        return extractData(response, BranchInventoryReportDto.class);
     }
 
     // --- Sales Stats ---
-    public SalesStatsReportDto getSalesByBranchReport() {
-        return fetchStatsReport("GET_SALES_STATS_BRANCH");
+    public SalesStatsReportDto getSalesByBranchReport() throws IOException {
+        SocketMessage response = clientTransport.send(EventType.GET_SALES_STATS_BRANCH, null);
+        return extractData(response, SalesStatsReportDto.class);
     }
 
-    public SalesStatsReportDto getSalesByProductReport() {
-        return fetchStatsReport("GET_SALES_STATS_PRODUCT");
+    public SalesStatsReportDto getSalesByProductReport() throws IOException {
+        SocketMessage response = clientTransport.send(EventType.GET_SALES_STATS_PRODUCT, null);
+        return extractData(response, SalesStatsReportDto.class);
     }
 
-    private SalesStatsReportDto fetchStatsReport(String messageType) {
-        
-        String jsonResponse = clientTransport.send(messageType);
-        
-        if (jsonResponse.startsWith("ERROR")) {
-            throw new RuntimeException("Server error: " + jsonResponse);
+    private <T> T extractData(SocketMessage response, Class<T> type) {
+        if (response == null) {
+            throw new RuntimeException("Error: No response from server.");
         }
-        return gson.fromJson(jsonResponse, SalesStatsReportDto.class);
+
+        if (response.getEventType() == EventType.ERROR) {
+            throw new RuntimeException("Server Error: " + response.getData());
+        }
+
+        if (response.getData() == null) {
+            throw new RuntimeException("Error: Empty data received.");
+        }
+
+        String json = gson.toJson(response.getData());
+        return gson.fromJson(json, type);
     }
 }

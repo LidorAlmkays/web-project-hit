@@ -1,9 +1,5 @@
 package server.application.services;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
 import server.application.adaptors.ReportService;
 import server.domain.BranchInventoryItem;
 import server.domain.LogEntry;

@@ -89,7 +89,7 @@ public class FileLogRepository implements LogRepository {
             try {
                 type = LogEntry.LogType.valueOf(parts[2]);
             } catch (Exception e) {
-                type = LogEntry.LogType.LOGIN;
+                type = LogEntry.LogType.AUTHENTICATION;
             }
             
             String email = parts[3];
@@ -103,8 +103,11 @@ public class FileLogRepository implements LogRepository {
 
     private void writeToFile(String line) {
         synchronized (writeLock) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(logFilePath.toFile(), true))) {
-                writer.println(line);
+            File file = logFilePath.toFile();
+            PrintWriter writer = null;
+            try {
+                writer = new PrintWriter(file);
+                
             } catch (IOException e) {
                 System.err.println("Failed to write log: " + e.getMessage());
             }

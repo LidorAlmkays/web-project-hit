@@ -14,10 +14,10 @@ public enum EventType {
     LIST_BRANCH_EMPLOYEES,
     ADD_INVENTORY_ITEM,
     GET_CUSTOMER,
+    ERROR,
 
     // --- Technical Logs ---
     GET_SYSTEM_LOGS_JSON,
-    GET_SYSTEM_LOGS_DOCUMENT,
 
     // --- Business Reports ---
     GET_BRANCH_INVENTORY_REPORT,

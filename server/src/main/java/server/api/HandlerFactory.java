@@ -49,9 +49,8 @@ public class HandlerFactory {
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
 
         // --- System Logs Handlers ---
-        handlers.put(EventType.GET_SYSTEM_LOGS_JSON, new SystemLogHandler(logService, SystemLogHandler.LogRequestType.JSON));
-        handlers.put(EventType.GET_SYSTEM_LOGS_DOCUMENT, new SystemLogHandler(logService, SystemLogHandler.LogRequestType.DOCUMENT));
-
+        handlers.put(EventType.GET_SYSTEM_LOGS_JSON, new SystemLogHandler(logService));
+        
         // --- Business Reports Handlers ---
         handlers.put(EventType.GET_BRANCH_INVENTORY_REPORT, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_INVENTORY));
         handlers.put(EventType.GET_SALES_STATS_BRANCH, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_BRANCH));

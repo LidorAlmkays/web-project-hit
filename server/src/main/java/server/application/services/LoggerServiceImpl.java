@@ -3,12 +3,6 @@ package server.application.services;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
-
 import server.application.adaptors.LoggerService;
 import server.domain.LogEntry;
 import server.infustructre.adaptors.LogRepository;

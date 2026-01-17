@@ -16,14 +16,23 @@ public class SystemLogHandler extends AbstractSocketHandler {
 
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
-        SystemEventLogDto logs = loggerService.getSystemLogs();
+        try {
+            SystemEventLogDto logs = loggerService.getSystemLogs();
 
-        SocketMessage response = new SocketMessage(
-            EventType.GET_SYSTEM_LOGS_JSON, 
-            logs
-        );
+            SocketMessage response = new SocketMessage(
+                EventType.GET_SYSTEM_LOGS_JSON, 
+                logs
+            );
 
 
-        sendMessage(clientSocket, response);
+            sendMessage(clientSocket, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            SocketMessage errorResponse = new SocketMessage(
+                EventType.ERROR, 
+                "Failed to fetch system logs: " + e.getMessage()
+            );
+            sendMessage(clientSocket, errorResponse);
+        }
     }
 }

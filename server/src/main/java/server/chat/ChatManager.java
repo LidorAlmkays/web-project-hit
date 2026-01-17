@@ -2,6 +2,7 @@ package server.chat;
 
 import com.google.gson.Gson;
 import server.application.adaptors.UserManagementService;
+import server.domain.LogEntry;
 import server.domain.chat.ChatParticipant;
 import server.domain.chat.ChatSession;
 import server.domain.employee.Employee;
@@ -138,7 +139,7 @@ public class ChatManager {
         sendSystemMessage(accepterEmail, "You are now connected to " + requesterEmail);
         startChatLog(session, requesterEmail, accepterEmail);
 
-        logRepository.info("[ChatManager] Chat established: " + requesterEmail + " <-> " + accepterEmail);
+        logRepository.info(LogEntry.LogType.CHAT, "[ChatManager] Chat established: " + requesterEmail + " <-> " + accepterEmail);
     }
 
     public synchronized void declineChat(String declinerEmail, String targetRequesterEmail) {
@@ -227,7 +228,7 @@ public class ChatManager {
         sendChatHistory(managerEmail, session);
 
         sendSystemMessage(managerEmail, "You have joined the chat.");
-        logRepository.info("[ChatManager] Manager " + managerEmail + " joined session " + sessionId);
+        logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Manager " + managerEmail + " joined session " + sessionId);
     }
 
     private void sendChatHistory(String managerEmail, ChatSession session) {
@@ -240,7 +241,7 @@ public class ChatManager {
                     sendSystemMessage(managerEmail, "=== Chat History ===\n" + history + "\n=== End History ===");
                 }
             } catch (IOException e) {
-                logRepository.info("[ChatManager] Failed to read chat history: " + e.getMessage());
+                logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Failed to read chat history: " + e.getMessage());
             }
         }
     }
@@ -287,7 +288,7 @@ public class ChatManager {
                         sendCloseConfirmation(participantEmail);
                     }
                     chatSessions.remove(sessionId);
-                    logRepository.info("[ChatManager] Chat session " + sessionId + " closed.");
+                    logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Chat session " + sessionId + " closed.");
                 }
             }
         }
@@ -305,7 +306,7 @@ public class ChatManager {
                     }
                 }
             }
-            logRepository.info("[ChatManager] Cancelled request from " + email);
+            logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Cancelled request from " + email);
         }
 
         sendCloseConfirmation(email);
@@ -326,7 +327,7 @@ public class ChatManager {
                 out.writeUTF(gson.toJson(msg));
                 out.flush();
             } catch (IOException e) {
-                logRepository.info("[ChatManager] Failed to send message: " + e.getMessage());
+                logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Failed to send message: " + e.getMessage());
             }
         }
     }
@@ -349,7 +350,7 @@ public class ChatManager {
         try {
             File dir = new File(CHAT_LOG_DIR);
             if (!dir.exists() && !dir.mkdirs()) {
-                logRepository.info("[ChatManager] Cannot create chat log directory: " + CHAT_LOG_DIR);
+                logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Cannot create chat log directory: " + CHAT_LOG_DIR);
                 return;
             }
 
@@ -366,9 +367,9 @@ public class ChatManager {
             session.setLogWriter(writer);
             session.setLogFilePath(filename);
 
-            logRepository.info("[ChatManager] Chat log started: " + filename);
+            logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Chat log started: " + filename);
         } catch (IOException e) {
-            logRepository.info("[ChatManager] Failed to create chat log: " + e.getMessage());
+            logRepository.info(LogEntry.LogType.CHAT,"[ChatManager] Failed to create chat log: " + e.getMessage());
         }
     }
 
