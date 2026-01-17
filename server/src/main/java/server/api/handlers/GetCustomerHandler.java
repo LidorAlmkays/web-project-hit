@@ -1,12 +1,13 @@
 package server.api.handlers;
 
-import java.net.Socket;
-import java.util.Optional;
-
-import server.application.adaptors.CustomerService;
-import server.domain.customer.Customer;
 import shareddto.EventType;
 import shareddto.SocketMessage;
+import shareddto.customermanagement.request.CustomerGetRequest;
+import server.application.adaptors.CustomerService;
+import server.domain.customer.Customer;
+
+import java.net.Socket;
+import java.util.Optional;
 
 public class GetCustomerHandler extends AbstractSocketHandler {
     private final CustomerService customerService;
@@ -18,26 +19,32 @@ public class GetCustomerHandler extends AbstractSocketHandler {
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
         try {
-            String idNumber = gson.fromJson(gson.toJson(data), String.class);
-            Optional<Customer> customer = customerService.getCustomerByIdNumber(idNumber);
-
+            String idNumber = resolveIdNumber(data);
+            if (idNumber == null || idNumber.trim().isEmpty()) {
+                throw new IllegalArgumentException("customer id number is required");
+            }
+            Optional<Customer> customer = customerService.getCustomerByIdNumber(idNumber.trim());
             if (customer.isEmpty()) {
                 throw new IllegalArgumentException("Customer not found");
             }
-
-            sendSuccess(clientSocket, customer.get());
-        } catch (IllegalArgumentException e) {
-            sendError(clientSocket, e.getMessage());
+            sendMessage(clientSocket,
+                    new SocketMessage(EventType.GET_CUSTOMER, CustomerMapper.toDto(customer.get())));
         } catch (Exception e) {
-            sendError(clientSocket, "Internal server error: " + e.getMessage());
+            sendMessage(clientSocket, new SocketMessage(EventType.GET_CUSTOMER, e.getMessage()));
         }
     }
 
-    private void sendSuccess(Socket clientSocket, Object payload) throws Exception {
-        sendMessage(clientSocket, new SocketMessage(EventType.GET_CUSTOMER, payload));
-    }
-
-    private void sendError(Socket clientSocket, String message) throws Exception {
-        sendMessage(clientSocket, new SocketMessage(EventType.GET_CUSTOMER, message));
+    private String resolveIdNumber(Object data) {
+        if (data == null) {
+            return null;
+        }
+        if (data instanceof String) {
+            return (String) data;
+        }
+        CustomerGetRequest request = gson.fromJson(gson.toJsonTree(data), CustomerGetRequest.class);
+        if (request == null) {
+            return null;
+        }
+        return request.getIdNumber();
     }
 }

@@ -50,8 +50,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer addCustomer(String fullName, String idNumber, String phone, String email) {
+        CustomerType customerType = CustomerType.NEW;
         logRepository.info("Adding new customer, fullName=" + fullName + ", idNumber=" + idNumber
-                + ", phone=" + phone + ", email=" + email);
+                + ", phone=" + phone + ", email=" + email + ", customerType=" + customerType);
 
         if (fullName == null || fullName.trim().isEmpty()) {
             Error error = new Error("Add customer failed, fullName must not be null or empty");
@@ -86,13 +87,13 @@ public class CustomerServiceImpl implements CustomerService {
                 throw new IllegalArgumentException(error);
             }
 
-            Customer newCustomer = new Customer(fullName, idNumber, phone, email, CustomerType.NEW);
+            Customer newCustomer = new Customer(fullName, idNumber, phone, email, customerType);
 
             customerRepository.save(newCustomer);
 
             logRepository.info("Add customer succeeded, customerId=" + newCustomer.getCustomerId()
                     + ", fullName=" + fullName + ", idNumber=" + idNumber + ", email=" + email
-                    + ", customerType=" + CustomerType.NEW);
+                    + ", customerType=" + customerType);
 
             return newCustomer;
         } catch (IllegalArgumentException ex) {
@@ -105,4 +106,5 @@ public class CustomerServiceImpl implements CustomerService {
             throw new RuntimeException(error);
         }
     }
+
 }

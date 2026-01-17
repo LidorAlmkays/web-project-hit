@@ -1,17 +1,17 @@
-package frontend.cli.employeemanagement;
+package frontend.cli.customermanagement;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import shareddto.customermanagement.response.CustomerDto;
 
-import shareddto.employeemanagement.response.EmployeeDto;
-
-import java.util.List;
-import java.util.Locale;
 import java.util.Scanner;
 
-
-public class EmployeeManagementView {
+/**
+ * Handles CLI prompts and rendering for customer management tasks.
+ */
+public class CustomerManagementView {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
     public void header(String title) {
         System.out.println();
         System.out.println(title);
@@ -25,10 +25,9 @@ public class EmployeeManagementView {
 
     public void menu() {
         section("Main Menu");
-        System.out.println("1. Update employee (by email)");
-        System.out.println("2. Get employee (by email)");
-        System.out.println("3. List employees (all or by branch)");
-        System.out.println("4. Exit");
+        System.out.println("1. Add customer");
+        System.out.println("2. Get customer (by ID number)");
+        System.out.println("3. Exit");
         System.out.print("Choose: ");
     }
 
@@ -38,15 +37,6 @@ public class EmployeeManagementView {
             return "";
         }
         return scanner.nextLine().trim();
-    }
-
-    public String promptRole(Scanner scanner) {
-        System.out.print("Role (SHIFT_MANAGER, CASHIER, SELLER, ADMIN): ");
-        if (!scanner.hasNextLine()) {
-            return "";
-        }
-        String role = scanner.nextLine().trim();
-        return role.toUpperCase(Locale.ROOT);
     }
 
     public void success(String message) {
@@ -61,21 +51,14 @@ public class EmployeeManagementView {
         System.out.println(message);
     }
 
-    public void printEmployee(EmployeeDto employee) {
-        if (employee == null) {
+    public void printCustomer(CustomerDto customer) {
+        if (customer == null) {
             System.out.println("No data.");
             return;
         }
-        System.out.println(gson.toJson(employee));
+        System.out.println(gson.toJson(customer));
     }
 
-    public void printEmployeeList(List<EmployeeDto> employees) {
-        if (employees == null || employees.isEmpty()) {
-            System.out.println("No data.");
-            return;
-        }
-        System.out.println(gson.toJson(employees));
-    }
 
     private String repeat(String text, int times) {
         StringBuilder sb = new StringBuilder();
