@@ -354,9 +354,6 @@ public class EmployeeManagementController {
         }
         return currentBranch.trim().equalsIgnoreCase(targetBranch.trim());
     }
-
-
-
     private SocketMessage sendOrReport(EventType event, Object request, String errorPrefix) throws IOException {
         SocketMessage response = client.send(event, request);
         if (response == null) {

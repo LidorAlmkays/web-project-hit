@@ -18,8 +18,11 @@ public class GetCustomerHandler extends AbstractSocketHandler {
     @Override
     public void handle(Object data, Socket clientSocket) throws Exception {
         try {
-            CustomerGetRequest request = gson.fromJson(gson.toJsonTree(data), CustomerGetRequest.class);
-            Optional<Customer> customer = resolveCustomer(request);
+            String idNumber = resolveIdNumber(data);
+            if (idNumber == null || idNumber.trim().isEmpty()) {
+                throw new IllegalArgumentException("Customer id number is required");
+            }
+            Optional<Customer> customer = customerService.getCustomerByIdNumber(idNumber.trim());
             if (customer.isEmpty()) {
                 throw new IllegalArgumentException("Customer not found");
             }
@@ -33,13 +36,17 @@ public class GetCustomerHandler extends AbstractSocketHandler {
         }
     }
 
-    private Optional<Customer> resolveCustomer(CustomerGetRequest request) {
+    private String resolveIdNumber(Object data) {
+        if (data == null) {
+            return null;
+        }
+        if (data instanceof String) {
+            return (String) data;
+        }
+        CustomerGetRequest request = gson.fromJson(gson.toJsonTree(data), CustomerGetRequest.class);
         if (request == null) {
-            return Optional.empty();
+            return null;
         }
-        if (request.getIdNumber() != null && !request.getIdNumber().trim().isEmpty()) {
-            return customerService.getCustomerByIdNumber(request.getIdNumber().trim());
-        }
-        return Optional.empty();
+        return request.getIdNumber();
     }
 }
