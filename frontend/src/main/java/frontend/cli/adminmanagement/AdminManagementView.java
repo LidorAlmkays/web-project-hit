@@ -1,17 +1,20 @@
-package frontend.cli.employeemanagement;
+package frontend.cli.adminmanagement;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import shareddto.admin.PasswordSettingsDto;
 import shareddto.employeemanagement.response.EmployeeDto;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-
-public class EmployeeManagementView {
+/**
+ * Handles CLI prompts and rendering for admin management tasks.
+ */
+public class AdminManagementView {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
     public void header(String title) {
         System.out.println();
         System.out.println(title);
@@ -26,10 +29,12 @@ public class EmployeeManagementView {
     public void menu() {
         section("Main Menu");
         System.out.println("1. Create employee");
-        System.out.println("2. Update employee (by email)");
-        System.out.println("3. Get employee (by email)");
-        System.out.println("4. List employees (current branch)");
-        System.out.println("5. Exit");
+        System.out.println("2. Update employee");
+        System.out.println("3. Delete employee");
+        System.out.println("4. Get employee");
+        System.out.println("5. List employees");
+        System.out.println("6. Password policy");
+        System.out.println("7. Exit");
         System.out.print("Choose: ");
     }
 
@@ -50,13 +55,16 @@ public class EmployeeManagementView {
         return role.toUpperCase(Locale.ROOT);
     }
 
-    public String promptRoleNonAdmin(Scanner scanner) {
-        System.out.print("Role (SHIFT_MANAGER, CASHIER, SELLER): ");
+    public boolean promptBoolean(Scanner scanner, String label, boolean currentValue) {
+        System.out.print(label + " (y/n, current: " + currentValue + "): ");
         if (!scanner.hasNextLine()) {
-            return "";
+            return currentValue;
         }
-        String role = scanner.nextLine().trim();
-        return role.toUpperCase(Locale.ROOT);
+        String input = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
+        if (input.isEmpty()) {
+            return currentValue;
+        }
+        return input.startsWith("y");
     }
 
     public void success(String message) {
@@ -85,6 +93,14 @@ public class EmployeeManagementView {
             return;
         }
         System.out.println(gson.toJson(employees));
+    }
+
+    public void printPasswordSettings(PasswordSettingsDto settings) {
+        if (settings == null) {
+            System.out.println("No data.");
+            return;
+        }
+        System.out.println(gson.toJson(settings));
     }
 
     private String repeat(String text, int times) {

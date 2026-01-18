@@ -8,7 +8,6 @@ import server.domain.customer.Customer;
 
 import java.net.Socket;
 import java.util.Optional;
-
 public class GetCustomerHandler extends AbstractSocketHandler {
     private final CustomerService customerService;
 
@@ -21,7 +20,7 @@ public class GetCustomerHandler extends AbstractSocketHandler {
         try {
             String idNumber = resolveIdNumber(data);
             if (idNumber == null || idNumber.trim().isEmpty()) {
-                throw new IllegalArgumentException("customer id number is required");
+                throw new IllegalArgumentException("Customer id number is required");
             }
             Optional<Customer> customer = customerService.getCustomerByIdNumber(idNumber.trim());
             if (customer.isEmpty()) {
@@ -29,8 +28,11 @@ public class GetCustomerHandler extends AbstractSocketHandler {
             }
             sendMessage(clientSocket,
                     new SocketMessage(EventType.GET_CUSTOMER, CustomerMapper.toDto(customer.get())));
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             sendMessage(clientSocket, new SocketMessage(EventType.GET_CUSTOMER, e.getMessage()));
+        } catch (Exception e) {
+            sendMessage(clientSocket,
+                    new SocketMessage(EventType.GET_CUSTOMER, "Internal server error: " + e.getMessage()));
         }
     }
 
