@@ -1,11 +1,13 @@
 package frontend.cli.reports;
 
+import frontend.services.FrontendChatService;
 import frontend.services.FrontendLoggerService;
 import frontend.services.FrontendReportService;
 import frontend.util.ReportFileGenerator;
 import shareddto.reporting.BranchInventoryReportDto;
 import shareddto.reporting.SalesStatsReportDto;
 import shareddto.reporting.SystemEventLogDto;
+import shareddto.reporting.ChatHistoryDto;
 
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -15,12 +17,14 @@ public class ReportController {
 
     private final FrontendReportService reportService;
     private final FrontendLoggerService loggerService;
+    private final FrontendChatService chatService;
     private final ReportFileGenerator fileGenerator;
     private final Scanner scanner;
 
-    public ReportController(FrontendReportService reportService, FrontendLoggerService loggerService) {
+    public ReportController(FrontendReportService reportService, FrontendLoggerService loggerService, FrontendChatService chatService) {
         this.reportService = reportService;
         this.loggerService = loggerService;
+        this.chatService = chatService;
         this.fileGenerator = new ReportFileGenerator();
         this.scanner = new Scanner(System.in);
     }
@@ -32,6 +36,7 @@ public class ReportController {
             System.out.println("2. Generate Branch Inventory Report");
             System.out.println("3. Generate Sales Report (By Branch)");
             System.out.println("4. Generate Sales Report (By Product)");
+            System.out.println("5. Export Chat History");
             System.out.println("0. Back");
             
             System.out.print("Select option: ");
@@ -49,6 +54,9 @@ public class ReportController {
                     break;
                 case "4":
                     generateSalesByProduct();
+                    break;
+                case "5":
+                    exportChatHistory();
                     break;
                 case "0":
                     return;
@@ -104,6 +112,17 @@ public class ReportController {
             SalesStatsReportDto report = reportService.getSalesByProductReport();
             String fileName = "Sales_By_Product_" + LocalDate.now() + ".doc";
             fileGenerator.generateSalesReportFile("Sales Report - By Product", report, fileName);
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    private void exportChatHistory(){
+        System.out.println("Exporting Chat History...");
+        try {
+            ChatHistoryDto report = chatService.fetchChatHistory();
+            String fileName = "Chat_History_Report_" + LocalDate.now() + ".doc";
+            fileGenerator.generateChatHistoryFile(report, fileName);
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
         }
