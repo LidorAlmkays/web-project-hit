@@ -174,7 +174,7 @@ public class BranchItemServiceImpl implements BranchItemService {
 
                     branchOpt = branchRepository.findById(branchId);
                     if (branchOpt.isEmpty()) {
-                        Error error = new Error("Buy item failed, branch not found after sale: " + branchId);
+                        Error error = new Error("[BUY ITEM] failed, branch not found after sale: " + branchId);
                         logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
                         throw new IllegalArgumentException(error);
                     }
