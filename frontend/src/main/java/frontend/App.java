@@ -7,7 +7,7 @@ import frontend.cli.adminmanagement.AdminManagementCli;
 import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
 import frontend.cli.customermanagement.CustomerManagementCli;
-
+import frontend.cli.reports.ReportsCli;
 import frontend.cli.storagemanagement.StorageManagementConsole;
 import frontend.cli.home.HomeCli;
 import frontend.transport.IClientTransport;
@@ -38,6 +38,7 @@ public class App {
                 String role = loggedInEmployee.getRole();
                 if (role != null && "ADMIN".equalsIgnoreCase(role)) {
                     options.add(new AdminManagementCli());
+                    options.add(new ReportsCli());
                 }
                 if (role != null && ("ADMIN".equalsIgnoreCase(role) || "SELLER".equalsIgnoreCase(role))) {
                     options.add(new EmployeeManagementCli());
