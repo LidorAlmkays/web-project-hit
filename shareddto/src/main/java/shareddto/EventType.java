@@ -35,5 +35,7 @@ public enum EventType {
     CHAT_DECLINE,
     GET_PENDING_REQUESTS,
     GET_ACTIVE_CHATS,
+    GET_CHAT_HISTORY_JSON,
     MANAGER_JOIN
+    
 }

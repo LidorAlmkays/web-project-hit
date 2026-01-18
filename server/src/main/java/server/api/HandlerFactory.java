@@ -52,6 +52,7 @@ public class HandlerFactory {
 
         // --- System Logs Handlers ---
         handlers.put(EventType.GET_SYSTEM_LOGS_JSON, new SystemLogHandler(logService));
+        handlers.put(EventType.GET_CHAT_HISTORY_JSON, new ChatHistoryHandler());
         
         // --- Business Reports Handlers ---
         handlers.put(EventType.GET_BRANCH_INVENTORY_REPORT, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_INVENTORY));
