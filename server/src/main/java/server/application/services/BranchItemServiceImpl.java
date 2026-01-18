@@ -172,13 +172,25 @@ public class BranchItemServiceImpl implements BranchItemService {
                     item.sell(quantity);
                     branchInventoryItemRepository.update(item);
 
+                    branchOpt = branchRepository.findById(branchId);
+                    if (branchOpt.isEmpty()) {
+                        Error error = new Error("Buy item failed, branch not found after sale: " + branchId);
+                        logRepository.error(LogEntry.LogType.PURCHASE, error.getMessage());
+                        throw new IllegalArgumentException(error);
+                    }
+                    Branch branch = branchOpt.get();
+                    branch.addSale(quantity, finalPrice);
+                    branchRepository.update(branch);
+
                     logRepository.info(LogEntry.LogType.PURCHASE, "[BUY ITEM] succeeded, itemId=" + itemId + ", branchId=" + branchId
                             + ", customerId=" + customerId + ", quantity=" + quantity
                             + ", originalPrice=" + originalPrice + ", finalPrice=" + finalPrice
                             + ", remainingStock=" + item.getQuantityInStock()
                             + ", customerTotalPurchases=" + customer.getTotalPurchases()
                             + ", customerTotalSpent=" + customer.getTotalSpent()
-                            + ", customerType=" + customer.getCustomerType());
+                            + ", customerType=" + customer.getCustomerType()
+                            + ", branchTotalSold=" + branch.getTotalSold()
+                            + ", branchTotalMoneyEarned=" + branch.getTotalMoneyEarned());
 
                     return item;
                 }
