@@ -8,6 +8,7 @@ import static org.junit.Assert.*;
 import server.application.adaptors.CustomerService;
 import server.domain.customer.Customer;
 import server.domain.customer.CustomerType;
+import server.domain.LogEntry;
 import server.infustructre.adaptors.CustomerRepository;
 import server.infustructre.adaptors.LogRepository;
 
@@ -310,7 +311,8 @@ public class CustomerServiceImplTest {
 
     private static class MockLogRepository implements LogRepository {
         private List<String> infoLogs = new ArrayList<>();
-        private List<Error> errorLogs = new ArrayList<>();
+        private List<String> errorLogs = new ArrayList<>();
+        private List<LogEntry> savedEntries = new ArrayList<>();
 
         public boolean hasInfoLogs() {
             return !infoLogs.isEmpty();
@@ -323,23 +325,41 @@ public class CustomerServiceImplTest {
         public void reset() {
             infoLogs.clear();
             errorLogs.clear();
+            savedEntries.clear();
         }
 
         @Override
-        public void info(String message) {
+        public void save(LogEntry entry) {
+            savedEntries.add(entry);
+        }
+
+        @Override
+        public List<LogEntry> findAll() {
+            return new ArrayList<>(savedEntries);
+        }
+
+        @Override
+        public void info(LogEntry.LogType type, String message) {
             infoLogs.add(message);
-            System.out.println("[INFO] " + message);
+            System.out.println("[INFO] " + type + " | " + message);
         }
 
         @Override
-        public void error(Error error) {
-            errorLogs.add(error);
-            System.out.println("[ERROR] " + error.getMessage());
+        public void info(LogEntry.LogType type, String userId, String message) {
+            infoLogs.add(message);
+            System.out.println("[INFO] " + type + " | User: " + userId + " | " + message);
         }
 
         @Override
-        public List<String> getLogs() {
-            return new ArrayList<>(infoLogs);
+        public void error(LogEntry.LogType type, String message) {
+            errorLogs.add(message);
+            System.out.println("[ERROR] " + type + " | " + message);
+        }
+
+        @Override
+        public void error(LogEntry.LogType type, String userId, String message) {
+            errorLogs.add(message);
+            System.out.println("[ERROR] " + type + " | User: " + userId + " | " + message);
         }
     }
 }

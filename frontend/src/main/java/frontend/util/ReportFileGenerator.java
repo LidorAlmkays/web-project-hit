@@ -8,8 +8,9 @@ import shareddto.reporting.LogEntryDto;
 import shareddto.reporting.SalesStatsReportDto;
 import shareddto.reporting.SystemEventLogDto;
 
-import java.io.FileWriter;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -183,11 +184,19 @@ public class ReportFileGenerator {
     }
 
     private void saveFile(String content, String fileName) {
-        try (FileWriter writer = new FileWriter(fileName)) {
-            writer.write(content);
+        File file = new File(fileName);
+        PrintWriter writer = null;
+
+        try {
+            writer = new PrintWriter(file);
+            writer.print(content);
             System.out.println("File saved successfully: " + Paths.get(fileName).toAbsolutePath());
         } catch (IOException e) {
-            System.err.println("Failed to save file: " + e.getMessage());
+            throw new RuntimeException("cant write to file get error ", e);
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
         }
     }
 }

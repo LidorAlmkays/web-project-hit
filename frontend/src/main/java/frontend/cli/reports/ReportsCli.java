@@ -10,9 +10,6 @@ import frontend.transport.IClientTransport;
 import java.io.IOException;
 import java.util.Scanner;
 
-/**
- * CLI entry point for reports management (Admin only).
- */
 public class ReportsCli implements IOptionCli {
     @Override
     public String getOptionName() {
