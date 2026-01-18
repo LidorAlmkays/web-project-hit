@@ -36,7 +36,7 @@ public class SocketServer {
         this.employeeRepository = employeeRepository;
         this.running = false;
         this.handlerFactory = new HandlerFactory(authService, logService, employeeService, branchItemService,
-                branchService, customerService, reportService, employeeRepository);
+                branchService, customerService, reportService, passwordSettingsService, employeeRepository);
     }
 
     public void start() {

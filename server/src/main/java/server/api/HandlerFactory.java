@@ -17,12 +17,13 @@ public class HandlerFactory {
     private final BranchService branchService;
     private final CustomerService customerService;
     private final ReportService reportService;
+    private final PasswordSettingsService passwordSettingsService;
     private final EmployeeRepository employeeRepository;
     private final Map<EventType, SocketHandler> handlers;
 
     public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService,
             BranchItemService branchItemService, BranchService branchService, CustomerService customerService,
-            ReportService reportService, EmployeeRepository employeeRepository) {
+            ReportService reportService, PasswordSettingsService passwordSettingsService, EmployeeRepository employeeRepository) {
         this.branchItemService = branchItemService;
         this.branchService = branchService;
         this.authService = authService;
@@ -30,6 +31,7 @@ public class HandlerFactory {
         this.employeeService = employeeService;
         this.customerService = customerService;
         this.reportService = reportService;
+        this.passwordSettingsService = passwordSettingsService;
         this.employeeRepository = employeeRepository;
         this.handlers = new HashMap<>();
         initializeHandlers();
@@ -56,8 +58,9 @@ public class HandlerFactory {
         handlers.put(EventType.GET_SALES_STATS_BRANCH, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_BRANCH));
         handlers.put(EventType.GET_SALES_STATS_PRODUCT, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_PRODUCT));
 
-        handlers.put(EventType.ADD_INVENTORY_ITEM, new AddItemHandler(branchItemService));
+        handlers.put(EventType.CREATE_CUSTOMER, new CreateCustomerHandler(customerService));
         handlers.put(EventType.GET_CUSTOMER, new GetCustomerHandler(customerService));
+        handlers.put(EventType.ADD_INVENTORY_ITEM, new AddItemHandler(branchItemService));
         handlers.put(EventType.CHAT_REQUEST, new StartBranchChatHandler());
         handlers.put(EventType.CHAT_MESSAGE, new SendMessageHandler());
         handlers.put(EventType.CHAT_CLOSE, new CloseChatHandler());
@@ -66,6 +69,8 @@ public class HandlerFactory {
         handlers.put(EventType.GET_PENDING_REQUESTS, new GetPendingRequestsHandler());
         handlers.put(EventType.GET_ACTIVE_CHATS, new GetActiveChatsHandler(employeeRepository));
         handlers.put(EventType.MANAGER_JOIN, new JoinChatHandler());
+        handlers.put(EventType.GET_PASSWORD_SETTINGS, new GetPasswordSettingsHandler(passwordSettingsService));
+        handlers.put(EventType.UPDATE_PASSWORD_SETTINGS, new UpdatePasswordSettingsHandler(passwordSettingsService));
     }
 
     public SocketHandler createHandler(EventType eventType) {

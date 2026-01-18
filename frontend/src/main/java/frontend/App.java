@@ -1,9 +1,12 @@
 package frontend;
 
 import frontend.cli.CliResult;
+import frontend.cli.IOptionCli;
 import frontend.cli.auth.LoginController;
+import frontend.cli.adminmanagement.AdminManagementCli;
 import frontend.cli.chat.ChatManagementCli;
 import frontend.cli.employeemanagement.EmployeeManagementCli;
+import frontend.cli.customermanagement.CustomerManagementCli;
 
 import frontend.cli.storagemanagement.StorageManagementConsole;
 import frontend.cli.home.HomeCli;
@@ -12,6 +15,7 @@ import frontend.transport.SocketClient;
 import frontend.util.SessionManager;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -30,9 +34,18 @@ public class App {
                     return;
                 }
                 SessionManager.getInstance().setCurrentEmployee(loggedInEmployee);
-                HomeCli homeCli = new HomeCli(List.of(new EmployeeManagementCli(),
-                        new StorageManagementConsole(),
-                        new ChatManagementCli()));
+                List<IOptionCli> options = new ArrayList<>();
+                String role = loggedInEmployee.getRole();
+                if (role != null && "ADMIN".equalsIgnoreCase(role)) {
+                    options.add(new AdminManagementCli());
+                }
+                if (role != null && ("ADMIN".equalsIgnoreCase(role) || "SELLER".equalsIgnoreCase(role))) {
+                    options.add(new EmployeeManagementCli());
+                }
+                options.add(new CustomerManagementCli());
+                options.add(new StorageManagementConsole());
+                options.add(new ChatManagementCli());
+                HomeCli homeCli = new HomeCli(options);
                 CliResult result = homeCli.run(client, scanner);
                 if (result == CliResult.EXIT) {
                  repeat = false;

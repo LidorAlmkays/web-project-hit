@@ -1,4 +1,4 @@
-package frontend.cli.employeemanagement;
+package frontend.cli.customermanagement;
 
 import frontend.cli.CliResult;
 import frontend.cli.IOptionCli;
@@ -7,18 +7,19 @@ import frontend.transport.IClientTransport;
 import java.io.IOException;
 import java.util.Scanner;
 
-
-public class EmployeeManagementCli implements IOptionCli {
+/**
+ * CLI entry point for customer management tasks.
+ */
+public class CustomerManagementCli implements IOptionCli {
     @Override
     public String getOptionName() {
-        return "Employee management";
+        return "Customer management";
     }
-
 
     @Override
     public CliResult run(IClientTransport client, Scanner scanner) throws IOException {
-        EmployeeManagementView view = new EmployeeManagementView();
-        EmployeeManagementController controller = new EmployeeManagementController(client, view, scanner);
+        CustomerManagementView view = new CustomerManagementView();
+        CustomerManagementController controller = new CustomerManagementController(client, view, scanner);
         controller.run();
         return CliResult.BACK;
     }
