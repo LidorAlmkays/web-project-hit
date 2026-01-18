@@ -5,20 +5,18 @@ import server.domain.LogEntry;
 import server.infustructre.adaptors.LogRepository;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class FileLogRepository implements LogRepository {
 
-    private final Path logFilePath;
+    private final File logFile;
     private final Object writeLock = new Object();
 
     public FileLogRepository() {
-        this.logFilePath = Paths.get(Config.LOGS_DIR, "logs.txt");
+        this.logFile = new File(Config.LOGS_DIR, "logs.txt");
         ensureFileExists();
     }
 
@@ -32,23 +30,28 @@ public class FileLogRepository implements LogRepository {
     public List<LogEntry> findAll() {
         List<LogEntry> logs = new ArrayList<>();
 
-        if (!Files.exists(logFilePath)) {
+        if (!logFile.exists()) {
             return logs;
         }
 
-        try (BufferedReader reader = Files.newBufferedReader(logFilePath)) {
-            
-            String line;
-            while ((line = reader.readLine()) != null) {
+        Scanner scanner = null;
+        try {
+            scanner = new Scanner(logFile);
+
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
                 LogEntry entry = decode(line);
                 
                 if (entry != null) {
                     logs.add(entry);
                 }
             }
-
-        } catch (IOException e) {
-            System.err.println("Failed to read logs: " + e.getMessage());
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("cant read file error " + logFile.getAbsolutePath(), e);
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
         }
 
         return logs;
@@ -116,13 +119,12 @@ public class FileLogRepository implements LogRepository {
         }
 
         synchronized (writeLock) {
-            ensureFileExists(); 
+            ensureFileExists();
 
-            File file = logFilePath.toFile();
             PrintWriter writer = null;
 
             try {
-                writer = new PrintWriter(new FileWriter(file, true));
+                writer = new PrintWriter(new FileWriter(logFile, true));
                 writer.println(line);
             } catch (IOException e) {
                 throw new RuntimeException("Unable to write to file. Get error: ", e);
@@ -136,11 +138,12 @@ public class FileLogRepository implements LogRepository {
 
     private void ensureFileExists() {
         try {
-            if (logFilePath.getParent() != null) {
-                Files.createDirectories(logFilePath.getParent());
+            File parentDir = logFile.getParentFile();
+            if (parentDir != null) {
+                parentDir.mkdirs();
             }
-            if (!Files.exists(logFilePath)) {
-                Files.createFile(logFilePath);
+            if (!logFile.exists()) {
+                logFile.createNewFile();
             }
         } catch (IOException e) {
             e.printStackTrace();
