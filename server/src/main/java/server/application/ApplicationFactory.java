@@ -57,6 +57,10 @@ public class ApplicationFactory {
         return new UserManagementServiceImpl(logRepository);
     }
 
+    public ReportService createReportService(LogRepository logRepository, BranchInventoryItemRepository inventoryRepository) {
+        return new ReportServiceImpl(logRepository, inventoryRepository);
+    }
+
     public CustomerService createCustomerService(CustomerRepository customerRepository, LogRepository logRepository) {
         return new CustomerServiceImpl(customerRepository, logRepository);
     }

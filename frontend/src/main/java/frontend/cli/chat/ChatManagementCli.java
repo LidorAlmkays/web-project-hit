@@ -29,6 +29,7 @@ public class ChatManagementCli implements IOptionCli {
             if (currentEmployee != null && isManager(currentEmployee.getRole())) {
                 chatOptions.add(new JoinChatCli());
             }
+            
 
             System.out.println("\n=== Chat Management ===");
             for (int i = 0; i < chatOptions.size(); i++) {

@@ -8,6 +8,7 @@ import server.domain.employee.EmployeeRole;
 import server.infustructre.adaptors.BranchRepository;
 import server.infustructre.adaptors.EmployeeRepository;
 import server.infustructre.adaptors.LogRepository;
+import server.domain.LogEntry;
 
 import java.util.Map;
 import java.util.Optional;
@@ -52,7 +53,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee createEmployee(UUID branchId, String fullName, String employeeId, String phoneNumber,
             String bankAccountNumber, EmployeeRole role, String email, String password) {
         this.logRepository
-                .info("creating employee: " + fullName + " " + employeeId + " " + phoneNumber + " " + bankAccountNumber
+                .info(LogEntry.LogType.MANAGEMENT, "[CREATE EMPLOYEE] creating employee: " + fullName + " " + employeeId + " " + phoneNumber + " " + bankAccountNumber
                         + " " + role + " " + email + " " + password);
         
        validatePassword(password);
@@ -60,14 +61,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (role != EmployeeRole.ADMIN && branchId != null) {
             try {
                 if (branchRepository.findById(branchId).isEmpty()) {
-                    Error error = new Error("create employee failed, branch not found: " + branchId);
-                    logRepository.error(error);
-                    throw new IllegalArgumentException(error);
+                    String errorMessage = "[CREATE EMPLOYEE] failed, branch not found: " + branchId;
+                    logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
                 }
             } catch (Exception e) {
-                Error error = new Error("create employee error, when trying to find branch: " + e.getMessage());
-                logRepository.error(error);
-                throw new RuntimeException(error);
+                String errorMessage = "[CREATE EMPLOYEE] error, when trying to find branch: " + e.getMessage();
+                logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+                throw new RuntimeException(errorMessage);
             }
         }
 
@@ -76,41 +77,40 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         try {
             employeeRepository.save(newEmployee);
-            logRepository.info("new employee created: " + newEmployee.getEmployeeNumber());
+            logRepository.info(LogEntry.LogType.MANAGEMENT, email, "[CREATE EMPLOYEE] new employee created: " + newEmployee.getEmployeeNumber());
             return newEmployee;
         } catch (Exception e) {
-            Error error = new Error("create employee error, when trying to save employee: " + e.getMessage());
-            logRepository.error(error);
-            throw new RuntimeException(error);
+            String errorMessage = "[CREATE EMPLOYEE] error, when trying to save employee: " + e.getMessage();
+            logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+            throw new RuntimeException(errorMessage);
         }
     }
 
     @Override
     public Optional<Employee> getEmployee(String email) {
-        logRepository.info("Getting employee by email: " + email);
+        logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET EMPLOYEE] getting employee by email: " + email);
 
         if (email == null || email.trim().isEmpty()) {
-            Error error = new Error("Get employee failed, email is null or empty");
-            logRepository.error(error);
-            throw new IllegalArgumentException(error);
+            String errorMessage = "[GET EMPLOYEE] failed, email is null or empty";
+            logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+            throw new IllegalArgumentException(errorMessage);
         }
 
         try {
             Optional<Employee> employee = employeeRepository.findByEmail(email);
             if (employee.isPresent()) {
-                logRepository.info("Employee found by email, email=" + email
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET EMPLOYEE] employee found by email, email=" + email
                         + ", employeeNumber=" + employee.get().getEmployeeNumber());
             } else {
-                logRepository.info("Employee not found by email, email=" + email);
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET EMPLOYEE] employee not found by email, email=" + email);
             }
             return employee;
         } catch (IllegalArgumentException ex) {
-            // Already logged above
             throw ex;
         } catch (Exception e) {
-            Error error = new Error("Get employee error, when trying to find employee by email: " + email
-                    + ", " + e.getMessage());
-            logRepository.error(error);
+            String errorMessage = "[GET EMPLOYEE] error, when trying to find employee by email: " + email
+                    + ", " + e.getMessage();
+            logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
             return Optional.empty();
         }
     }
@@ -123,21 +123,21 @@ public class EmployeeServiceImpl implements EmployeeService {
         synchronized (lock) {
             Optional<Employee> existingEmployeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
             if (existingEmployeeOpt.isEmpty()) {
-                Error error = new Error("update failed, employee not found: " + employeeNumber);
-                logRepository.error(error);
-                throw new IllegalArgumentException(error);
+                String errorMessage = "[UPDATE EMPLOYEE] failed, employee not found: " + employeeNumber;
+                logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+                throw new IllegalArgumentException(errorMessage);
             }
 
             try {
                 employeeRepository.update(employeeToUpdate);
-                logRepository.info("employee updated: " + employeeNumber);
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[UPDATE EMPLOYEE] employee updated: " + employeeNumber);
                 return employeeToUpdate;
             } catch (Exception e) {
-                Error error = new Error(
-                        "employee update error, when trying to update into repository: " + employeeNumber
-                                + ", " + e.getMessage());
-                logRepository.error(error);
-                throw new RuntimeException(error);
+                String errorMessage =
+                        "[UPDATE EMPLOYEE] error, when trying to update into repository: " + employeeNumber
+                                + ", " + e.getMessage();
+                logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+                throw new RuntimeException(errorMessage);
             }
         }
     }
@@ -148,58 +148,58 @@ public class EmployeeServiceImpl implements EmployeeService {
         synchronized (lock) {
             Optional<Employee> existingEmployeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
             if (existingEmployeeOpt.isEmpty()) {
-                Error error = new Error("delete failed, employee not found: " + employeeNumber);
-                logRepository.error(error);
-                throw new IllegalArgumentException(error);
+                String errorMessage = "[DELETE EMPLOYEE] failed, employee not found: " + employeeNumber;
+                logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+                throw new IllegalArgumentException(errorMessage);
             }
 
             try {
                 employeeRepository.delete(employeeNumber);
-                logRepository.info("employee deleted: " + employeeNumber);
+                logRepository.info(LogEntry.LogType.MANAGEMENT, "[DELETE EMPLOYEE] Successful for employee: " + employeeNumber);
             } catch (Exception e) {
-                Error error = new Error("employee delete error, when trying to delete from repository: "
-                        + employeeNumber + ", " + e.getMessage());
-                logRepository.error(error);
-                throw new RuntimeException(error);
+                String errorMessage = "[DELETE EMPLOYEE] error, when trying to delete from repository: "
+                        + employeeNumber + ", " + e.getMessage();
+                logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
+                throw new RuntimeException(errorMessage);
             }
         }
     }
 
     private void validatePassword(String password) {
         if (password == null || password.trim().isEmpty()) {
-            Error error = new Error("Password validation failed: password is null or empty");
-            logRepository.error(error);
-            throw new IllegalArgumentException(error);
+            String errorMessage = "Password validation failed: password is null or empty";
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, errorMessage);
+            throw new IllegalArgumentException(errorMessage);
         }
 
         PasswordSettings settings = passwordSettingsService.getPasswordSettings();
-        logRepository.info("Validating password against settings: passwordlength8=" + settings.isPasswordlength8()
+        logRepository.info(LogEntry.LogType.AUTHENTICATION, "Validating password against settings: passwordlength8=" + settings.isPasswordlength8()
                 + ", oneUpperletter=" + settings.isOneUpperletter() + ", oneNumber=" + settings.isOneNumber());
 
         StringBuilder validationErrors = new StringBuilder();
 
         if (settings.isPasswordlength8() && password.length() < 8) {
             validationErrors.append("Password must be at least 8 characters long. ");
-            logRepository.info("Password validation failed: length requirement not met (length=" + password.length() + ")");
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, "Password validation failed: length requirement not met (length=" + password.length() + ")");
         }
 
         if (settings.isOneUpperletter() && !hasUpperCaseLetter(password)) {
             validationErrors.append("Password must contain at least one uppercase letter. ");
-            logRepository.info("Password validation failed: uppercase letter requirement not met");
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, "Password validation failed: uppercase letter requirement not met");
         }
 
         if (settings.isOneNumber() && !hasNumber(password)) {
             validationErrors.append("Password must contain at least one number. ");
-            logRepository.info("Password validation failed: number requirement not met");
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, "Password validation failed: number requirement not met");
         }
 
         if (validationErrors.length() > 0) {
             Error error = new Error("Password validation failed: " + validationErrors.toString().trim());
-            logRepository.error(error);
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, error.getMessage());
             throw new IllegalArgumentException(error);
         }
 
-        logRepository.info("Password validation passed for employee creation");
+        logRepository.info(LogEntry.LogType.AUTHENTICATION, "Password validation passed for employee creation");
     }
 
     private boolean hasUpperCaseLetter(String password) {

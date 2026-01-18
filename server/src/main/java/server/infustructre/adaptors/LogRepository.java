@@ -1,12 +1,16 @@
 package server.infustructre.adaptors;
 
+import server.domain.LogEntry;
 import java.util.List;
 
 public interface LogRepository {
 
-    void info(String message);
+    void save(LogEntry entry);
+    List<LogEntry> findAll();
 
-    void error(Error error);
-
-    List<String> getLogs();
+    void info(LogEntry.LogType type, String message);
+    void info(LogEntry.LogType type, String userId, String message);
+    
+    void error(LogEntry.LogType type, String message);
+    void error(LogEntry.LogType type, String userId, String message);
 }

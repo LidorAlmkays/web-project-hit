@@ -1,84 +1,133 @@
 package server.infustructre.persistentTxtStorage;
 
 import server.config.Config;
+import server.domain.LogEntry;
 import server.infustructre.adaptors.LogRepository;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
+import java.io.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Scanner;
 
 public class FileLogRepository implements LogRepository {
 
-    private final Path logFilePath;
+    private final File logFile;
     private final Object writeLock = new Object();
 
     public FileLogRepository() {
-        this.logFilePath = Paths.get(Config.LOG_FILE_PATH);
+        this.logFile = new File(Config.LOGS_DIR, "logs.txt");
+        ensureFileExists();
     }
 
     @Override
-    public void info(String message) {
-        try {
-            log("INFO", message);
-        } catch (Exception e) {
-            System.err.println("CRITICAL: Logger failed during INFO operation. " + e.getMessage());
+    public void save(LogEntry entry) {
+        String line = encode(entry);
+        writeToFile(line);
+    }
+
+    @Override
+    public List<LogEntry> findAll() {
+        List<LogEntry> logs = new ArrayList<>();
+
+        if (!logFile.exists()) {
+            return logs;
         }
-    }
 
-    @Override
-    public void error(Error error) {
+        Scanner scanner = null;
         try {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            error.printStackTrace(pw);
-            log("ERROR", sw.toString());
-        } catch (Exception e) {
-            System.err.println("CRITICAL: Logger failed during ERROR operation. " + e.getMessage());
-        }
-    }
+            scanner = new Scanner(logFile);
 
-    @Override
-    public List<String> getLogs() {
-        try {
-            ensureFileAndDirectoryExists();
-            try (BufferedReader reader = Files.newBufferedReader(logFilePath)) {
-                return reader.lines().collect(Collectors.toList());
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                LogEntry entry = decode(line);
+                
+                if (entry != null) {
+                    logs.add(entry);
+                }
             }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("cant read file error " + logFile.getAbsolutePath(), e);
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
+        }
+
+        return logs;
+    }
+    
+    @Override
+    public void info(LogEntry.LogType type, String message) {
+        info(type, "SYSTEM", message);
+    }
+    @Override
+    public void info(LogEntry.LogType type, String userId, String message) {
+        LogEntry entry = new LogEntry(userId, type, message, LogEntry.LogLevel.INFO);
+        save(entry);
+        System.out.println("[INFO] [" + type + "] " + message);
+    }
+
+    @Override
+    public void error(LogEntry.LogType type, String message) {
+        error(type, "SYSTEM", message);
+    }
+
+    @Override
+    public void error(LogEntry.LogType type, String userId, String message) {
+        LogEntry entry = new LogEntry(userId, type, message, LogEntry.LogLevel.ERROR);
+        save(entry);
+        System.err.println("[ERROR] [" + type + "] " + message);
+    }
+
+
+    private String encode(LogEntry log) {
+        return log.getTimestamp().toString() + "|" +
+               log.getLevel() + "|" +
+               log.getType() + "|" +
+               log.getEmail() + "|" +
+               log.getMessage();
+    }
+
+    private LogEntry decode(String line) {
+        try {
+            String[] parts = line.split("\\|", 5);
+            if (parts.length < 5) return null;
+
+            LocalDateTime timestamp = LocalDateTime.parse(parts[0]);
+            LogEntry.LogLevel level = LogEntry.LogLevel.valueOf(parts[1]);
+            
+            LogEntry.LogType type;
+            try {
+                type = LogEntry.LogType.valueOf(parts[2]);
+            } catch (Exception e) {
+                type = LogEntry.LogType.AUTHENTICATION;
+            }
+            
+            String email = parts[3];
+            String message = parts[4];
+
+            return new LogEntry(email, type, message, level, timestamp);
         } catch (Exception e) {
-            System.err.println("CRITICAL: Logger failed during GETLOGS operation. " + e.getMessage());
-            return new ArrayList<>();
+            return null;
         }
     }
 
-    private void log(String level, String message) throws IOException {
-        ensureFileAndDirectoryExists();
-        String logEntry = "[" + Instant.now().toString() + "] [" + level + "] " + message;
-
-        if ("ERROR".equals(level)) {
-            System.err.println(logEntry);
-        } else {
-            System.out.println(logEntry);
+    private void writeToFile(String line) {
+        if (line == null) {
+            throw new IllegalArgumentException("cant write null entity");
         }
 
         synchronized (writeLock) {
-            File file = new File("logs.txt");
+            ensureFileExists();
+
             PrintWriter writer = null;
+
             try {
-                writer = new PrintWriter(new FileWriter(file, true));// true is to append to the file that way we dont
-                                                                     // remove exisitng logs
-                writer.println(logEntry);
+                writer = new PrintWriter(new FileWriter(logFile, true));
+                writer.println(line);
             } catch (IOException e) {
-                throw new RuntimeException("cant write to file get error ", e);
+                throw new RuntimeException("Unable to write to file. Get error: ", e);
             } finally {
                 if (writer != null) {
                     writer.close();
@@ -87,10 +136,17 @@ public class FileLogRepository implements LogRepository {
         }
     }
 
-    private void ensureFileAndDirectoryExists() throws IOException {
-        Files.createDirectories(this.logFilePath.getParent());
-        if (!Files.exists(this.logFilePath)) {
-            Files.createFile(this.logFilePath);
+    private void ensureFileExists() {
+        try {
+            File parentDir = logFile.getParentFile();
+            if (parentDir != null) {
+                parentDir.mkdirs();
+            }
+            if (!logFile.exists()) {
+                logFile.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

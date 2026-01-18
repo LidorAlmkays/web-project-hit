@@ -2,6 +2,7 @@ package server.application.services;
 
 import server.application.adaptors.AuthService;
 import server.application.adaptors.UserManagementService;
+import server.domain.LogEntry;
 import server.domain.employee.Employee;
 import server.infustructre.adaptors.EmployeeRepository;
 import server.infustructre.adaptors.LogRepository;
@@ -30,34 +31,33 @@ public class AuthServiceImpl implements AuthService {
             employeeOpt = employeeRepository.findByEmail(email);
         } catch (Exception e) {
             Error error = new Error(
-                    "login error, when trying to finding employee by email: " + email + ", error: " + e.getMessage());
-            logRepository.error(error);
+                    "[LOGIN] error, when trying to finding employee by email: " + email + ", error: " + e.getMessage());
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, email, error.getMessage());
             throw new RuntimeException(error);
         }
 
         if (employeeOpt.isEmpty()) {
-            Error error = new Error("login failed: No employee found with email: " + email);
-            logRepository.error(error);
+            Error error = new Error("[LOGIN] failed: No employee found with email: " + email);
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, email, error.getMessage());
             throw new IllegalArgumentException("user not found");
         }
 
         Employee employee = employeeOpt.get();
 
         if (!employee.getPassword().equals(password)) {
-            Error error = new Error("login failed: incorrect password for employee " + employee.getEmployeeNumber());
-            logRepository.error(error);
-            throw new IllegalArgumentException("login failed, invalid credentials");
+            Error error = new Error("[LOGIN] failed: incorrect password for employee " + employee.getEmployeeNumber());
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, email, error.getMessage());
+            throw new IllegalArgumentException("[LOGIN] failed, invalid credentials");
         }
 
-        // Check if user is already logged in
         if (userManagementService.getSocketByEmail(email).isPresent()) {
-            Error error = new Error("login failed: Employee " + email + " is already logged in");
-            logRepository.error(error);
+            Error error = new Error("[LOGIN] failed: Employee " + email + " is already logged in");
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, email, error.getMessage());
             throw new SecurityException(error);
         }
         userManagementService.addUser(email, employee, socket);
 
-        logRepository.info("Login successful: Employee " + employee.getEmployeeNumber() + " logged in");
+        logRepository.info(LogEntry.LogType.AUTHENTICATION, email, "[LOGIN] successful: Employee " + employee.getEmployeeNumber() + " logged in");
         return employee;
     }
 
@@ -68,18 +68,17 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
-            // Find employee by employeeNumber to get email
             Optional<Employee> employeeOpt = employeeRepository.findByEmployeeNumber(employeeNumber);
             if (employeeOpt.isPresent()) {
                 String email = employeeOpt.get().getEmail();
                 userManagementService.removeUser(email);
-                logRepository.info("logout successful: Employee " + employeeNumber + " logged out");
+                logRepository.info(LogEntry.LogType.AUTHENTICATION, email, "[LOGOUT] successful: Employee " + employeeNumber + " logged out");
             } else {
-                logRepository.info("Logout failed, employee not found: " + employeeNumber);
+                logRepository.info(LogEntry.LogType.AUTHENTICATION, "[LOGOUT] failed: Employee not found: " + employeeNumber);
             }
         } catch (Exception e) {
-            logRepository.error(new Error(
-                    "logout error, removing session for employee: " + employeeNumber + ", " + e.getMessage()));
+            logRepository.error(LogEntry.LogType.AUTHENTICATION, 
+                    "[LOGOUT] error, removing session for employee: " + employeeNumber + ", " + e.getMessage());
         }
     }
 }

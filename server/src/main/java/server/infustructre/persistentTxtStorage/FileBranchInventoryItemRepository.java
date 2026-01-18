@@ -50,9 +50,8 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
         sb.append(entity.getCategory()).append("\n");
         sb.append(entity.getUnitPrice()).append("\n");
         sb.append(entity.getQuantityInStock()).append("\n");
-        sb.append(entity.getTotalBought()).append("\n");
         sb.append(entity.getTotalSold()).append("\n");
-        sb.append(entity.getTotalRevenue()).append("\n");
+        sb.append(entity.getTotalSalesValue()).append("\n");
         return sb.toString();
     }
 
@@ -60,7 +59,7 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
     protected BranchInventoryItem decodeFromString(String content) {
         String[] lines = content.split("\n");
 
-        if (lines.length < 9) {
+        if (lines.length < 8) {
             throw new RuntimeException("Invalid branch inventory item format: insufficient data");
         }
 
@@ -70,12 +69,11 @@ public class FileBranchInventoryItemRepository extends AbstractFileRepository<Br
         String category = lines[3].trim();
         double unitPrice = Double.parseDouble(lines[4].trim());
         int quantityInStock = Integer.parseInt(lines[5].trim());
-        int totalBought = Integer.parseInt(lines[6].trim());
-        int totalSold = Integer.parseInt(lines[7].trim());
-        double totalRevenue = Double.parseDouble(lines[8].trim());
+        int totalSold = Integer.parseInt(lines[6].trim());
+        double totalSalesValue = Double.parseDouble(lines[7].trim());
 
         return new BranchInventoryItem(itemId, branchId, productName, category, unitPrice,
-                quantityInStock, totalBought, totalSold, totalRevenue);
+                quantityInStock, totalSold, totalSalesValue);
     }
 
     @Override

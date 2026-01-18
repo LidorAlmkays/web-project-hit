@@ -16,19 +16,21 @@ public class HandlerFactory {
     private final BranchItemService branchItemService;
     private final BranchService branchService;
     private final CustomerService customerService;
+    private final ReportService reportService;
     private final PasswordSettingsService passwordSettingsService;
     private final EmployeeRepository employeeRepository;
     private final Map<EventType, SocketHandler> handlers;
 
     public HandlerFactory(AuthService authService, LoggerService logService, EmployeeService employeeService,
             BranchItemService branchItemService, BranchService branchService, CustomerService customerService,
-            PasswordSettingsService passwordSettingsService, EmployeeRepository employeeRepository) {
+            ReportService reportService, PasswordSettingsService passwordSettingsService, EmployeeRepository employeeRepository) {
         this.branchItemService = branchItemService;
         this.branchService = branchService;
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
         this.customerService = customerService;
+        this.reportService = reportService;
         this.passwordSettingsService = passwordSettingsService;
         this.employeeRepository = employeeRepository;
         this.handlers = new HashMap<>();
@@ -47,6 +49,16 @@ public class HandlerFactory {
         handlers.put(EventType.GET_EMPLOYEE, new GetEmployeeHandler(employeeService));
         handlers.put(EventType.LIST_BRANCH_EMPLOYEES, new ListBranchEmployeesHandler());
         handlers.put(EventType.LOGOUT_EMPLOYEE, new LogoutEmployeeHandler(authService));
+
+        // --- System Logs Handlers ---
+        handlers.put(EventType.GET_SYSTEM_LOGS_JSON, new SystemLogHandler(logService));
+        handlers.put(EventType.GET_CHAT_HISTORY_JSON, new ChatHistoryHandler());
+        
+        // --- Business Reports Handlers ---
+        handlers.put(EventType.GET_BRANCH_INVENTORY_REPORT, new ReportHandler(reportService, ReportHandler.ReportType.BRANCH_INVENTORY));
+        handlers.put(EventType.GET_SALES_STATS_BRANCH, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_BRANCH));
+        handlers.put(EventType.GET_SALES_STATS_PRODUCT, new ReportHandler(reportService, ReportHandler.ReportType.SALES_STATS_PRODUCT));
+
         handlers.put(EventType.CREATE_CUSTOMER, new CreateCustomerHandler(customerService));
         handlers.put(EventType.GET_CUSTOMER, new GetCustomerHandler(customerService));
         handlers.put(EventType.ADD_INVENTORY_ITEM, new AddItemHandler(branchItemService));
@@ -65,8 +77,9 @@ public class HandlerFactory {
     public SocketHandler createHandler(EventType eventType) {
         SocketHandler handler = handlers.get(eventType);
         if (handler == null) {
+            System.err.println("Warning: No handler found for event type: " + eventType);
             throw new IllegalArgumentException("Invalid handler type: " + eventType);
-        }
+            }
         return handler;
     }
 }

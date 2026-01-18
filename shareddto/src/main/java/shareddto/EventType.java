@@ -17,6 +17,17 @@ public enum EventType {
     ADD_INVENTORY_ITEM,
     CREATE_CUSTOMER,
     GET_CUSTOMER,
+    ERROR,
+
+    // --- Technical Logs ---
+    GET_SYSTEM_LOGS_JSON,
+
+    // --- Business Reports ---
+    GET_BRANCH_INVENTORY_REPORT,
+    GET_SALES_STATS_BRANCH,
+    GET_SALES_STATS_PRODUCT,
+
+    // --- Chat ---
     CHAT_REQUEST,
     CHAT_MESSAGE,
     CHAT_CLOSE,
@@ -24,5 +35,7 @@ public enum EventType {
     CHAT_DECLINE,
     GET_PENDING_REQUESTS,
     GET_ACTIVE_CHATS,
+    GET_CHAT_HISTORY_JSON,
     MANAGER_JOIN
+    
 }

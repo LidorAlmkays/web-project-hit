@@ -222,7 +222,7 @@ public class StorageManagementConsole implements IOptionCli {
         System.out.println("Address: " + getString(data, "address"));
         System.out.println("Phone:   " + getString(data, "phoneNumber"));
         System.out.println("Sold:    " + data.get("totalSold"));
-        System.out.println("Revenue: " + data.get("totalMoneyEarned"));
+        System.out.println("Total Earned: " + data.get("totalMoneyEarned"));
         System.out.println("======================");
     }
 

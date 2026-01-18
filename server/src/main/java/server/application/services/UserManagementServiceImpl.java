@@ -1,6 +1,7 @@
 package server.application.services;
 
 import server.application.adaptors.UserManagementService;
+import server.domain.LogEntry;
 import server.domain.employee.Employee;
 import server.infustructre.adaptors.LogRepository;
 
@@ -50,10 +51,10 @@ public class UserManagementServiceImpl implements UserManagementService {
         Object lock = getLockForEmail(email);
         synchronized (lock) {
             if (activeUsers.containsKey(email)) {
-                logRepository.info("User already logged in, replacing session for email: " + email);
+                logRepository.info(LogEntry.LogType.AUTHENTICATION, "[ADD USER] user already logged in, replacing session for email: " + email);
             }
             activeUsers.put(email, new UserSession(employee, socket));
-            logRepository.info("User added to session management: " + email);
+            logRepository.info(LogEntry.LogType.AUTHENTICATION, "[ADD USER] Successful, email: " + email);
         }
     }
 
@@ -67,11 +68,11 @@ public class UserManagementServiceImpl implements UserManagementService {
         synchronized (lock) {
             UserSession removed = activeUsers.remove(email);
             if (removed != null) {
-                logRepository.info("User removed from session management: " + email);
+                logRepository.info(LogEntry.LogType.AUTHENTICATION, "[REMOVE USER] Successful, email: " + email);
                 // Clean up lock if user is removed
                 emailLocks.remove(email);
             } else {
-                logRepository.info("User not found in session management: " + email);
+                logRepository.info(LogEntry.LogType.AUTHENTICATION, "[REMOVE USER] error. User not found in session management: " + email);
             }
         }
     }

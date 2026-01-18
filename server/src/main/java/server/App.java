@@ -40,6 +40,7 @@ public class App {
         BranchService branchService = applicationFactory.createBranchService(branchRepository,
                 branchInventoryItemRepository, employeeRepository, logRepository);
         LoggerService logService = applicationFactory.createLoggerService(logRepository);
+        ReportService reportService = applicationFactory.createReportService(logRepository, branchInventoryItemRepository);
         AuthService authService = applicationFactory.createAuthService(employeeRepository, logRepository,
                 userManagementService);
         BranchItemService branchItemService = applicationFactory.createBranchItemService(branchRepository,
@@ -49,7 +50,7 @@ public class App {
         ChatManager.getInstance().setDependencies(userManagementService, employeeRepository, logRepository);
         System.out.println("Starting API");
         SocketServer socketServer = new SocketServer(authService, logService, employeeService,
-                branchItemService, branchService, customerService, passwordSettingsService,
+                branchItemService, branchService, customerService, reportService, passwordSettingsService,
                 employeeRepository);
         socketServer.start();
 

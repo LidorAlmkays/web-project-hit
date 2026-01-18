@@ -3,6 +3,7 @@ package server.application.services;
 import server.application.adaptors.BranchService;
 import server.domain.Branch;
 import server.domain.BranchInventoryItem;
+import server.domain.LogEntry;
 import server.domain.employee.Employee;
 import server.infustructre.adaptors.BranchInventoryItemRepository;
 import server.infustructre.adaptors.BranchRepository;
@@ -33,13 +34,12 @@ public class BranchServiceImpl implements BranchService {
     @Override
     public Optional<Branch> getBranch(UUID branchId) {
         try {
-            logRepository.info("Getting branch: " + branchId);
+            logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET BRANCH] for branch: " + branchId);
             Optional<Branch> branch = branchRepository.findById(branchId);
             return branch;
         } catch (Exception e) {
-            Error error = new Error(
-                    "Get branch error, when trying to find branch: " + branchId + ", " + e.getMessage());
-            logRepository.error(error);
+            String errorMessage = "[GET BRANCH] failed, when trying to find branch: " + branchId + ", " + e.getMessage();
+            logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
             return Optional.empty();
         }
     }
@@ -47,13 +47,13 @@ public class BranchServiceImpl implements BranchService {
     @Override
     public List<BranchInventoryItem> getBranchItems(UUID branchId) {
         try {
-            logRepository.info("Getting items for branch: " + branchId);
+            logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET BRANCH ITEMS] for branch: " + branchId);
             List<BranchInventoryItem> items = branchInventoryItemRepository.findByBranchId(branchId);
             return items;
         } catch (Exception e) {
-            Error error = new Error("Get branch items error, when trying to find items for branch: " + branchId + ", "
-                    + e.getMessage());
-            logRepository.error(error);
+            String errorMessage = "[GET BRANCH ITEMS] failed, when trying to find items for branch: " + branchId + ", "
+                    + e.getMessage();
+            logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
             return new ArrayList<>();
         }
     }
@@ -61,14 +61,14 @@ public class BranchServiceImpl implements BranchService {
     @Override
     public List<Employee> getBranchEmployees(UUID branchId) {
         try {
-            logRepository.info("Getting employees for branch: " + branchId);
+            logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET BRANCH EMPLOYEES] for branch: " + branchId);
             List<Employee> employees = employeeRepository.findByBranchId(branchId);
-            logRepository.info("Found " + employees.size() + " employees for branch: " + branchId);
+            logRepository.info(LogEntry.LogType.MANAGEMENT, "[GET BRANCH EMPLOYEES] found " + employees.size() + " employees for branch: " + branchId);
             return employees;
         } catch (Exception e) {
-            Error error = new Error("Get branch employees error, when trying to find employees for branch: " + branchId
-                    + ", " + e.getMessage());
-            logRepository.error(error);
+            String errorMessage = "[GET BRANCH EMPLOYEES] failed, when trying to find employees for branch: " + branchId
+                    + ", " + e.getMessage();
+            logRepository.error(LogEntry.LogType.MANAGEMENT, errorMessage);
             return new ArrayList<>();
         }
     }

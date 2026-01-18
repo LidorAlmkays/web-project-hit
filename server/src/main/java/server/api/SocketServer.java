@@ -15,6 +15,7 @@ public class SocketServer {
     private final BranchItemService branchItemService;
     private final BranchService branchService;
     private final CustomerService customerService;
+    private final ReportService reportService;
     private final PasswordSettingsService passwordSettingsService;
     private final EmployeeRepository employeeRepository;
     private ServerSocket serverSocket;
@@ -23,18 +24,19 @@ public class SocketServer {
 
     public SocketServer(AuthService authService, LoggerService logService, EmployeeService employeeService,
             BranchItemService branchItemService, BranchService branchService, CustomerService customerService,
-                        PasswordSettingsService passwordSettingsService, EmployeeRepository employeeRepository) {
+            ReportService reportService, PasswordSettingsService passwordSettingsService, EmployeeRepository employeeRepository) {
         this.branchItemService = branchItemService;
         this.branchService = branchService;
         this.authService = authService;
         this.logService = logService;
         this.employeeService = employeeService;
         this.customerService = customerService;
+        this.reportService = reportService;
         this.passwordSettingsService = passwordSettingsService;
         this.employeeRepository = employeeRepository;
         this.running = false;
         this.handlerFactory = new HandlerFactory(authService, logService, employeeService, branchItemService,
-                branchService, customerService, passwordSettingsService, employeeRepository);
+                branchService, customerService, reportService, passwordSettingsService, employeeRepository);
     }
 
     public void start() {

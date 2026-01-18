@@ -9,9 +9,8 @@ public class BranchInventoryItem {
     private String category;
     private double unitPrice;
     private int quantityInStock;
-    private int totalBought;
     private int totalSold;
-    private double totalRevenue;
+    private double totalSalesValue;
 
     public BranchInventoryItem(UUID branchId, String productName, String category, double unitPrice) {
         if (branchId == null) {
@@ -32,13 +31,12 @@ public class BranchInventoryItem {
         this.category = category;
         this.unitPrice = unitPrice;
         this.quantityInStock = 0;
-        this.totalBought = 0;
         this.totalSold = 0;
-        this.totalRevenue = 0.0;
+        this.totalSalesValue = 0.0;
     }
 
     public BranchInventoryItem(UUID itemId, UUID branchId, String productName, String category, double unitPrice,
-            int quantityInStock, int totalBought, int totalSold, double totalRevenue) {
+            int quantityInStock, int totalSold, double totalSalesValue) {
         if (itemId == null) {
             throw new IllegalArgumentException("itemId must not be null");
         }
@@ -57,14 +55,11 @@ public class BranchInventoryItem {
         if (quantityInStock < 0) {
             throw new IllegalArgumentException("quantityInStock must be non-negative");
         }
-        if (totalBought < 0) {
-            throw new IllegalArgumentException("totalBought must be non-negative");
-        }
         if (totalSold < 0) {
             throw new IllegalArgumentException("totalSold must be non-negative");
         }
-        if (totalRevenue < 0) {
-            throw new IllegalArgumentException("totalRevenue must be non-negative");
+        if (totalSalesValue < 0) {
+            throw new IllegalArgumentException("totalSalesValue must be non-negative");
         }
         this.itemId = itemId;
         this.branchId = branchId;
@@ -72,9 +67,8 @@ public class BranchInventoryItem {
         this.category = category;
         this.unitPrice = unitPrice;
         this.quantityInStock = quantityInStock;
-        this.totalBought = totalBought;
         this.totalSold = totalSold;
-        this.totalRevenue = totalRevenue;
+        this.totalSalesValue = totalSalesValue;
     }
 
     // getters
@@ -103,16 +97,12 @@ public class BranchInventoryItem {
         return quantityInStock;
     }
 
-    public int getTotalBought() {
-        return totalBought;
-    }
-
     public int getTotalSold() {
         return totalSold;
     }
 
-    public double getTotalRevenue() {
-        return totalRevenue;
+    public double getTotalSalesValue() {
+        return totalSalesValue;
     }
 
     // setters
@@ -143,7 +133,6 @@ public class BranchInventoryItem {
             throw new IllegalArgumentException("Restock quantity must be non-negative");
         }
         this.quantityInStock += quantity;
-        this.totalBought += quantity;
     }
 
     public void sell(int quantity) {
@@ -155,7 +144,7 @@ public class BranchInventoryItem {
         }
         this.quantityInStock -= quantity;
         this.totalSold += quantity;
-        this.totalRevenue += (quantity * unitPrice);
+        this.totalSalesValue += (quantity * unitPrice);
     }
 
     public BranchInventoryItem createCopy() {
@@ -166,9 +155,8 @@ public class BranchInventoryItem {
                 this.category,
                 this.unitPrice,
                 this.quantityInStock,
-                this.totalBought,
                 this.totalSold,
-                this.totalRevenue);
+                this.totalSalesValue);
     }
 
     @Override
@@ -180,9 +168,8 @@ public class BranchInventoryItem {
                 ", category='" + category + '\'' +
                 ", unitPrice=" + unitPrice +
                 ", quantityInStock=" + quantityInStock +
-                ", totalBought=" + totalBought +
                 ", totalSold=" + totalSold +
-                ", totalRevenue=" + totalRevenue +
+                ", totalSalesValue=" + totalSalesValue +
                 '}';
     }
 }
