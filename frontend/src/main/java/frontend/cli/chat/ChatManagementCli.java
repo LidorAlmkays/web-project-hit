@@ -30,7 +30,6 @@ public class ChatManagementCli implements IOptionCli {
                 chatOptions.add(new JoinChatCli());
             }
             
-            chatOptions.add(new SaveChatHistoryCli());
 
             System.out.println("\n=== Chat Management ===");
             for (int i = 0; i < chatOptions.size(); i++) {
