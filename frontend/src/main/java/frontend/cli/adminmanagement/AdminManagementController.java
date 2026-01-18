@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-/**
- * Coordinates user input, API calls, and view rendering for admin management tasks.
- */
 public class AdminManagementController {
     private static final Gson gson = new Gson();
     private final IClientTransport client;

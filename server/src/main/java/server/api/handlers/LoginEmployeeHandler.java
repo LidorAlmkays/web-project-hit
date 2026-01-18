@@ -8,9 +8,6 @@ import shareddto.employeemanagement.request.LoginEmployeeRequest;
 
 import java.net.Socket;
 
-/**
- * Handles login requests from clients.
- */
 public class LoginEmployeeHandler extends AbstractSocketHandler {
     private final AuthService authService;
 

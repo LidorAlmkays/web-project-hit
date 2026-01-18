@@ -9,9 +9,6 @@ import shareddto.chat.ChatPacket;
 import java.net.Socket;
 import java.util.UUID;
 
-/**
- * Handles CHAT_REQUEST - starts a chat with another branch.
- */
 public class StartBranchChatHandler extends AbstractSocketHandler {
 
     @Override

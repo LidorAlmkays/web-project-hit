@@ -8,9 +8,6 @@ import shareddto.chat.ChatPacket;
 
 import java.net.Socket;
 
-/**
- * Handles accepting a chat request.
- */
 public class AcceptChatHandler extends AbstractSocketHandler {
 
     @Override

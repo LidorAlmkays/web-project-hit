@@ -6,9 +6,6 @@ import shareddto.customermanagement.response.CustomerDto;
 
 import java.util.Scanner;
 
-/**
- * Handles CLI prompts and rendering for customer management tasks.
- */
 public class CustomerManagementView {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 

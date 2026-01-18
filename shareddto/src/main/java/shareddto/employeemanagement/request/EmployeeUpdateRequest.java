@@ -1,8 +1,5 @@
 package shareddto.employeemanagement.request;
 
-/**
- * Request payload for updating an employee.
- */
 public class EmployeeUpdateRequest {
     private String employeeNumber;
     private String branchId;

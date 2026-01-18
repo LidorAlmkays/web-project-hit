@@ -6,9 +6,6 @@ import shareddto.SocketMessage;
 import java.io.Closeable;
 import java.io.IOException;
 
-/**
- * Abstraction for CLI transport implementations (socket or mock).
- */
 public interface IClientTransport extends Closeable {
     SocketMessage send(EventType eventType, Object data) throws IOException;
     void sendOnly(EventType eventType, Object data) throws IOException;

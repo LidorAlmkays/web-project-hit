@@ -10,9 +10,6 @@ import shareddto.employeemanagement.response.EmployeeDto;
 import java.io.IOException;
 import java.util.Scanner;
 
-/**
- * Handles CLI login interactions. Returns the logged-in employee on success.
- */
 public class LoginController {
     private final Gson gson = new Gson();
 

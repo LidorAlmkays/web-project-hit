@@ -9,9 +9,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-/**
- * Socket-based transport for the CLI.
- */
 public class SocketClient implements IClientTransport {
     private static final Gson gson = new Gson();
     private final Socket socket;

@@ -2,15 +2,10 @@ package server.api.handlers.chat;
 
 import server.api.handlers.AbstractSocketHandler;
 import server.chat.ChatManager;
-import shareddto.EventType;
-import shareddto.SocketMessage;
 import shareddto.chat.ChatPacket;
 
 import java.net.Socket;
 
-/**
- * Handles CHAT_MESSAGE - routes messages between chat partners.
- */
 public class SendMessageHandler extends AbstractSocketHandler {
 
     @Override

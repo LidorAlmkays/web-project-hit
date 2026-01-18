@@ -1,8 +1,5 @@
 package shareddto.employeemanagement.response;
 
-/**
- * Response payload for employee details.
- */
 public class EmployeeDto {
     private String employeeNumber;
     private String branchId;

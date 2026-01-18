@@ -7,9 +7,6 @@ import frontend.transport.IClientTransport;
 import java.io.IOException;
 import java.util.Scanner;
 
-/**
- * CLI entry point for customer management tasks.
- */
 public class CustomerManagementCli implements IOptionCli {
     @Override
     public String getOptionName() {

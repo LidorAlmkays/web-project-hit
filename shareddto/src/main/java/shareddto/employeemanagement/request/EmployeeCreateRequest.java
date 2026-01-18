@@ -1,8 +1,5 @@
 package shareddto.employeemanagement.request;
 
-/**
- * Request payload for creating an employee.
- */
 public class EmployeeCreateRequest {
     private String branchId;
     private String fullName;

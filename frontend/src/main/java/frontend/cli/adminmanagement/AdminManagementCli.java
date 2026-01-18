@@ -7,9 +7,6 @@ import frontend.transport.IClientTransport;
 import java.io.IOException;
 import java.util.Scanner;
 
-/**
- * CLI entry point for admin management tasks.
- */
 public class AdminManagementCli implements IOptionCli {
     @Override
     public String getOptionName() {

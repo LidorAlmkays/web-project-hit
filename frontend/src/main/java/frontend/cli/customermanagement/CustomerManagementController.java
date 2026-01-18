@@ -11,9 +11,6 @@ import shareddto.customermanagement.response.CustomerDto;
 import java.io.IOException;
 import java.util.Scanner;
 
-/**
- * Coordinates user input, API calls, and view rendering for customer management tasks.
- */
 public class CustomerManagementController {
     private static final Gson gson = new Gson();
     private final IClientTransport client;
@@ -26,9 +23,6 @@ public class CustomerManagementController {
         this.scanner = scanner;
     }
 
-    /**
-     * Runs the main CLI loop until the user exits.
-     */
     public void run() throws IOException {
         view.header("Task 6 - Customer Management");
         while (true) {
@@ -79,9 +73,6 @@ public class CustomerManagementController {
         view.printCustomer(parseCustomer(response));
     }
 
-    /**
-     * Sends a request and renders a user-friendly error on failure.
-     */
     private SocketMessage sendOrReport(EventType event, Object request, String errorPrefix) throws IOException {
         SocketMessage response = client.send(event, request);
         if (response == null) {

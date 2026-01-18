@@ -8,9 +8,6 @@ import shareddto.employeemanagement.request.LogoutEmployeeRequest;
 import java.net.Socket;
 import java.util.UUID;
 
-/**
- * Handles logout requests from clients.
- */
 public class LogoutEmployeeHandler extends AbstractSocketHandler {
     private final AuthService authService;
 

@@ -6,9 +6,6 @@ import shareddto.chat.ChatPacket;
 
 import java.net.Socket;
 
-/**
- * Handles CHAT_CLOSE - closes an active chat session.
- */
 public class CloseChatHandler extends AbstractSocketHandler {
 
     @Override

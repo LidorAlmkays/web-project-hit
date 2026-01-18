@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-/**
- * Handles CLI prompts and rendering for admin management tasks.
- */
 public class AdminManagementView {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
