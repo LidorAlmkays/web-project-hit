@@ -191,7 +191,7 @@ public class StorageManagementConsole implements IOptionCli {
 
         for (int i = 0; i < items.size(); i++) {
             JsonObject item = items.get(i).getAsJsonObject();
-            System.out.println((i + 1) + ") " + getString(item, "productName"));
+            System.out.println((i + 1) + ") " + getString(item, "productName") + " (" + getString(item, "category") + ")");
         }
 
         System.out.print("Select item number: ");
