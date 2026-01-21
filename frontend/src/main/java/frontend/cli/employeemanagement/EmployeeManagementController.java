@@ -1,38 +1,25 @@
 package frontend.cli.employeemanagement;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import frontend.cli.shared.EmployeeManagementBaseController;
+import frontend.cli.shared.ValidationUtils;
 import frontend.transport.IClientTransport;
 import frontend.util.SessionManager;
 import shareddto.employeemanagement.request.BranchEmployeesRequest;
 import shareddto.employeemanagement.request.EmployeeCreateRequest;
 import shareddto.employeemanagement.request.EmployeeGetRequest;
 import shareddto.employeemanagement.request.EmployeeUpdateRequest;
-import shareddto.employeemanagement.BranchCatalog;
 import shareddto.employeemanagement.response.EmployeeDto;
 import shareddto.SocketMessage;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import shareddto.EventType;
 
 
-public class EmployeeManagementController {
-    private static final Gson gson = new Gson();
-    private final IClientTransport client;
-    private final EmployeeManagementView view;
-    private final Scanner scanner;
-    private final List<Map.Entry<String, String>> branchOptions;
+public class EmployeeManagementController extends EmployeeManagementBaseController<EmployeeManagementView> {
 
     public EmployeeManagementController(IClientTransport client, EmployeeManagementView view, Scanner scanner) {
-        this.client = client;
-        this.view = view;
-        this.scanner = scanner;
-        this.branchOptions = new ArrayList<>(BranchCatalog.KNOWN_BRANCHES.entrySet());
+        super(client, view, scanner);
     }
 
 
@@ -85,8 +72,18 @@ public class EmployeeManagementController {
         EmployeeCreateRequest request = new EmployeeCreateRequest();
         request.setBranchId(branchId);
         request.setFullName(view.prompt(scanner, "Full name"));
-        request.setEmployeeId(view.prompt(scanner, "Employee ID"));
-        request.setPhoneNumber(view.prompt(scanner, "Phone number"));
+        String employeeId = view.prompt(scanner, "Employee ID");
+        if (!ValidationUtils.isValidIsraeliId(employeeId)) {
+            view.error("Employee ID must be a valid Israeli ID number.");
+            return;
+        }
+        request.setEmployeeId(employeeId);
+        String phoneNumber = view.prompt(scanner, "Phone number");
+        if (!ValidationUtils.isValidPhoneDigits(phoneNumber)) {
+            view.error("Phone number must contain only digits (9-10 digits).");
+            return;
+        }
+        request.setPhoneNumber(phoneNumber);
         request.setBankAccountNumber(view.prompt(scanner, "Bank account number"));
         String role = view.promptRoleNonAdmin(scanner);
         if ("ADMIN".equalsIgnoreCase(role)) {
@@ -94,7 +91,12 @@ public class EmployeeManagementController {
             return;
         }
         request.setRole(role);
-        request.setEmail(view.prompt(scanner, "Email"));
+        String email = view.prompt(scanner, "Email");
+        if (!ValidationUtils.isValidEmail(email)) {
+            view.error("Invalid email format.");
+            return;
+        }
+        request.setEmail(email);
         request.setPassword(view.prompt(scanner, "Password"));
 
         SocketMessage response = sendOrReport(EventType.CREATE_EMPLOYEE, request, "Create failed: ");
@@ -112,6 +114,10 @@ public class EmployeeManagementController {
             return;
         }
         String email = view.prompt(scanner, "Email");
+        if (!ValidationUtils.isValidEmail(email)) {
+            view.error("Invalid email format.");
+            return;
+        }
         EmployeeDto current = fetchEmployeeByEmail(email);
         if (current == null) {
             return;
@@ -142,7 +148,12 @@ public class EmployeeManagementController {
         if (currentEmployee == null) {
             return;
         }
-        EmployeeGetRequest request = new EmployeeGetRequest(view.prompt(scanner, "Email"));
+        String email = view.prompt(scanner, "Email");
+        if (!ValidationUtils.isValidEmail(email)) {
+            view.error("Invalid email format.");
+            return;
+        }
+        EmployeeGetRequest request = new EmployeeGetRequest(email);
         SocketMessage response = sendOrReport(EventType.GET_EMPLOYEE, request, "Get failed: ");
         if (response == null) {
             return;
@@ -167,19 +178,6 @@ public class EmployeeManagementController {
             return;
         }
         view.printEmployeeList(toDisplayEmployeeList(parseEmployeeList(response)));
-    }
-
-    private EmployeeDto fetchEmployeeByEmail(String email) throws IOException {
-        if (email == null || email.trim().isEmpty()) {
-            view.error("Email is required to update an employee.");
-            return null;
-        }
-        EmployeeGetRequest getRequest = new EmployeeGetRequest(email.trim());
-        SocketMessage response = sendOrReport(EventType.GET_EMPLOYEE, getRequest, "Get failed: ");
-        if (response == null) {
-            return null;
-        }
-        return parseEmployee(response);
     }
 
     private EmployeeUpdateRequest promptEmployeeUpdateRequest(String email, EmployeeDto current) {
@@ -229,6 +227,10 @@ public class EmployeeManagementController {
                 case "2":
                     String employeeId = view.prompt(scanner, "Employee ID");
                     if (!employeeId.trim().isEmpty()) {
+                        if (!ValidationUtils.isValidIsraeliId(employeeId)) {
+                            view.error("Employee ID must be a valid Israeli ID number.");
+                            break;
+                        }
                         request.setEmployeeId(employeeId);
                         draft.setEmployeeId(employeeId);
                         hasChanges = true;
@@ -239,6 +241,10 @@ public class EmployeeManagementController {
                 case "3":
                     String phoneNumber = view.prompt(scanner, "Phone number");
                     if (!phoneNumber.trim().isEmpty()) {
+                        if (!ValidationUtils.isValidPhoneDigits(phoneNumber)) {
+                            view.error("Phone number must contain only digits (9-10 digits).");
+                            break;
+                        }
                         request.setPhoneNumber(phoneNumber);
                         draft.setPhoneNumber(phoneNumber);
                         hasChanges = true;
@@ -288,43 +294,6 @@ public class EmployeeManagementController {
         }
     }
 
-    private String promptBranchId(String label, boolean allowBlank, String blankHint) {
-        if (branchOptions.isEmpty()) {
-            String suffix = allowBlank ? " (" + blankHint + ")" : "";
-            return view.prompt(scanner, label + suffix);
-        }
-
-        view.info("Known branches:");
-        for (int i = 0; i < branchOptions.size(); i++) {
-            Map.Entry<String, String> option = branchOptions.get(i);
-            view.info(String.format("  %d) %s", i + 1, option.getValue()));
-        }
-        String hint = allowBlank
-                ? "Choose a number from the list or " + blankHint
-                : "Choose a number from the list";
-        while (true) {
-            String input = view.prompt(scanner, label + " - " + hint);
-            if (input.isEmpty() && allowBlank) {
-                return "";
-            }
-            Integer selection = parseSelection(input, branchOptions.size());
-            if (selection != null) {
-                return branchOptions.get(selection - 1).getKey();
-            }
-            view.error("Invalid selection. Enter a number from the list.");
-        }
-    }
-
-    private Integer parseSelection(String input, int max) {
-        try {
-            int value = Integer.parseInt(input);
-            if (value >= 1 && value <= max) {
-                return value;
-            }
-        } catch (NumberFormatException ignored) {
-        }
-        return null;
-    }
 
     private EmployeeDto getCurrentEmployeeWithBranch() {
         EmployeeDto currentEmployee = SessionManager.getInstance().getCurrentEmployee();
@@ -353,72 +322,5 @@ public class EmployeeManagementController {
             return false;
         }
         return currentBranch.trim().equalsIgnoreCase(targetBranch.trim());
-    }
-    private SocketMessage sendOrReport(EventType event, Object request, String errorPrefix) throws IOException {
-        SocketMessage response = client.send(event, request);
-        if (response == null) {
-            view.error(errorPrefix + "No response from server.");
-            return null;
-        }
-        Object data = response.getData();
-        if (data instanceof String) {
-            view.error(errorPrefix + data);
-            return null;
-        }
-        return response;
-    }
-
-    private EmployeeDto parseEmployee(SocketMessage response) {
-        // SocketMessage data is untyped; Gson maps it into DTOs.
-        return gson.fromJson(gson.toJsonTree(response.getData()), EmployeeDto.class);
-    }
-
-    private List<EmployeeDto> parseEmployeeList(SocketMessage response) {
-        // List mapping mirrors server list payloads.
-        Type listType = new TypeToken<List<EmployeeDto>>() {
-        }.getType();
-        return gson.fromJson(gson.toJsonTree(response.getData()), listType);
-    }
-
-    private EmployeeDto toDisplayEmployee(EmployeeDto employee) {
-        if (employee == null) {
-            return null;
-        }
-        String displayBranch = getBranchDisplay(employee.getBranchId());
-        if (displayBranch.equals(employee.getBranchId())) {
-            return employee;
-        }
-        return new EmployeeDto(
-                employee.getEmployeeNumber(),
-                displayBranch,
-                employee.getFullName(),
-                employee.getEmployeeId(),
-                employee.getPhoneNumber(),
-                employee.getBankAccountNumber(),
-                employee.getRole(),
-                employee.getEmail());
-    }
-
-    private List<EmployeeDto> toDisplayEmployeeList(List<EmployeeDto> employees) {
-        if (employees == null || employees.isEmpty()) {
-            return employees;
-        }
-        List<EmployeeDto> display = new ArrayList<>(employees.size());
-        for (EmployeeDto employee : employees) {
-            display.add(toDisplayEmployee(employee));
-        }
-        return display;
-    }
-
-    private String getBranchDisplay(String branchId) {
-        if (branchId == null || branchId.trim().isEmpty()) {
-            return branchId;
-        }
-        for (Map.Entry<String, String> option : branchOptions) {
-            if (option.getKey().equals(branchId)) {
-                return option.getValue();
-            }
-        }
-        return branchId;
     }
 }

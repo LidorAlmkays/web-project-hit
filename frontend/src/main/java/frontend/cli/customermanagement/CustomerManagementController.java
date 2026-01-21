@@ -1,6 +1,7 @@
 package frontend.cli.customermanagement;
 
-import com.google.gson.Gson;
+import frontend.cli.shared.BaseManagementController;
+import frontend.cli.shared.ValidationUtils;
 import frontend.transport.IClientTransport;
 import shareddto.EventType;
 import shareddto.SocketMessage;
@@ -11,16 +12,10 @@ import shareddto.customermanagement.response.CustomerDto;
 import java.io.IOException;
 import java.util.Scanner;
 
-public class CustomerManagementController {
-    private static final Gson gson = new Gson();
-    private final IClientTransport client;
-    private final CustomerManagementView view;
-    private final Scanner scanner;
+public class CustomerManagementController extends BaseManagementController<CustomerManagementView> {
 
     public CustomerManagementController(IClientTransport client, CustomerManagementView view, Scanner scanner) {
-        this.client = client;
-        this.view = view;
-        this.scanner = scanner;
+        super(client, view, scanner);
     }
 
     public void run() throws IOException {
@@ -54,6 +49,18 @@ public class CustomerManagementController {
         String idNumber = view.prompt(scanner, "ID number");
         String phone = view.prompt(scanner, "Phone");
         String email = view.prompt(scanner, "Email");
+        if (!ValidationUtils.isValidIsraeliId(idNumber)) {
+            view.error("ID number must be a valid Israeli ID number.");
+            return;
+        }
+        if (!ValidationUtils.isValidPhoneDigits(phone)) {
+            view.error("Phone number must contain only digits (9-10 digits).");
+            return;
+        }
+        if (!ValidationUtils.isValidEmail(email)) {
+            view.error("Invalid email format.");
+            return;
+        }
         CustomerCreateRequest request = new CustomerCreateRequest(fullName, idNumber, phone, email);
         SocketMessage response = sendOrReport(EventType.CREATE_CUSTOMER, request, "Add failed: ");
         if (response == null) {
@@ -65,26 +72,17 @@ public class CustomerManagementController {
 
     private void getCustomer() throws IOException {
         view.section("Get Customer");
-        CustomerGetRequest request = new CustomerGetRequest(view.prompt(scanner, "ID number"));
+        String idNumber = view.prompt(scanner, "ID number");
+        if (!ValidationUtils.isValidIsraeliId(idNumber)) {
+            view.error("ID number must be a valid Israeli ID number.");
+            return;
+        }
+        CustomerGetRequest request = new CustomerGetRequest(idNumber);
         SocketMessage response = sendOrReport(EventType.GET_CUSTOMER, request, "Get failed: ");
         if (response == null) {
             return;
         }
         view.printCustomer(parseCustomer(response));
-    }
-
-    private SocketMessage sendOrReport(EventType event, Object request, String errorPrefix) throws IOException {
-        SocketMessage response = client.send(event, request);
-        if (response == null) {
-            view.error(errorPrefix + "No response from server.");
-            return null;
-        }
-        Object data = response.getData();
-        if (data instanceof String) {
-            view.error(errorPrefix + data);
-            return null;
-        }
-        return response;
     }
 
     private CustomerDto parseCustomer(SocketMessage response) {
