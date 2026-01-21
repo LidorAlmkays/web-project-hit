@@ -1,6 +1,7 @@
 package frontend.cli.auth;
 
 import com.google.gson.Gson;
+import frontend.cli.shared.ValidationUtils;
 import frontend.transport.IClientTransport;
 import shareddto.EventType;
 import shareddto.SocketMessage;
@@ -19,6 +20,11 @@ public class LoginController {
         while (attempts < 3) {
             System.out.print("Email: ");
             String email = scanner.nextLine().trim();
+            if (!ValidationUtils.isValidEmail(email)) {
+                System.out.println("Invalid email format.");
+                attempts++;
+                continue;
+            }
             System.out.print("Password: ");
             String password = scanner.nextLine();
 
