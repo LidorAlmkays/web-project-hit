@@ -9,7 +9,6 @@ public class HomeView {
             System.out.println((i + 1) + ". " + options.get(i));
         }
         System.out.println((options.size() + 1) + ". Logout");
-        System.out.println((options.size() + 2) + ". Exit");
         System.out.print("Select an option: ");
     }
 

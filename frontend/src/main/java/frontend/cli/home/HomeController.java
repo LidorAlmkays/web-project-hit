@@ -35,7 +35,7 @@ public class HomeController {
         while (true) {
             view.menu(optionNames);
             if (!scanner.hasNextLine()) {
-                return CliResult.EXIT;
+                return CliResult.BACK;
             }
             String input = scanner.nextLine().trim();
             int choice;
@@ -60,9 +60,6 @@ public class HomeController {
                 // Logout
                 logout();
                 return CliResult.BACK;
-            } else if (choice == options.size() + 2) {
-                // Exit
-                return CliResult.EXIT;
             } else {
                 view.error("Unknown option.");
             }
